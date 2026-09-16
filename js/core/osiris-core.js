@@ -33,28 +33,42 @@
       var raw = global.localStorage.getItem(LIB_KEY);
       var parsed = raw ? JSON.parse(raw) : [];
       var arr = Array.isArray(parsed) ? parsed : [];
+        // Migration patch for renamed tutorial PDFs
+        try {
+            let lib = JSON.parse(localStorage.getItem('osiris_library_shelf') || '[]');
+            let changed = false;
+            lib.forEach(book => {
+                if (book.link === '../data/Erste_Schritte.pdf') { book.link = '../data/LEHRERPORTFOLIO_Tutoriel_PWA_DE.pdf'; book.title = 'Tutoriel PWA (DE)'; changed = true; }
+                if (book.link === '../data/Guide_de_Demarrage.pdf') { book.link = '../data/LEHRERPORTFOLIO_Tutoriel_PWA_FR.pdf'; book.title = 'Tutoriel PWA (FR)'; changed = true; }
+            });
+            if (changed) {
+                localStorage.setItem('osiris_library_shelf', JSON.stringify(lib));
+                arr = lib; // update in-memory array if already loaded
+            }
+        } catch(e) {}
+
       
       if (!global.localStorage.getItem('osiris_onboarded_pdf_v2')) {
           global.localStorage.setItem('osiris_onboarded_pdf_v2', 'true');
           if (arr.length === 0) {
               arr.push({
                   id: makeBookId(),
-                  title: "Erste Schritte (DE)",
+                  title: "Tutoriel PWA (DE)",
                   description: "Kurzanleitung zur Nutzung der KI-Tools und API-Schlüssel.",
                   author: "System",
                   cover: "",
                   type: "application/pdf",
-                  link: "../data/Erste_Schritte.pdf",
+                  link: "../data/LEHRERPORTFOLIO_Tutoriel_PWA_DE.pdf",
                   timestamp: Date.now()
               });
               arr.push({
                   id: makeBookId(),
-                  title: "Guide de Démarrage (FR)",
+                  title: "Tutoriel PWA (FR)",
                   description: "Guide rapide sur l'utilisation des outils IA et des clés API.",
                   author: "System",
                   cover: "",
                   type: "application/pdf",
-                  link: "../data/Guide_de_Demarrage.pdf",
+                  link: "../data/LEHRERPORTFOLIO_Tutoriel_PWA_FR.pdf",
                   timestamp: Date.now() - 1000
               });
               // Save directly so it persists immediately
