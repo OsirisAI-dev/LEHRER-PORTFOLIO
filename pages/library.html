@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mein Bibliothek — Hub</title>
+
+<script>
+  /* Pre-paint restore: set the shelf theme + font before first paint, so there's
+     no flash of the default (classique) chrome on reload. */
+  (function () {
+    try {
+      var saved = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+      document.documentElement.setAttribute('data-shelf', saved.shelf || 'classique');
+      document.documentElement.setAttribute('lang', (saved.lang || 'FR').toLowerCase());
+      if (saved.font) {
+        document.documentElement.style.setProperty('--hub-font-family', saved.font);
+      }
+    } catch (e) {
+      document.documentElement.setAttribute('data-shelf', 'classique');
+    }
+  })();
+</script>
+
+<style>
+  * { box-sizing: border-box; }
+
+  :root {
+    /* Drives the MEIN BIBLIOTHEK title and the shelf-tab labels ? toggled by
+       the "Aa" button. Defaults to the original Brush Script MT look. */
+    --hub-font-family: 'Brush Script MT', cursive;
+  }
+
+  /* ---------- Per-shelf chrome tokens ----------
+     Each block mirrors that shelf's own default palette, so the hub header
+     visually "belongs" to whichever vitrine is currently loaded. */
+  html[data-shelf="classique"] {
+    --hub-bg:          #efe6cf;
+    --hub-surface:     #f7f1e0;
+    --hub-text:        #1b1714;
+    --hub-text-dim:    rgba(27, 23, 20, 0.62);
+    --hub-accent:      #8a6a24;
+    --hub-accent-grad: linear-gradient(90deg, #8a6a24, #c2a04e);
+    --hub-border:      rgba(27, 23, 20, 0.18);
+  }
+  html[data-shelf="litcircle"] {
+    --hub-bg:          #0c0c14;
+    --hub-surface:     #13131f;
+    --hub-text:        #eeeef8;
+    --hub-text-dim:    #9090b8;
+    --hub-accent:      #818cf8;
+    --hub-accent-grad: linear-gradient(90deg, #2dd4bf, #818cf8);
+    --hub-border:      rgba(255, 255, 255, 0.12);
+  }
+  html[data-shelf="darkshelf"] {
+    --hub-bg:          #07070f;
+    --hub-surface:     #111120;
+    --hub-text:        #e8e8f8;
+    --hub-text-dim:    #9090b0;
+    --hub-accent:      #4af0ff;
+    --hub-accent-grad: linear-gradient(90deg, #4af0ff, #48ff91);
+    --hub-border:      rgba(255, 255, 255, 0.12);
+  }
+  html[data-shelf="codex"] {
+    --hub-bg:          #1a1710;
+    --hub-surface:     #211c14;
+    --hub-text:        #e8dfc8;
+    --hub-text-dim:    #8a8070;
+    --hub-accent:      #d4a76a;
+    --hub-accent-grad: linear-gradient(90deg, #a56a2c, #d4a76a);
+    --hub-border:      rgba(255, 255, 255, 0.12);
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--hub-bg);
+    color: var(--hub-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* ---------- Header (narrow ? the iframe below gets the real estate) ---------- */
+  #header-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--hub-surface);
+    border-bottom: 2px solid var(--hub-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  /* Default collapsed: only the title row (header) shows ? tabs/sort/AI-Sorting/
+     API-Keys rows are hidden until the user clicks the title row to expand.
+     This exists so the add-book modal (opened inside the shelf iframe) has room
+     instead of overlapping the header. */
+  #header-container.collapsed .subbar,
+  #header-container.collapsed .controls-row {
+    display: none;
+  }
+  header {
+    padding: 8px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+  }
+  .header-toggle-hint {
+    display: inline-block;
+    font-size: 0.6em;
+    color: var(--hub-text-dim);
+    transition: transform 0.2s ease;
+    transform: rotate(-90deg); /* collapsed: pointing right */
+  }
+  #header-container:not(.collapsed) .header-toggle-hint {
+    transform: rotate(0deg); /* expanded: pointing down */
+  }
+
+  .title-group { display: flex; flex-direction: column; }
+  .app-title-main {
+    font-family: var(--hub-font-family);
+    font-size: 1.5em;
+    line-height: 1;
+    margin: 0;
+    color: var(--hub-accent);
+    transition: color 0.3s ease;
+  }
+  .app-title-sub {
+    font-family: var(--hub-font-family);
+    font-size: 0.75em;
+    margin: -2px 0 0 28px;
+    color: var(--hub-text-dim);
+    font-style: italic;
+  }
+
+  .toolbar { display: flex; align-items: center; gap: 8px; }
+  .conn-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #6b7280;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+  }
+  .conn-dot.is-online { background: #22c55e; }
+  .conn-dot.is-offline { background: #ef4444; }
+  .hub-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid var(--hub-border);
+    background: var(--hub-bg);
+    color: var(--hub-text);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hub-btn:hover { border-color: var(--hub-accent); color: var(--hub-accent); }
+
+  .hub-checkbox {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid var(--hub-border);
+    background: var(--hub-bg);
+    color: var(--hub-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+  }
+  .hub-checkbox:hover { border-color: var(--hub-accent); color: var(--hub-accent); }
+  .hub-checkbox input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; margin: 0; }
+  .hub-checkbox select {
+    font-family: inherit; font-size: 0.8rem; font-weight: bold; cursor: pointer;
+    background: var(--hub-bg); color: var(--hub-text); border: 1px solid var(--hub-border);
+    border-radius: 4px; padding: 2px 4px;
+  }
+
+  /* ---------- Subbar repurposed as the shelf picker ---------- */
+  .subbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: var(--hub-surface);
+    border-top: 1px solid var(--hub-border);
+  }
+  .subbar-tab {
+    padding: 8px 18px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: var(--hub-font-family);
+    font-size: 0.82rem;
+    letter-spacing: 0.01em;
+    color: var(--hub-text-dim);
+    border-bottom: 3px solid transparent;
+    transition: 0.2s;
+  }
+  .subbar-tab:hover { color: var(--hub-text); }
+  .subbar-tab.active { border-bottom-color: var(--hub-accent); color: var(--hub-accent); }
+
+  /* ---------- Controls row: sort + AI sorting + API-Keys ---------- */
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-top: 1px solid var(--hub-border);
+  }
+  .sort-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .sort-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--hub-text-dim);
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    transition: 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .sort-btn:hover { color: var(--hub-text); }
+  .sort-btn.active {
+    color: var(--hub-accent);
+    text-decoration-color: var(--hub-accent);
+  }
+  .sort-btn .arrow { font-size: 0.7em; opacity: 0; transition: opacity 0.15s; }
+  .sort-btn.active .arrow { opacity: 1; }
+
+  .right-controls { display: flex; align-items: center; gap: 8px; position: relative; }
+
+
+  .dropdown-wrap { position: relative; }
+  .dropdown-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 210px;
+    max-width: min(280px, calc(100vw - 24px));
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--hub-surface);
+    border: 1px solid var(--hub-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    padding: 10px;
+    z-index: 1100;
+    font-size: 0.8rem;
+  }
+  .dropdown-panel.open { display: block; }
+  .dropdown-panel h4 {
+    margin: 0 0 8px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--hub-text-dim);
+  }
+  .dropdown-divider {
+    border: none;
+    border-top: 1px solid var(--hub-border);
+    margin: 10px 0;
+  }
+  .hub-select {
+    width: 100%;
+    background: var(--hub-bg);
+    color: var(--hub-text);
+    border: 1px solid var(--hub-border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 0.78rem;
+  }
+  .manual-key-field { position: relative; margin-top: 8px; }
+  .manual-key-field input {
+    width: 100%;
+    background: var(--hub-bg);
+    color: var(--hub-text);
+    border: 1px solid var(--hub-border);
+    border-radius: 6px;
+    padding: 6px 30px 6px 8px;
+    font-family: inherit;
+    font-size: 0.78rem;
+  }
+  .manual-key-field input.key-invalid { border-color: #a33b46; }
+  .manual-key-field input.key-valid { border-color: #2f8f6f; }
+  .manual-key-field input.key-warning { border-color: #d4a72c; }
+  .manual-key-toggle {
+    position: absolute;
+    right: 6px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--hub-text-dim); padding: 2px; line-height: 0;
+  }
+  .manual-key-toggle:hover { color: var(--hub-text); }
+  .manual-key-msg { font-size: 0.68rem; margin-top: 4px; line-height: 1.4; display: none; }
+  .manual-key-msg.show-invalid { display: block; color: #a33b46; }
+  .manual-key-msg.show-valid { display: block; color: #2f8f6f; }
+  .manual-key-msg.show-warning { display: block; color: #d4a72c; }
+  .manual-hint { font-size: 0.68rem; color: var(--hub-text-dim); margin-top: 6px; line-height: 1.4; }
+  .manual-hint a { color: var(--hub-accent); text-decoration: none; font-weight: 600; }
+  .manual-hint a:hover { text-decoration: underline; }
+  .ai-sort-warning { color: #d4a72c; font-weight: 600; }
+  .manual-clear-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: none;
+    border: 1px solid #a33b46;
+    color: #a33b46;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .manual-clear-btn:hover { background: rgba(163, 59, 70, 0.1); }
+  .vault-status-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px;
+    color: var(--hub-text-dim);
+  }
+  .vault-status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #999; flex: none;
+  }
+  .vault-status-dot.locked { background: #d4a72c; }
+  .vault-status-dot.unavailable { background: #a33b46; }
+  .vault-status-dot.ready { background: #2f8f6f; }
+  .provider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 4px;
+    color: var(--hub-text);
+  }
+  .provider-row .badge {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--hub-bg);
+    color: var(--hub-text-dim);
+    border: 1px solid var(--hub-border);
+  }
+
+  /* ---------- Shelf viewport ---------- */
+  #shelf-frame-wrap { flex: 1; display: flex; }
+  #shelf-frame { flex: 1; width: 100%; border: 0; display: block; background: #fff; }
+</style>
+</head>
+<body>
+
+<div id="header-container" class="collapsed">
+  <header id="headerBar" title="Click to show/hide tabs, sort and AI-Sorting/API-Keys controls">
+    <div class="title-group">
+      <h2 class="app-title-main">MEIN BIBLIOTHEK <span class="header-toggle-hint" id="headerToggleHint" aria-hidden="true">▼</span></h2>
+      <h3 class="app-title-sub">By Osiris Inc.</h3>
+    </div>
+    <div class="toolbar">
+      <span class="conn-dot" id="connDot" title="?" aria-hidden="false"></span>
+      <button class="hub-btn" id="fontBtn" onclick="randomFont()" title="Changer la police (aléatoire)">
+        🎨 <span id="fontBtnLabel">Aa</span>
+      </button>
+      <button class="hub-btn" id="langBtn" onclick="toggleLang()" title="Changer de langue">
+        🌐 <span id="langBtnLabel">FR</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="subbar" id="shelfTabs" aria-label="Choisir une vitrine">
+    <div class="subbar-tab" data-shelf-key="classique" onclick="switchShelf('classique')">Classic</div>
+    <div class="subbar-tab" data-shelf-key="litcircle" onclick="switchShelf('litcircle')">The Lit Circle</div>
+    <div class="subbar-tab" data-shelf-key="darkshelf" onclick="switchShelf('darkshelf')">The Dark Shelf</div>
+    <div class="subbar-tab" data-shelf-key="codex" onclick="switchShelf('codex')">The Codex Collection</div>
+  </nav>
+
+  <div class="controls-row">
+    <div class="sort-row" id="sortRow">
+      <button class="sort-btn" data-sort-key="name"><span id="sortLabelName">Name</span> <span class="arrow">▾</span></button>
+      <button class="sort-btn" data-sort-key="date"><span id="sortLabelDate">Date</span> <span class="arrow">▾</span></button>
+      <button class="sort-btn" data-sort-key="size"><span id="sortLabelSize">Size</span> <span class="arrow">▾</span></button>
+      <button class="sort-btn" data-sort-key="opens"><span id="sortLabelOpens">Opening frequency</span> <span class="arrow">▾</span></button>
+      <button class="sort-btn" data-sort-key="category"><span id="sortLabelCategory">Category</span> <span class="arrow">▾</span></button>
+      <button class="sort-btn" data-sort-key="theme" id="sortBtnTheme" title="Populated by AI Sorting ? untagged books group together until it runs"><span id="sortLabelTheme">Theme</span> <span class="arrow">▾</span></button>
+      <button class="sort-btn" data-sort-key="cecr" id="sortBtnCecr" title="Populated by AI Sorting ? untagged books group together until it runs"><span id="sortLabelCecr">Level (CECR)</span> <span class="arrow">▾</span></button>
+    </div>
+
+    <div class="right-controls">
+      <label class="hub-checkbox" id="openModeToggle" title="Choisissez comment un livre s'ouvre : lecteur intégré, une seule fenêtre réutilisée, ou un nouvel onglet à chaque fois.">
+        <span id="openModeLabel">Ouverture des livres</span>
+        <select id="openModeSelect" onchange="onOpenModeChange()">
+          <option value="reader" id="openModeOptReader">Lecteur intégré</option>
+          <option value="popup" id="openModeOptPopup">Fenêtre unique</option>
+          <option value="newtab" id="openModeOptNewtab">Nouvel onglet</option>
+        </select>
+      </label>
+      <div class="dropdown-wrap">
+        <button class="hub-btn" id="aiSortBtn">🤖 <span id="aiSortBtnLabel">AI Sorting</span> ▾</button>
+        <div class="dropdown-panel" id="aiSortPanel">
+          <h4 id="aiSortPanelTitle">AI Sorting</h4>
+          <div class="manual-hint" id="aiSortHint">Tags each book with a theme and a CECR language level (A1?C2) using your configured API key. Runs only against books that don't have tags yet.</div>
+          <div class="manual-hint ai-sort-warning" id="aiSortDataWarning">⚠ AI Sorting requires text chunks to be sent for Theme and CECR level categorizing.</div>
+          <div class="manual-hint" id="aiSortStatusText"></div>
+          <button type="button" class="manual-clear-btn" id="aiSortRunBtn" style="background:var(--hub-accent);color:#fff;border-color:var(--hub-accent);">Run AI Sorting</button>
+        </div>
+      </div>
+      <div class="dropdown-wrap">
+        <button class="hub-btn" id="apiKeysBtn">🔑 <span id="apiKeysBtnLabel">API-Keys</span> ▾</button>
+        <div class="dropdown-panel" id="apiKeysPanel">
+          <h4 id="vaultPanelTitle">Vault</h4>
+          <div class="vault-status-line" id="vaultStatusLine">
+            <span class="vault-status-dot" id="vaultStatusDot"></span>
+            <span id="vaultStatusText">Checking…</span>
+          </div>
+          <div id="providerList"></div>
+
+          <hr class="dropdown-divider">
+          <h4 id="manualEntryTitle">Manual entry</h4>
+          <select class="hub-select" id="manualProviderSel"></select>
+          <div class="manual-key-field">
+            <input type="password" id="manualApiKeyInp" placeholder="API key" autocomplete="off">
+            <button type="button" class="manual-key-toggle" id="manualKeyToggle" title="Show/hide key">👁️</button>
+          </div>
+          <div class="manual-key-msg" id="manualApiKeyMsg"></div>
+          <select class="hub-select" id="manualModelSel" style="margin-top:6px;"></select>
+          <div class="manual-hint" id="manualKeyLink"></div>
+          <div class="manual-hint" id="manualEncryptionHint">Keys are encrypted in this browser (AES-GCM, non-extractable key) and never leave this device ? separate from the Portfolio vault above.</div>
+          <button type="button" class="manual-clear-btn" id="manualClearBtn">Clear all manual keys</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="shelf-frame-wrap">
+  <iframe id="shelf-frame" title="Vitrine active" src="../shelves/classique.html"></iframe>
+</div>
+
+<script src="/js/core/osiris-core.js"></script>
+<script>
+  var SHELVES = {
+    classique: { file: '../shelves/classique.html', label: 'Classic' },
+    litcircle: { file: '../shelves/the_lit_circle.html', label: 'The Lit Circle' },
+    darkshelf: { file: '../shelves/the_dark_shelf.html', label: 'The Dark Shelf' },
+    codex:     { file: '../shelves/the_codex_collection.html', label: 'The Codex Collection' }
+  };
+
+
+  var READER_FILE = '../shelves/OSIRIS_PDF_READER.html';
+
+
+  var SHELF_READER_THEME = { classique: 'light', codex: 'osiris', darkshelf: 'dark', litcircle: 'snow' };
+
+  var preReaderShelf = null;    // which shelf to restore when the reader closes
+  var readerActive = false;
+  var pendingReaderPayload = null; // { buffer, title, author } waiting for osirisReaderReady
+
+  /* "Mein Bibliothek" stays as-is regardless of language or shelf ? only the
+     shelf name appended after it changes, so the tab title tracks what's loaded. */
+  function updateDocTitle() {
+    document.title = 'Mein Bibliothek — ' + SHELVES[appState.shelf].label;
+  }
+
+  var FONT_POOL = [
+    "'Brush Script MT', cursive",
+    "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    "Georgia, 'Times New Roman', serif",
+    "'Courier New', Courier, monospace",
+    "'Trebuchet MS', Verdana, sans-serif",
+    "'Arial Narrow', Arial, sans-serif",
+    "'Palatino Linotype', 'Book Antiqua', Palatino, serif"
+  ];
+
+  var I18N = {
+    FR: {
+      fontTitle: 'Changer la police (aléatoire)',
+      shelfNavLabel: 'Choisir une vitrine',
+      headerToggleTitle: 'Cliquer pour afficher/masquer les onglets, le tri et les contrôles Tri IA/Clés API',
+      langBtnTitle: 'Changer de langue',
+      shelfFrameTitle: 'Vitrine active',
+      connOnline: 'En ligne',
+      connOffline: "Hors ligne \u2014 les polices et l'extraction de couverture en ligne sont indisponibles",
+
+      sortName: 'Nom',
+      sortDate: 'Date',
+      sortSize: 'Taille',
+      sortOpens: 'Fréquence d\'ouverture',
+      sortCategory: 'Catégorie',
+      sortTheme: 'Thème',
+      sortThemeTooltip: 'Rempli par le Tri IA — les livres non étiquetés restent groupés tant qu\'il n\'a pas été exécuté',
+      sortCecr: 'Niveau (CECR)',
+      sortCecrTooltip: 'Rempli par le Tri IA — les livres non étiquetés restent groupés tant qu\'il n\'a pas été exécuté',
+
+      aiSortBtnLabel: 'Tri IA',
+      openModeLabel: 'Ouverture des livres',
+      openModeTitle: "Choisissez comment un livre s'ouvre : lecteur intégré, une seule fenêtre réutilisée, ou un nouvel onglet à chaque fois.",
+      openModeOptReader: 'Lecteur intégré',
+      openModeOptPopup: 'Fenêtre unique',
+      openModeOptNewtab: 'Nouvel onglet',
+      aiSortPanelTitle: 'Tri IA',
+      aiSortHint: 'Étiquette chaque livre avec un thème et un niveau de langue CECR (A1-C2) à l\'aide de votre clé API configurée. Ne s\'exécute que sur les livres qui n\'ont pas encore d\'étiquettes.',
+      aiSortDataWarning: "\u26A0 Le Tri IA n\u00e9cessite l'envoi de fragments de texte pour la cat\u00e9gorisation du th\u00e8me et du niveau CECR.",
+      aiSortRunBtn: 'Lancer le Tri IA',
+      aiSortReviewTitle: function (n) { return n + ' livre(s) vont être traité(s) :'; },
+      aiSortReviewExcerpt: 'texte réel envoyé',
+      aiSortReviewMetaOnly: 'métadonnées seulement',
+      aiSortReviewMore: function (n) { return '? et ' + n + ' de plus'; },
+      aiSortReviewFooter: 'Le Tri IA est indicatif et approximatif — vérifiez par vous-même ou en ligne pour un résultat plus fiable. Vérifiez aussi qu\'aucun document personnel ne figure dans cette liste.\n\nContinuer ?',
+      aiSortRecheckPrompt: function (n) { return n + ' livre(s) ont déjà une étiquette.\n\nSouhaitez-vous les revérifier aussi (nouvel appel IA, nouveaux jetons consommés) ?\n\nNon = seuls les livres non étiquetés seront traités.'; },
+      aiSortOffline: 'Vérifiez votre connexion internet.',
+      aiSortNoKey: 'Assurez-vous d\'avoir saisi vos clés — vérifiez les paramètres ou utilisez le coffre-fort.',
+      aiSortTagging: function (n) { return 'Étiquetage de ' + n + ' livre(s)…'; },
+      aiSortNothingToDo: 'Tous les livres ont déjà une étiquette — rien à faire.',
+      aiSortDone: function (n) { return n + ' livre(s) étiqueté(s).'; },
+      aiSortFailed: 'Échec du Tri IA — vérifiez votre/vos clé(s) et réessayez.',
+
+      apiKeysBtnLabel: 'Clés API',
+      vaultPanelTitle: 'Coffre-fort',
+      vaultWaiting: "En attente des cl\u00e9s du coffre-fort Portfolio (cliquez sur \u00ab\u00a0Appliquer les cl\u00e9s\u00a0\u00bb l\u00e0-bas)",
+      vaultNoMatch: 'Le Portfolio a envoyé des clés, mais aucune ne correspond à un fournisseur connu.',
+      vaultApplied: function (n) { return n + ' clé' + (n === 1 ? '' : 's') + ' appliquée' + (n === 1 ? '' : 's') + ' depuis le coffre-fort Portfolio'; },
+      providerReadyBadge: 'prête',
+
+      manualEntryTitle: 'Saisie manuelle',
+      manualKeyPlaceholderDefault: 'Clé API',
+      manualKeyPlaceholderCloudflare: 'ID de compte:Jeton API',
+      manualKeyToggleGeneric: 'Afficher/masquer la clé',
+      manualKeyToggleShow: 'Afficher la clé',
+      manualKeyToggleHide: 'Masquer la clé',
+      manualGetFreeKey: function (provider) { return 'Obtenir une clé ' + provider + ' gratuite ?'; },
+      manualEncryptionHint: 'Les clés sont chiffrées dans ce navigateur (AES-GCM, clé non extractible) et ne quittent jamais cet appareil — indépendant du coffre-fort Portfolio ci-dessus.',
+      manualClearBtn: 'Effacer toutes les clés manuelles',
+      manualClearConfirm: 'Effacer la clé saisie manuellement pour tous les fournisseurs ? Cette action est irréversible.'
+    },
+    DE: {
+      fontTitle: 'Schriftart wechseln (zufällig)',
+      shelfNavLabel: 'Regal auswählen',
+      headerToggleTitle: 'Klicken, um Tabs, Sortierung und KI-Sortierung/API-Schlüssel ein-/auszublenden',
+      langBtnTitle: 'Sprache wechseln',
+      shelfFrameTitle: 'Aktives Regal',
+      connOnline: 'Online',
+      connOffline: 'Offline — Online-Schriftarten und Cover-Extraktion sind nicht verfügbar',
+
+      sortName: 'Name',
+      sortDate: 'Datum',
+      sortSize: 'Größe',
+      sortOpens: 'Öffnungshäufigkeit',
+      sortCategory: 'Kategorie',
+      sortTheme: 'Thema',
+      sortThemeTooltip: 'Wird durch die KI-Sortierung befüllt — unmarkierte Bücher bleiben gruppiert, bis sie ausgeführt wurde',
+      sortCecr: 'Niveau (GER)',
+      sortCecrTooltip: 'Wird durch die KI-Sortierung befüllt — unmarkierte Bücher bleiben gruppiert, bis sie ausgeführt wurde',
+
+      aiSortBtnLabel: 'KI-Sortierung',
+      openModeLabel: 'Bücher öffnen',
+      openModeTitle: 'Wählen Sie, wie ein Buch geöffnet wird: integrierter Reader, ein wiederverwendetes Fenster, oder jedes Mal ein neuer Tab.',
+      openModeOptReader: 'Integrierter Reader',
+      openModeOptPopup: 'Ein Fenster',
+      openModeOptNewtab: 'Neuer Tab',
+      aiSortPanelTitle: 'KI-Sortierung',
+      aiSortHint: 'Versieht jedes Buch mit einem Thema und einem GER-Sprachniveau (A1?C2) über Ihren konfigurierten API-Schlüssel. Läuft nur für Bücher, die noch keine Tags haben.',
+      aiSortDataWarning: '? Die KI-Sortierung erfordert das Senden von Textausschnitten zur Einstufung von Thema und GER-Niveau.',
+      aiSortRunBtn: 'KI-Sortierung starten',
+      aiSortReviewTitle: function (n) { return n + ' Buch/Bücher werden verarbeitet:'; },
+      aiSortReviewExcerpt: 'echter Text wird gesendet',
+      aiSortReviewMetaOnly: 'nur Metadaten',
+      aiSortReviewMore: function (n) { return '? und ' + n + ' weitere'; },
+      aiSortReviewFooter: 'Die KI-Sortierung ist richtungsweisend und ungefähr — prüfen Sie selbst oder online für ein zuverlässigeres Ergebnis. Stellen Sie außerdem sicher, dass keine persönlichen Dokumente in dieser Liste stehen.\n\nFortfahren?',
+      aiSortRecheckPrompt: function (n) { return n + ' Buch/Bücher haben bereits ein Tag.\n\nMöchten Sie diese ebenfalls erneut prüfen (neuer KI-Aufruf, zusätzlicher Token-Verbrauch)?\n\nNein = nur ungetaggte Bücher werden verarbeitet.'; },
+      aiSortOffline: 'Bitte Internetverbindung prüfen.',
+      aiSortNoKey: 'Stellen Sie sicher, dass Sie Ihre Schlüssel eingegeben haben — prüfen Sie die Einstellungen oder verwenden Sie den Tresor.',
+      aiSortTagging: function (n) { return n + ' Buch/Bücher werden getaggt?'; },
+      aiSortNothingToDo: 'Alle Bücher sind bereits getaggt — nichts zu tun.',
+      aiSortDone: function (n) { return n + ' Buch/Bücher getaggt.'; },
+      aiSortFailed: 'KI-Sortierung fehlgeschlagen — Schlüssel prüfen und erneut versuchen.',
+
+      apiKeysBtnLabel: 'API-Schlüssel',
+      vaultPanelTitle: 'Tresor',
+      vaultWaiting: 'Warte auf Schlüssel aus dem Portfolio-Tresor (dort auf „Schlüssel anwenden“ klicken)',
+      vaultNoMatch: 'Portfolio hat Schlüssel gesendet, aber keiner passt zu einem bekannten Anbieter.',
+      vaultApplied: function (n) { return n + ' Schlüssel aus dem Portfolio-Tresor übernommen'; },
+      providerReadyBadge: 'bereit',
+
+      manualEntryTitle: 'Manuelle Eingabe',
+      manualKeyPlaceholderDefault: 'API-Schlüssel',
+      manualKeyPlaceholderCloudflare: 'Konto-ID:API-Token',
+      manualKeyToggleGeneric: 'Schlüssel anzeigen/verbergen',
+      manualKeyToggleShow: 'Schlüssel anzeigen',
+      manualKeyToggleHide: 'Schlüssel verbergen',
+      manualGetFreeKey: function (provider) { return 'Kostenlosen ' + provider + '-Schlüssel holen ?'; },
+      manualEncryptionHint: 'Schlüssel werden in diesem Browser verschlüsselt (AES-GCM, nicht extrahierbarer Schlüssel) und verlassen dieses Gerät nie — unabhängig vom Portfolio-Tresor oben.',
+      manualClearBtn: 'Alle manuellen Schlüssel löschen',
+      manualClearConfirm: 'Den manuell eingegebenen Schlüssel für alle Anbieter löschen? Dies kann nicht rückgängig gemacht werden.'
+    }
+  };
+
+  var appState = loadPrefs();
+
+  function loadPrefs() {
+    var defaults = {
+      shelf: 'classique',
+      font: FONT_POOL[0],
+      lang: 'FR',
+      openMode: 'popup', // 'reader' (native in-app PDF reader) | 'popup' (reused window) | 'newtab' (fresh tab per click) ? default stays 'popup', 'reader' is opt-in
+      sort: { key: 'name', dir: 'asc' } // Hub-scoped, carries across shelf switches
+    };
+    try {
+      var saved = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+      return Object.assign(defaults, saved);
+    } catch (e) {
+      return defaults;
+    }
+  }
+
+  function savePrefs() {
+    localStorage.setItem('osiris_hub_prefs', JSON.stringify(appState));
+  }
+
+  function switchShelf(key) {
+    if (!SHELVES[key]) return;
+
+
+    readerActive = false;
+    preReaderShelf = null;
+    pendingReaderPayload = null;
+    appState.shelf = key;
+    document.documentElement.setAttribute('data-shelf', key);
+    document.querySelectorAll('.subbar-tab').forEach(function (tab) {
+      tab.classList.toggle('active', tab.dataset.shelfKey === key);
+    });
+    document.getElementById('shelf-frame').src = SHELVES[key].file;
+    attachShelfListener(); // new contentWindow after src change ? re-register
+    updateDocTitle();
+    savePrefs();
+  }
+
+  /* ---------- Sort row ? active shelf (core.MSG.SET_SORT) ---------- */
+
+  var core = window.OsirisCore;
+
+  function pushSort() {
+    var library = core.loadLibrary();
+    var orderedIds = core.sortBooks(library, appState.sort.key, appState.sort.dir);
+    var frame = document.getElementById('shelf-frame');
+    core.send(frame.contentWindow, core.MSG.SET_SORT, { orderedIds: orderedIds });
+  }
+
+
+  function pushLang() {
+    var frame = document.getElementById('shelf-frame');
+    core.send(frame.contentWindow, core.MSG.SET_LANG, { lang: appState.lang });
+  }
+
+
+  function pushOpenMode() {
+    var frame = document.getElementById('shelf-frame');
+    core.send(frame.contentWindow, core.MSG.SET_OPEN_MODE, { mode: appState.openMode });
+  }
+
+  function onOpenModeChange() {
+    appState.openMode = document.getElementById('openModeSelect').value;
+    savePrefs();
+    pushOpenMode();
+  }
+
+  function renderSortRow() {
+    document.querySelectorAll('.sort-btn').forEach(function (btn) {
+      var isActive = btn.dataset.sortKey === appState.sort.key;
+      btn.classList.toggle('active', isActive);
+      btn.querySelector('.arrow').textContent = appState.sort.dir === 'asc' ? '▾' : '▴';
+    });
+  }
+
+  function onSortClick(key) {
+    if (appState.sort.key === key) {
+      appState.sort.dir = appState.sort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      appState.sort.key = key;
+      appState.sort.dir = 'asc';
+    }
+    renderSortRow();
+    savePrefs();
+    pushSort();
+  }
+
+  /* ---------- Shelf iframe: (re-)register listener every switch, since
+     changing .src replaces contentWindow with a new window object. On
+     SHELF_READY (shelf just mounted), resend current sort AND language so
+     switching themes never resets either ? shelves are skins only. ---------- */
+
+
+  var pendingOpenBookId = (function () {
+    var params = new URLSearchParams(location.search);
+    var id = params.get('book');
+    if (id) history.replaceState(null, '', location.pathname + location.hash);
+    return id;
+  })();
+
+
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.type !== 'osirisOpenBookInHub') return;
+    console.debug('[osiris-nav] Hub received osirisOpenBookInHub', e.data, 'sourceIsParent=', e.source === window.parent);
+    if (e.source !== window.parent) return;
+    if (e.data.id) pendingOpenBookId = e.data.id;
+  });
+
+  function attachShelfListener() {
+    var frame = document.getElementById('shelf-frame');
+    core.listen(frame.contentWindow, (function () {
+      var handlers = {};
+      handlers[core.MSG.SHELF_READY] = function () {
+        pushSort();
+        pushLang();
+        pushOpenMode();
+        if (pendingOpenBookId) {
+          core.send(frame.contentWindow, core.MSG.OPEN_BOOK, { id: pendingOpenBookId });
+          pendingOpenBookId = null;
+        }
+      };
+      handlers[core.MSG.REQUEST_READER_OPEN] = function (payload) {
+        if (payload && payload.id) openBookInReader(payload.id, payload.title, payload.author);
+      };
+      return handlers;
+    })());
+  }
+
+
+  function fallbackOpenUrl(url) {
+    if (appState.openMode === 'newtab') {
+      window.open(url, '_blank');
+    } else {
+      window.open(url, 'osirisReader', 'width=820,height=1040');
+    }
+  }
+
+
+  function openBookInReader(id, title, author) {
+    if (!core) return;
+    var lib = core.loadLibrary();
+    var book = lib.filter(function (b) { return b.id === id; })[0];
+
+    function resolveFile() {
+      if (!book) return Promise.resolve(null);
+      return core.getFileHandle(id).then(function (handle) {
+        if (!handle) return null;
+        return core.resolveFileHandle(handle);
+      }).then(function (file) {
+        if (file) return file;
+        return core.getFileBlob(id).then(function(blob) {
+            if (blob) return blob;
+            if (book && book.link && /\.pdf$/i.test(book.link)) {
+                return fetch(book.link).then(function(res) {
+                    if (res.ok) {
+                        return res.blob().then(function(b) {
+                            b.name = "document.pdf";
+                            return b;
+                        });
+                    }
+                    return null;
+                }).catch(function() { return null; });
+            }
+            return null;
+        });
+      });
+    }
+
+    resolveFile().then(function (file) {
+      var isPdf = !!file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || ''));
+      if (!file || !isPdf) {
+        if (file) {
+          var blobUrl = URL.createObjectURL(file);
+          fallbackOpenUrl(blobUrl);
+          setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 60000);
+        } else if (book && book.link) {
+          window.open(book.link, '_blank', 'noopener,noreferrer');
+        }
+        return;
+      }
+      file.arrayBuffer().then(function (buffer) {
+        launchReader(buffer, title || (book && book.title) || '', author || (book && book.author) || '');
+      });
+    });
+  }
+
+  function launchReader(buffer, title, author) {
+    preReaderShelf = appState.shelf;
+    readerActive = true;
+    pendingReaderPayload = { buffer: buffer, title: title, author: author, theme: SHELF_READER_THEME[appState.shelf] || 'dark' };
+    document.getElementById('shelf-frame').src = READER_FILE;
+  }
+
+
+  window.addEventListener('message', function (e) {
+    if (!e.data) return;
+    var frame = document.getElementById('shelf-frame');
+    if (!frame || e.source !== frame.contentWindow) return;
+
+    if (e.data.type === 'osirisReaderReady' && pendingReaderPayload) {
+      var payload = pendingReaderPayload;
+      pendingReaderPayload = null;
+      frame.contentWindow.postMessage({ type: 'OPEN_PDF', payload: { buffer: payload.buffer, title: payload.title, author: payload.author } }, '*');
+      frame.contentWindow.postMessage({ type: 'SET_LANG', payload: { lang: appState.lang } }, '*');
+      frame.contentWindow.postMessage({ type: 'SET_THEME', payload: { theme: payload.theme } }, '*');
+    }
+
+    if (e.data.type === 'osirisReaderClose') {
+      switchShelf(preReaderShelf || appState.shelf);
+    }
+  });
+
+  /* ---------- API-Keys dropdown + Vault bridge ---------- */
+
+  var vaultState = { count: null, ids: [] }; // remembered so a language toggle can re-render this without a new event
+
+  function renderVaultStatus(count, appliedIds) {
+    vaultState.count = count;
+    vaultState.ids = appliedIds || [];
+
+    var t = I18N[appState.lang];
+    var dot = document.getElementById('vaultStatusDot');
+    var text = document.getElementById('vaultStatusText');
+    var list = document.getElementById('providerList');
+    list.innerHTML = '';
+
+    if (count === null) {
+
+
+      dot.className = 'vault-status-dot locked';
+      text.textContent = t.vaultWaiting;
+      return;
+    }
+
+    if (count === 0) {
+      dot.className = 'vault-status-dot locked';
+      text.textContent = t.vaultNoMatch;
+      return;
+    }
+
+    dot.className = 'vault-status-dot ready';
+    text.textContent = t.vaultApplied(count);
+
+    appliedIds.forEach(function (id) {
+      var label = (core.PROVIDERS.filter(function (p) { return p.id === id; })[0] || {}).label || id;
+      var row = document.createElement('div');
+      row.className = 'provider-row';
+      row.innerHTML = '<span>' + core.escapeHtml(label) + '</span><span class="badge">' + core.escapeHtml(t.providerReadyBadge) + '</span>';
+      list.appendChild(row);
+    });
+  }
+
+  function initVaultBridge() {
+    renderVaultStatus(null); // initial "waiting" state
+    core.onVaultKeysReceived(function (appliedById, count) {
+      var ids = Object.keys(appliedById);
+
+
+      ids.forEach(function (id) {
+        manualState.keys[id] = appliedById[id];
+      });
+      if (ids.length) {
+        core.saveManualKeys(manualState.keys);
+        if (manualState.provider && ids.indexOf(manualState.provider) !== -1) {
+          refreshManualProviderUI();
+        }
+      }
+      renderVaultStatus(count, ids);
+    });
+  }
+
+  function initApiKeysDropdown() {
+    var btn = document.getElementById('apiKeysBtn');
+    var panel = document.getElementById('apiKeysPanel');
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) positionDropdown(panel);
+    });
+    document.addEventListener('click', function (e) {
+      if (!panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
+    });
+  }
+
+  /* ---------- Dropdown positioning (fix: narrow-screen clipping) ----------
+     .dropdown-panel is center-anchored on its button by default (CSS:
+     left:50%/translateX(-50%)). That alone isn't enough when the button
+     itself sits close to a screen edge ? centering ON the button can still
+     push the panel off-screen. After opening, measure the actual rendered
+     rect and nudge the transform just enough to keep both edges within a
+     12px margin of the viewport, without disturbing the center-anchor
+     behavior on wider screens where nothing needs nudging. Re-applied on
+     resize for any panel currently open. */
+  function positionDropdown(panel) {
+    panel.style.transform = 'translateX(-50%)';
+    var margin = 12;
+    var rect = panel.getBoundingClientRect();
+    if (rect.left < margin) {
+      panel.style.transform = 'translateX(calc(-50% + ' + (margin - rect.left) + 'px))';
+    } else if (rect.right > window.innerWidth - margin) {
+      panel.style.transform = 'translateX(calc(-50% - ' + (rect.right - (window.innerWidth - margin)) + 'px))';
+    }
+  }
+
+  window.addEventListener('resize', function () {
+    document.querySelectorAll('.dropdown-panel.open').forEach(positionDropdown);
+  });
+
+  /* ---------- AI Sorting (?7) ----------
+     Runs against the whole shared library (one storage key, all shelves),
+     so this lives at the Hub level rather than duplicated per-shelf ?
+     same reasoning as the Sort control above. Gating matrix per
+     the workplan: offline / no key / has key, each with its own message;
+     a manual run always shows the "indicative and approximate" disclaimer
+     since that's the one moment the user is actively asking. Only books
+     without aiTags yet are sent (cache-first, see workplan cost-control
+     note) ? "Re-tag" for already-tagged books isn't built yet, out of
+     scope for this pass. */
+
+  function initAiSorting() {
+    var btn = document.getElementById('aiSortBtn');
+    var panel = document.getElementById('aiSortPanel');
+    var runBtn = document.getElementById('aiSortRunBtn');
+    var statusText = document.getElementById('aiSortStatusText');
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) positionDropdown(panel);
+    });
+    document.addEventListener('click', function (e) {
+      if (!panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
+    });
+
+    runBtn.addEventListener('click', function () {
+      var t = I18N[appState.lang];
+      if (!navigator.onLine) {
+        statusText.textContent = t.aiSortOffline;
+        return;
+      }
+      core.loadManualKeys().then(function (keys) {
+        var t = I18N[appState.lang];
+        var hasKey = Object.keys(keys || {}).length > 0;
+        if (!hasKey) {
+          statusText.textContent = t.aiSortNoKey;
+          return;
+        }
+
+
+        var library = core.loadLibrary();
+        var eligible = library.filter(function (b) { return !b.aiExcluded; });
+        var untagged = eligible.filter(function (b) { return !b.aiTags; });
+        var tagged = eligible.filter(function (b) { return !!b.aiTags; });
+
+        if (!untagged.length && !tagged.length) {
+          statusText.textContent = t.aiSortNothingToDo;
+          return;
+        }
+
+        var toProcess = untagged;
+
+
+        if (tagged.length) {
+          var recheck = confirm(t.aiSortRecheckPrompt(tagged.length));
+          if (recheck) toProcess = untagged.concat(tagged);
+        }
+
+        if (!toProcess.length) {
+          statusText.textContent = t.aiSortNothingToDo;
+          return;
+        }
+
+
+        var REVIEW_LIST_CAP = 20;
+        var lines = toProcess.slice(0, REVIEW_LIST_CAP).map(function (b) {
+          var hasExcerpt = !!(b.excerpt && String(b.excerpt).trim());
+          var tag = hasExcerpt ? t.aiSortReviewExcerpt : t.aiSortReviewMetaOnly;
+          return '? ' + (b.title || '?') + ' ? ' + tag;
+        });
+        if (toProcess.length > REVIEW_LIST_CAP) {
+          lines.push(t.aiSortReviewMore(toProcess.length - REVIEW_LIST_CAP));
+        }
+        var reviewMsg = t.aiSortReviewTitle(toProcess.length) + '\n\n' + lines.join('\n') + '\n\n' + t.aiSortReviewFooter;
+
+        var proceed = confirm(reviewMsg);
+        if (!proceed) return;
+
+        runBtn.disabled = true;
+        statusText.textContent = t.aiSortTagging(toProcess.length);
+
+        core.aiClassifyBatch(toProcess).then(function (tags) {
+          toProcess.forEach(function (book, i) { book.aiTags = tags[i]; });
+          core.saveLibrary(library);
+          statusText.textContent = t.aiSortDone(toProcess.length);
+          var frame = document.getElementById('shelf-frame');
+          core.send(frame.contentWindow, core.MSG.LIBRARY_UPDATED, {});
+        }).catch(function () {
+          statusText.textContent = t.aiSortFailed;
+        }).then(function () {
+          runBtn.disabled = false;
+        });
+      });
+    });
+  }
+
+  /* ---------- Manual API-key entry (9 providers, Hub-local vault) ----------
+     Independent of the Portfolio vault bridge above: this is what a user
+     fills in directly when Portfolio's vault is locked, or when testing
+     the Hub standalone. Keys live encrypted in osiris-core.js's manual
+     vault (AES-GCM, non-extractable key in IndexedDB); selected models
+     are plain (not sensitive). ---------- */
+
+  var manualState = { provider: (core.PROVIDERS[0] && core.PROVIDERS[0].id) || 'pollinations', keys: {}, models: {} };
+
+  function manualEls() {
+    return {
+      providerSel: document.getElementById('manualProviderSel'),
+      keyInp: document.getElementById('manualApiKeyInp'),
+      keyMsg: document.getElementById('manualApiKeyMsg'),
+      modelSel: document.getElementById('manualModelSel'),
+      link: document.getElementById('manualKeyLink'),
+      toggleBtn: document.getElementById('manualKeyToggle'),
+      clearBtn: document.getElementById('manualClearBtn')
+    };
+  }
+
+  function refreshManualKeyValidation() {
+    var els = manualEls();
+    var result = core.validateApiKey(manualState.provider, manualState.keys[manualState.provider] || '');
+    els.keyInp.classList.remove('key-invalid', 'key-valid', 'key-warning');
+    els.keyMsg.classList.remove('show-invalid', 'show-valid', 'show-warning');
+    if (result.status === 'invalid') {
+      els.keyInp.classList.add('key-invalid');
+      els.keyMsg.classList.add('show-invalid');
+    } else if (result.status === 'valid') {
+      els.keyInp.classList.add('key-valid');
+      els.keyMsg.classList.add('show-valid');
+    } else if (result.status === 'warning') {
+      els.keyInp.classList.add('key-warning');
+      els.keyMsg.classList.add('show-warning');
+    }
+    els.keyMsg.textContent = result.message;
+  }
+
+  function refreshManualProviderUI() {
+    var els = manualEls();
+    var provider = manualState.provider;
+    var t = I18N[appState.lang];
+
+    els.keyInp.value = manualState.keys[provider] || '';
+    els.keyInp.placeholder = provider === 'cloudflare' ? t.manualKeyPlaceholderCloudflare : t.manualKeyPlaceholderDefault;
+
+    els.modelSel.innerHTML = '';
+    (core.FREE_MODELS[provider] || []).forEach(function (m) {
+      var opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.label;
+      els.modelSel.appendChild(opt);
+    });
+    els.modelSel.value = manualState.models[provider] || (core.FREE_MODELS[provider] && core.FREE_MODELS[provider][0] && core.FREE_MODELS[provider][0].id) || '';
+
+    els.link.innerHTML = core.FREE_KEY_LINKS[provider]
+      ? '<a href="' + core.FREE_KEY_LINKS[provider] + '" target="_blank" rel="noopener">' + t.manualGetFreeKey(core.escapeHtml(provider)) + '</a>'
+      : '';
+
+    refreshManualKeyValidation();
+  }
+
+  function initManualApiKeys() {
+    var els = manualEls();
+
+    els.providerSel.innerHTML = '';
+    core.PROVIDERS.forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.label;
+      els.providerSel.appendChild(opt);
+    });
+    els.providerSel.value = manualState.provider;
+
+    manualState.models = core.loadManualModels();
+    core.loadManualKeys().then(function (keys) {
+      manualState.keys = keys || {};
+      refreshManualProviderUI();
+    });
+
+    els.providerSel.addEventListener('change', function () {
+      manualState.provider = els.providerSel.value;
+      refreshManualProviderUI();
+    });
+
+    els.modelSel.addEventListener('change', function () {
+      manualState.models[manualState.provider] = els.modelSel.value;
+      core.saveManualModels(manualState.models);
+    });
+
+    els.keyInp.addEventListener('input', function () {
+      manualState.keys[manualState.provider] = els.keyInp.value;
+      refreshManualKeyValidation();
+      core.saveManualKeys(manualState.keys);
+    });
+    els.keyInp.addEventListener('blur', function () {
+      var trimmed = els.keyInp.value.trim();
+      if (trimmed !== els.keyInp.value) {
+        els.keyInp.value = trimmed;
+        manualState.keys[manualState.provider] = trimmed;
+        core.saveManualKeys(manualState.keys);
+      }
+      refreshManualKeyValidation();
+    });
+
+    els.toggleBtn.addEventListener('click', function () {
+      var t = I18N[appState.lang];
+      var isHidden = els.keyInp.type === 'password';
+      els.keyInp.type = isHidden ? 'text' : 'password';
+      els.toggleBtn.title = isHidden ? t.manualKeyToggleHide : t.manualKeyToggleShow;
+    });
+
+    els.clearBtn.addEventListener('click', function () {
+      var t = I18N[appState.lang];
+      if (!confirm(t.manualClearConfirm)) return;
+      manualState.keys = {};
+      core.clearManualKeys();
+      refreshManualProviderUI();
+    });
+  }
+
+  function randomFont() {
+    var pool = FONT_POOL.filter(function (f) { return f !== appState.font; });
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    appState.font = pick;
+    document.documentElement.style.setProperty('--hub-font-family', pick);
+    savePrefs();
+  }
+
+  function toggleLang() {
+    appState.lang = appState.lang === 'FR' ? 'DE' : 'FR';
+    applyLang();
+    pushLang();
+    savePrefs();
+  }
+
+  function updateConnDot() {
+    var dot = document.getElementById('connDot');
+    if (!dot) return;
+    var t = I18N[appState.lang];
+    var online = navigator.onLine;
+    dot.classList.toggle('is-online', online);
+    dot.classList.toggle('is-offline', !online);
+    dot.title = online ? t.connOnline : t.connOffline;
+  }
+  window.addEventListener('online', updateConnDot);
+  window.addEventListener('offline', updateConnDot);
+
+  function applyLang() {
+    var t = I18N[appState.lang];
+    document.documentElement.lang = appState.lang.toLowerCase();
+
+
+    document.getElementById('langBtnLabel').textContent = appState.lang;
+    document.getElementById('langBtn').title = t.langBtnTitle;
+    document.getElementById('fontBtn').title = t.fontTitle;
+    document.getElementById('headerBar').title = t.headerToggleTitle;
+    document.getElementById('shelfTabs').setAttribute('aria-label', t.shelfNavLabel);
+    document.getElementById('shelf-frame').title = t.shelfFrameTitle;
+    updateConnDot();
+
+
+    document.getElementById('sortLabelName').textContent = t.sortName;
+    document.getElementById('sortLabelDate').textContent = t.sortDate;
+    document.getElementById('sortLabelSize').textContent = t.sortSize;
+    document.getElementById('sortLabelOpens').textContent = t.sortOpens;
+    document.getElementById('sortLabelCategory').textContent = t.sortCategory;
+    document.getElementById('sortLabelTheme').textContent = t.sortTheme;
+    document.getElementById('sortLabelCecr').textContent = t.sortCecr;
+    document.getElementById('sortBtnTheme').title = t.sortThemeTooltip;
+    document.getElementById('sortBtnCecr').title = t.sortCecrTooltip;
+
+    document.getElementById('aiSortBtnLabel').textContent = t.aiSortBtnLabel;
+    document.getElementById('openModeLabel').textContent = t.openModeLabel;
+    document.getElementById('openModeToggle').title = t.openModeTitle;
+    document.getElementById('openModeOptReader').textContent = t.openModeOptReader;
+    document.getElementById('openModeOptPopup').textContent = t.openModeOptPopup;
+    document.getElementById('openModeOptNewtab').textContent = t.openModeOptNewtab;
+    document.getElementById('aiSortPanelTitle').textContent = t.aiSortPanelTitle;
+    document.getElementById('aiSortHint').textContent = t.aiSortHint;
+    document.getElementById('aiSortDataWarning').textContent = t.aiSortDataWarning;
+    document.getElementById('aiSortRunBtn').textContent = t.aiSortRunBtn;
+
+
+    document.getElementById('apiKeysBtnLabel').textContent = t.apiKeysBtnLabel;
+    document.getElementById('vaultPanelTitle').textContent = t.vaultPanelTitle;
+    document.getElementById('manualEntryTitle').textContent = t.manualEntryTitle;
+    document.getElementById('manualEncryptionHint').textContent = t.manualEncryptionHint;
+    document.getElementById('manualClearBtn').textContent = t.manualClearBtn;
+    document.getElementById('manualKeyToggle').title = t.manualKeyToggleGeneric;
+
+    if (typeof renderVaultStatus === 'function') renderVaultStatus(vaultState.count, vaultState.ids);
+    if (typeof refreshManualProviderUI === 'function' && manualState.provider) refreshManualProviderUI();
+  }
+
+  function init() {
+    document.documentElement.setAttribute('data-shelf', appState.shelf);
+    document.documentElement.style.setProperty('--hub-font-family', appState.font);
+    document.getElementById('openModeSelect').value = appState.openMode;
+    document.querySelectorAll('.subbar-tab').forEach(function (tab) {
+      tab.classList.toggle('active', tab.dataset.shelfKey === appState.shelf);
+      tab.addEventListener('click', function () { switchShelf(tab.dataset.shelfKey); });
+    });
+    document.querySelectorAll('.sort-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { onSortClick(btn.dataset.sortKey); });
+    });
+    renderSortRow();
+    document.getElementById('shelf-frame').src = SHELVES[appState.shelf].file;
+    attachShelfListener();
+    initApiKeysDropdown();
+    initAiSorting();
+    initVaultBridge();
+    initManualApiKeys();
+    updateDocTitle();
+    applyLang();
+    initHeaderToggle();
+
+
+    if (window.parent !== window) {
+      console.debug('[osiris-nav] Hub announcing osirisHubReady');
+      window.parent.postMessage({ type: 'osirisHubReady' }, '*');
+    }
+  }
+
+  /* ---------- Auto-refresh the mounted shelf's library when this Hub
+     becomes visible again ----------
+     A shelf's own `books`/`library` array is only ever loaded once, at
+     that iframe's own boot ? it has no way to know the shared storage
+     changed underneath it (e.g. a book added via DASHBOARD.html in
+     another tab) unless something tells it to. Every shelf already
+     handles OsirisCore.MSG.LIBRARY_UPDATED correctly (built for the AI
+     Sorting flow: reload + re-render) ? this just triggers that same,
+     already-proven path on a second occasion: whenever the Hub's own tab
+     regains visibility/focus, not only after AI Sorting finishes.
+     Deliberately NOT on every focus/visibility blip in isolation ? both
+     listeners share one debounce so a rapid focus+visibilitychange pair
+     (common when alt-tabbing) only triggers one reload, not two. */
+  var refreshOnReturnTimer = null;
+  function refreshMountedShelfLibrary() {
+    clearTimeout(refreshOnReturnTimer);
+    refreshOnReturnTimer = setTimeout(function () {
+      var frame = document.getElementById('shelf-frame');
+      if (frame && frame.contentWindow) {
+        core.send(frame.contentWindow, core.MSG.LIBRARY_UPDATED, {});
+      }
+    }, 150);
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') refreshMountedShelfLibrary();
+  });
+  window.addEventListener('focus', refreshMountedShelfLibrary);
+
+  /* ---------- Collapsible header (default collapsed) ----------
+     Clicking the title row (header) shows/hides the tabs, sort, and
+     AI-Sorting/API-Keys rows below it ? starts collapsed so the shelf
+     iframe (and its add-book modal) has vertical room by default. Clicks
+     on the font/lang buttons must NOT toggle this ? a user reaching for
+     those isn't asking to expand/collapse anything, so any click that
+     lands inside .toolbar is ignored here and left to its own onclick. */
+  function initHeaderToggle() {
+    var headerBar = document.getElementById('headerBar');
+    var headerContainer = document.getElementById('header-container');
+    headerBar.addEventListener('click', function (e) {
+      if (e.target.closest('.toolbar')) return;
+      headerContainer.classList.toggle('collapsed');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

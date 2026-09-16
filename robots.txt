@@ -1,0 +1,6 @@
+# robots.txt — OSIRIS Lehrer-Portfolio
+# This is a local PWA, not intended for public web indexing.
+# Disallow all crawlers.
+
+User-agent: *
+Disallow: /

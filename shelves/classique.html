@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bibliothèque — Démo Osiris</title>
+<style>
+/* ======================================================================
+   OSIRIS LIBRARY — namespaced under .osiris-library so this block can sit
+   next to unrelated page CSS without collision. Three independent view
+   blocks (shelf / gallery / list) each carry their own class prefix too,
+   so they don't bleed into each other even though they share data.
+   ====================================================================== */
+
+.osiris-library {
+  --ol-ink: #1b1714;
+  --ol-parchment: #efe6cf;
+  --ol-parchment-dim: #d9cdac;
+  --ol-leather: #4a2f22;
+  --ol-leather-light: #6b4530;
+  --ol-brass: #c2a04e;
+  --ol-brass-dim: #8f7638;
+  --ol-moss: #33493c;
+  --ol-danger: #a1483a;
+  --ol-radius: 4px;
+  --ol-font-display: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --ol-font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color-scheme: dark;
+
+  all: initial;
+  display: block;
+  font-family: var(--ol-font-ui);
+  color: var(--ol-parchment);
+  background: var(--ol-ink);
+  padding: 28px 20px 60px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  position: relative;
+  /* Widened from 980px so Gallery's 8-across tier (see .ol-gal-grid) has
+     genuine room to fire with full-size 140px covers on a wide screen,
+     instead of being structurally capped at 5. Shelf and List views
+     share this same root, but neither has a fixed-width layout that
+     depends on staying narrow — Shelf's flex row and List's rows both
+     just get more breathing room. */
+  max-width: 1400px;
+  margin: 0 auto;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+/* ---------- Light theme override ----------
+   Swaps the same token set used everywhere else in this file, so the
+   whole component re-themes just by toggling data-theme — no per-rule
+   color edits needed elsewhere. */
+.osiris-library[data-theme="light"] {
+  --ol-ink: #f3ead2;
+  --ol-parchment: #2c2416;
+  --ol-parchment-dim: #6c6250;
+  --ol-leather: #e2d3ab;
+  --ol-leather-light: #d4c091;
+  --ol-brass: #8a6a24;
+  --ol-brass-dim: #b89a5c;
+  --ol-moss: #3d5a49;
+  --ol-danger: #a1483a;
+  color-scheme: light;
+}
+.osiris-library *,
+.osiris-library *::before,
+.osiris-library *::after {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.osiris-library button { cursor: pointer; }
+
+/* ---------- Header + brass nameplate ---------- */
+.ol-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--ol-brass-dim);
+  padding-bottom: 14px;
+}
+.ol-header h2 {
+  font-family: var(--ol-font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  color: var(--ol-brass);
+  margin: 0;
+  font-weight: 600;
+}
+.ol-header .ol-count {
+  font-size: 0.75rem;
+  color: var(--ol-parchment-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ol-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ol-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--ol-leather);
+  border: 1px solid var(--ol-brass-dim);
+  border-radius: 50%;
+  color: var(--ol-brass);
+  padding: 0;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.ol-icon-btn:hover { border-color: var(--ol-brass); color: var(--ol-parchment); }
+.ol-icon-btn svg { width: 15px; height: 15px; fill: currentColor; pointer-events: none; }
+.ol-icon-btn input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.ol-bg-tools { display: flex; align-items: center; gap: 8px; }
+.ol-bg-slider {
+  width: 70px;
+  accent-color: var(--ol-brass);
+}
+
+/* ---------- View switcher (tabs styled as brass plates) ---------- */
+.ol-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.ol-tab {
+  background: var(--ol-leather);
+  border: 1px solid var(--ol-brass-dim);
+  color: var(--ol-parchment-dim);
+  font-family: var(--ol-font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  border-radius: var(--ol-radius);
+  transition: all 0.2s ease;
+}
+.ol-tab:hover { color: var(--ol-parchment); border-color: var(--ol-brass); }
+.ol-tab[aria-selected="true"] {
+  background: var(--ol-brass);
+  color: var(--ol-ink);
+  border-color: var(--ol-brass);
+  font-weight: 700;
+}
+
+.ol-view { display: none; }
+.ol-view.ol-active { display: block; animation: ol-fade 0.25s ease; }
+@keyframes ol-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.ol-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--ol-parchment-dim);
+  font-family: var(--ol-font-display);
+  font-style: italic;
+  border: 1px dashed var(--ol-brass-dim);
+  border-radius: var(--ol-radius);
+}
+
+/* ======================================================================
+   VIEW 1 — SHELF (global view). Independent block, prefix: ol-shelf-
+   Cuboid shelving unit inspired by simple 3D-transform book-case layouts.
+   ====================================================================== */
+.ol-shelf-wrap {
+  perspective: 900px;
+  padding: 10px 0 30px;
+}
+.ol-shelf-unit {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(4deg);
+  background: var(--ol-leather);
+  border-radius: 3px;
+  padding: 18px 22px 26px;
+  box-shadow:
+    0 18px 30px -14px rgba(0,0,0,0.6),
+    inset 0 0 0 1px rgba(194,160,78,0.25);
+}
+.ol-shelf-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  min-height: 150px;
+  border-bottom: 10px solid var(--ol-leather-light);
+  box-shadow: inset 0 8px 14px -6px rgba(0,0,0,0.55);
+  padding: 0 4px 6px;
+}
+.ol-shelf-book {
+  position: relative;
+  width: 26px;
+  min-height: 120px;
+  border-radius: 2px 2px 0 0;
+  box-shadow:
+    inset 2px 0 0 rgba(255,255,255,0.12),
+    inset -2px 0 0 rgba(0,0,0,0.35),
+    1px 0 3px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+}
+.ol-shelf-book:hover { transform: translateY(-8px); }
+
+/* Deep-link highlight (OsirisCore.MSG.OPEN_BOOK) — applies to whichever
+   view's card matches [data-id], not just .ol-shelf-book, since Shelf/
+   Gallery/List all use the same attribute. */
+@keyframes osirisOpenPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 60, 0); }
+  25%, 75% { box-shadow: 0 0 0 6px rgba(255, 200, 60, 0.55); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 200, 60, 0.25); }
+}
+.osiris-open-highlight { animation: osirisOpenPulse 2.2s ease; }
+.ol-shelf-book:focus-visible { outline: 2px solid var(--ol-brass); outline-offset: 2px; transform: translateY(-8px); }
+.ol-shelf-book.ol-open-busy { opacity: 0.55; pointer-events: none; }
+.ol-shelf-book .ol-spine-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--ol-font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.88);
+  max-height: 100px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ======================================================================
+   VIEW 2 — GALLERY (hover-tilt effect). Independent block, prefix: ol-gal-
+   Cover tilts open on hover, page-edge strip widens, highlight sweeps in.
+   ====================================================================== */
+/* Shelf backdrop for Gallery mode (item 5) — same cuboid-case family as
+   the Shelf view's .ol-shelf-wrap/.ol-shelf-unit, just sized for the
+   wider 140px covers instead of the Shelf view's 26px spines, and fluid-
+   width (100%) instead of content-sized, since it has to hold a full
+   grid rather than a single flex row. */
+.ol-gal-wrap {
+  perspective: 900px;
+  padding: 10px 0 30px;
+  /* Turns this wrap into a query container so .ol-gal-grid below can pick
+     its column count from the shelf's own real rendered width, not the
+     browser viewport — correct even when the shelf is embedded somewhere
+     narrower than the window. */
+  container-type: inline-size;
+  container-name: ol-gal;
+}
+.ol-gal-case {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(2deg);
+  background: var(--ol-leather);
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 22px 20px 30px;
+  box-shadow:
+    0 18px 30px -14px rgba(0,0,0,0.6),
+    inset 0 0 0 1px rgba(194,160,78,0.25);
+  /* No overflow-x here anymore — the grid below always resolves to
+     exactly this box's width (fr-based columns, no fixed floor), so the
+     leather case is guaranteed to stay fully visible with nothing
+     cropped or scrolling, at any size. */
+}
+.ol-gal-grid {
+  display: grid;
+  /* Responsive columns, driven by @container rules below: 2/row by
+     default (mobile), 5/row once there's genuinely room, 8/row only on
+     the widest shelves. minmax(0, 1fr) means the columns always divide
+     up whatever width the case actually has — never more — so there's
+     nothing left over to scroll. Book covers stay at their natural
+     140px whenever a tier has room for that; see .ol-gal-book for the
+     fluid fallback on the rare narrower case. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 34px 26px;
+  padding: 10px 6px 20px;
+  /* Shelf ledge (item 5), same treatment as .ol-shelf-row below. */
+  border-bottom: 10px solid var(--ol-leather-light);
+  box-shadow: inset 0 8px 14px -6px rgba(0,0,0,0.55);
+}
+/* 5-across once the case is wide enough to hold 5 full-size (140px)
+   covers comfortably; 8-across once it's wide enough for 8 — reachable
+   now that .osiris-library's max-width (see top of file) gives this
+   room to grow into on a wide screen. If this component ever ends up
+   embedded somewhere narrower (a tighter host container, a small
+   window), the query simply never crosses the 950px threshold and the
+   grid quietly stays at 5 — the "keep 5 max when 8 isn't possible"
+   fallback, handled automatically here rather than needing a scrollbar
+   or extra logic. */
+@container ol-gal (min-width: 660px) {
+  .ol-gal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@container ol-gal (min-width: 950px) {
+  .ol-gal-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .ol-gal-cover { padding: 8px; }
+  .ol-gal-cover .ol-gal-title { font-size: 0.68rem; }
+}
+/* Fallback for browsers without container-query support (pre-2023
+   Firefox/Safari): same tiers, keyed off viewport width instead of the
+   shelf's own box. Less precise for narrow embeds, but still can't
+   overflow since columns stay fr-based here too. */
+@supports not (container-type: inline-size) {
+  @media (min-width: 660px) {
+    .ol-gal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  }
+  @media (min-width: 950px) {
+    .ol-gal-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  }
+}
+.ol-gal-book {
+  /* Fluid instead of a fixed 140x200: caps at a book's natural size on
+     any column roomy enough for it, and only ever scales down (keeping
+     proportions via aspect-ratio) on a case narrower than that — the
+     fallback that replaces the old horizontal-scroll safety net. */
+  width: 100%;
+  max-width: 140px;
+  aspect-ratio: 7 / 10;
+  position: relative;
+  margin: 0 auto;
+}
+.ol-gal-cover {
+  /* Not a click target itself (nothing happens if you click it), and
+     its hover rotateY(...) is a genuine 3D transform — Chromium hit-
+     tests that trapezoidal shape over the flat .ol-gal-open pill even
+     though the pill has a higher z-index, so only the sliver of the
+     pill outside the cover's transformed footprint was clickable.
+     Removing the cover from hit-testing lets clicks fall straight
+     through to the pill everywhere inside it. */
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  transform-origin: 0 50%;
+  box-shadow:
+    inset 4px 1px 3px rgba(255,255,255,0.25),
+    inset 0 -1px 2px rgba(0,0,0,0.4);
+  transition: transform 0.45s ease, box-shadow 0.45s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px;
+  z-index: 2;
+}
+.ol-gal-cover .ol-gal-title {
+  font-family: var(--ol-font-display);
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.95);
+  line-height: 1.25;
+}
+.ol-gal-edge {
+  position: absolute;
+  top: 0; left: 6px; bottom: 0;
+  width: 16px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%);
+  border-left: 2px solid rgba(0,0,0,0.15);
+  transition: width 0.4s ease;
+  z-index: 1;
+}
+.ol-gal-pages {
+  position: absolute;
+  inset: 3% 0 3% 6px;
+  background: var(--ol-parchment);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+  z-index: 0;
+}
+.ol-gal-book:hover .ol-gal-cover {
+  transform: perspective(1400px) rotateY(-28deg);
+  box-shadow:
+    inset 4px 1px 3px rgba(255,255,255,0.25),
+    inset 0 -1px 2px rgba(0,0,0,0.4),
+    12px 8px 18px -6px rgba(0,0,0,0.5);
+}
+.ol-gal-book:hover .ol-gal-edge { width: 28px; }
+
+/* "Click to open" pill, centered on the cover — ported from Codex's
+   .vol-open. Sits as a sibling of .ol-gal-cover (not nested inside it)
+   so it stays flat and centered instead of inheriting the cover's
+   hover rotateY tilt. Only rendered when there's actually a file
+   handle or link to open (see canOpenFile() in the render function). */
+.ol-gal-open {
+  position: absolute; top: 50%; left: 50%; z-index: 3;
+  transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 14px; border-radius: 999px;
+  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.5);
+  color: #fff; font-family: var(--ol-font-ui);
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; white-space: nowrap;
+  opacity: 0; transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+/* Icon/label were eating the click before it reached the button (only
+   the bare edge of the pill — outside their boxes — was registering),
+   so make them purely decorative and let every click inside the pill
+   resolve to the button itself. */
+.ol-gal-open svg,
+.ol-gal-open span { pointer-events: none; }
+.ol-gal-open svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; flex-shrink: 0; }
+.ol-gal-book:hover .ol-gal-open,
+.ol-gal-open:focus-visible { opacity: 1; }
+.ol-gal-open:hover { background: var(--ol-brass); border-color: var(--ol-brass); }
+.ol-gal-open.ol-open-busy { opacity: 0.5; pointer-events: none; }
+@media (hover: none) {
+  .ol-gal-open { opacity: 0.85; }
+}
+.ol-gal-meta {
+  margin-top: 10px;
+  text-align: center;
+}
+.ol-gal-meta .ol-gal-author {
+  font-size: 0.72rem;
+  color: var(--ol-parchment-dim);
+}
+
+/* ======================================================================
+   VIEW 3 — LIST (expand-to-preview with inline comment). Independent
+   block, prefix: ol-list-. One row open at a time.
+   ====================================================================== */
+.ol-list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 10px;
+}
+.ol-list-row {
+  background: var(--ol-leather);
+  border: 1px solid rgba(194,160,78,0.2);
+  border-radius: var(--ol-radius);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.ol-list-row:hover { background: var(--ol-leather-light); }
+.ol-list-swatch {
+  width: 34px;
+  height: 48px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.4s ease;
+}
+.ol-list-row.ol-open .ol-list-swatch { transform: rotateY(35deg); }
+
+/* Cover thumbnail + always-reachable "click to open" overlay — ported
+   from Lit Circle's .row-thumb-wrap/.thumb-open. Sits directly on the
+   collapsed row (not gated behind expanding it first), hover-revealed
+   on pointer devices and left faintly visible under (hover: none) so
+   touch users aren't stuck guessing. */
+.ol-list-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.ol-list-thumb-open {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 2px;
+  border: none; border-radius: 2px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-family: var(--ol-font-ui);
+  font-size: 0.56rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  line-height: 1.25;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+.ol-list-thumb-wrap:hover .ol-list-thumb-open,
+.ol-list-thumb-open:focus-visible { opacity: 1; }
+@media (hover: none) {
+  .ol-list-thumb-open { opacity: 0.85; }
+}
+.ol-list-info { flex: 1; min-width: 0; }
+.ol-list-info .ol-list-title {
+  font-family: var(--ol-font-display);
+  font-size: 0.95rem;
+  color: var(--ol-parchment);
+}
+.ol-list-info .ol-list-author {
+  font-size: 0.72rem;
+  color: var(--ol-parchment-dim);
+}
+.ol-list-comment-preview {
+  max-width: 220px;
+  font-size: 0.72rem;
+  color: var(--ol-brass);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ol-list-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.ol-list-row.ol-open + .ol-list-expand {
+  max-height: 200px;
+}
+.ol-list-expand-inner {
+  padding: 12px 16px 16px 66px;
+  font-size: 0.82rem;
+  color: var(--ol-parchment-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ol-list-actions { display: flex; gap: 8px; align-items: center; }
+.ol-list-link { color: var(--ol-brass); font-size: 0.78rem; text-decoration: none; }
+.ol-list-link:hover { text-decoration: underline; }
+.ol-list-plain-path { font-size: 0.78rem; color: var(--ol-parchment-dim); font-family: monospace; }
+.ol-list-no-link { font-size: 0.7rem; opacity: 0.6; }
+.ol-btn-small {
+  background: transparent;
+  border: 1px solid var(--ol-brass-dim);
+  color: var(--ol-brass);
+  padding: 5px 12px;
+  border-radius: var(--ol-radius);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+}
+.ol-btn-small:hover { border-color: var(--ol-brass); color: var(--ol-parchment); }
+.ol-btn-small.ol-danger { border-color: var(--ol-danger); color: var(--ol-danger); }
+.ol-btn-small.ol-danger:hover { background: var(--ol-danger); color: var(--ol-parchment); }
+
+/* ---------- Floating add button ---------- */
+.ol-fab {
+  position: sticky;
+  bottom: 0;
+  margin-top: 20px;
+  width: 100%;
+  background: var(--ol-brass);
+  color: var(--ol-ink);
+  border: none;
+  padding: 12px;
+  font-family: var(--ol-font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  border-radius: var(--ol-radius);
+}
+.ol-fab:hover { filter: brightness(1.08); }
+
+/* ---------- Add-book modal ---------- */
+.ol-modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 9998;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.ol-modal-backdrop.ol-show { display: flex; }
+.ol-modal {
+  background: var(--ol-ink);
+  border: 1px solid var(--ol-brass-dim);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  color: var(--ol-parchment);
+  font-family: var(--ol-font-ui);
+}
+.ol-modal h3 {
+  font-family: var(--ol-font-display);
+  color: var(--ol-brass);
+  margin: 0 0 16px;
+  font-size: 1.15rem;
+}
+.ol-field { margin-bottom: 14px; }
+.ol-field-checkbox { display: flex; flex-direction: column; }
+.ol-checkbox-label { display: flex; align-items: center; gap: .5rem; cursor: pointer; font-size: .88rem; }
+.ol-checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+.ol-field label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ol-parchment-dim);
+  margin-bottom: 5px;
+}
+.ol-field input[type="text"],
+.ol-field textarea {
+  width: 100%;
+  background: var(--ol-leather);
+  border: 1px solid var(--ol-brass-dim);
+  border-radius: var(--ol-radius);
+  color: var(--ol-parchment);
+  padding: 9px 10px;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+.ol-field input[type="text"]:focus,
+.ol-field textarea:focus {
+  outline: 2px solid var(--ol-brass);
+  outline-offset: 1px;
+}
+.ol-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.ol-swatch-opt {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+.ol-swatch-opt[aria-checked="true"] { border-color: var(--ol-parchment); }
+.ol-hint {
+  margin: 6px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--ol-parchment-dim);
+  font-style: italic;
+}
+/* ---------- Upload zone (merged file-picker + cover extraction) ---------- */
+.ol-upload-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 92px;
+  border: 1px dashed var(--ol-brass-dim);
+  border-radius: var(--ol-radius);
+  background: var(--ol-leather);
+  cursor: pointer;
+  padding: 14px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.ol-upload-zone:hover,
+.ol-upload-zone:focus-visible {
+  border-color: var(--ol-brass);
+  background: var(--ol-leather-light);
+}
+.ol-upload-zone:focus-visible { outline: 2px solid var(--ol-brass); outline-offset: 2px; }
+.ol-upload-zone input[type="file"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer;
+}
+.ol-upload-zone-empty,
+.ol-upload-zone-filled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+.ol-upload-text {
+  font-size: 0.8rem;
+  color: var(--ol-parchment);
+  letter-spacing: 0.02em;
+}
+.ol-upload-subtext {
+  font-size: 0.67rem;
+  color: var(--ol-parchment-dim);
+  font-style: italic;
+}
+.ol-upload-cover-preview {
+  width: 54px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  display: none;
+}
+.ol-upload-filename {
+  font-size: 0.76rem;
+  color: var(--ol-parchment);
+  word-break: break-word;
+}
+.ol-upload-change {
+  font-size: 0.68rem;
+  color: var(--ol-brass);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ol-upload-status {
+  font-size: 0.68rem;
+  color: var(--ol-parchment-dim);
+  font-style: italic;
+}
+.ol-cat-submenu {
+  margin-top: 4px;
+  border: 1px solid var(--ol-brass-dim);
+  border-radius: var(--ol-radius);
+  background: var(--ol-leather);
+  overflow: hidden;
+}
+.ol-cat-submenu summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ol-parchment-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.ol-cat-submenu summary::-webkit-details-marker { display: none; }
+.ol-cat-submenu summary::before {
+  content: '▸';
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+  color: var(--ol-brass);
+}
+.ol-cat-submenu[open] summary::before { transform: rotate(90deg); }
+.ol-cat-submenu summary:hover { color: var(--ol-parchment); }
+.ol-cat-submenu-body { padding: 0 10px 10px; }
+.ol-cat-submenu-body input {
+  width: 100%;
+  background: var(--ol-parchment);
+  color: var(--ol-ink);
+  border: 1px solid var(--ol-brass-dim);
+  border-radius: var(--ol-radius);
+  padding: 9px 10px;
+  font-size: 0.85rem;
+}
+.ol-cat-submenu-body input:focus {
+  outline: 2px solid var(--ol-brass);
+  outline-offset: 1px;
+}
+.ol-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--ol-moss);
+  color: var(--ol-parchment);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.ol-ai-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px dashed var(--ol-brass-dim);
+  color: var(--ol-parchment-dim);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+/* Step 9: a text-based tag had a real excerpt behind it at classify
+   time, not just title/author/category/comment — solid border (vs. the
+   dashed default above) to read as a step more grounded, without
+   overclaiming certainty the badge's title text still hedges. */
+.ol-ai-tag-text {
+  border-style: solid;
+  border-color: var(--ol-brass);
+  color: var(--ol-parchment);
+}
+.ol-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.ol-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--ol-brass-dim);
+  color: var(--ol-parchment-dim);
+  padding: 8px 16px;
+  border-radius: var(--ol-radius);
+  font-size: 0.8rem;
+}
+.ol-btn-primary {
+  background: var(--ol-brass);
+  color: var(--ol-ink);
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--ol-radius);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.ol-sr-only {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+}
+#olBgImage {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+#olBgImage.ol-bg-active { opacity: var(--ol-bg-opacity, 0.35); }
+@media (prefers-reduced-motion: reduce) {
+  .osiris-library * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body style="margin:0; background:#0e0d0c; padding:24px; transition: background 0.3s ease;">
+
+<div id="olBgImage"></div>
+
+<div class="osiris-library" id="osirisLibrary">
+
+  <div class="ol-header">
+    <h2 id="olHeaderTitle">Mes livres</h2>
+    <div class="ol-header-tools">
+      <span class="ol-count" id="olCount">0 ouvrage(s)</span>
+      <div class="ol-bg-tools">
+        <label class="ol-icon-btn" id="olBgUploadBtn" title="Choisir un fond d'écran">
+          <input type="file" id="olBgInput" accept="image/*">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </label>
+        <input type="range" id="olBgOpacity" class="ol-bg-slider" min="5" max="80" value="35" hidden title="Opacité du fond">
+        <button type="button" class="ol-icon-btn" id="olBgClearBtn" title="Retirer le fond" hidden>
+          <svg viewBox="0 0 24 24"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.4 6.3 6.3-6.3 6.29 1.4 1.4 6.3-6.29 6.3 6.29 1.4-1.4-6.3-6.29 6.3-6.3z"/></svg>
+        </button>
+      </div>
+      <button type="button" class="ol-icon-btn" id="olThemeToggleBtn" title="Changer de thème">
+        <span id="olThemeIcon"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ol-tabs" role="tablist">
+    <button class="ol-tab" data-view="shelf" id="olTabShelf" role="tab" aria-selected="true">Vue Étagère</button>
+    <button class="ol-tab" data-view="gallery" id="olTabGallery" role="tab" aria-selected="false">Vue Galerie</button>
+    <button class="ol-tab" data-view="list" id="olTabList" role="tab" aria-selected="false">Vue Liste</button>
+  </div>
+
+  
+  <section class="ol-view ol-active" data-view-panel="shelf">
+    <div class="ol-shelf-wrap">
+      <div class="ol-shelf-unit">
+        <div class="ol-shelf-row" id="olShelfRow"></div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section class="ol-view" data-view-panel="gallery">
+    <div class="ol-gal-wrap">
+      <div class="ol-gal-case">
+        <div class="ol-gal-grid" id="olGalGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section class="ol-view" data-view-panel="list">
+    <div class="ol-list-wrap" id="olListWrap"></div>
+  </section>
+
+  <button class="ol-fab" id="olAddBtn">+ Ajouter un livre / document</button>
+
+  
+  <div class="ol-modal-backdrop" id="olModalBackdrop">
+    <div class="ol-modal" role="dialog" aria-modal="true" aria-labelledby="olModalTitle">
+      <h3 id="olModalTitle">Nouvel ouvrage</h3>
+      <form id="olAddForm">
+        <div class="ol-field">
+          <label for="olTitle" id="olTitleLabel">Titre (optionnel)</label>
+          <input type="text" id="olTitle" maxlength="120" placeholder="Déduit du fichier si laissé vide">
+        </div>
+        <div class="ol-field">
+          <label for="olAuthor" id="olAuthorLabel">Auteur (optionnel)</label>
+          <input type="text" id="olAuthor" maxlength="80">
+        </div>
+        <div class="ol-field">
+          <label for="olComment" id="olCommentLabel">Commentaire / note</label>
+          <textarea id="olComment" rows="2" maxlength="300"></textarea>
+        </div>
+        <div class="ol-field">
+          <label id="olColorLabel">Couleur de tranche</label>
+          <div class="ol-swatches" id="olSwatches"></div>
+        </div>
+        <div class="ol-field">
+          <details class="ol-cat-submenu">
+            <summary id="olCategorySummary">Catégorie (optionnel)</summary>
+            <div class="ol-cat-submenu-body">
+              <input type="text" id="olCategory" list="olCategoryOptions" placeholder="ex. Roman, Poésie, Philosophie…">
+              <datalist id="olCategoryOptions">
+                <option value="Roman"></option>
+                <option value="Poésie"></option>
+                <option value="Philosophie"></option>
+                <option value="Histoire"></option>
+                <option value="Théâtre"></option>
+                <option value="Essai"></option>
+                <option value="Science-fiction"></option>
+                <option value="Biographie"></option>
+              </datalist>
+            </div>
+          </details>
+        </div>
+        <div class="ol-field">
+          <label id="olFileLabel">Fichier (optionnel)</label>
+          <div class="ol-upload-zone" id="olUploadZone" tabindex="0" role="button" aria-label="Choisir un fichier — la couverture, le titre et l'auteur sont déduits automatiquement quand c'est possible">
+            <div class="ol-upload-zone-empty" id="olUploadEmpty">
+              <span class="ol-upload-text" id="olUploadText">Cliquez pour ouvrir un fichier</span>
+              <span class="ol-upload-subtext" id="olUploadSubtext">PDF / EPUB — couverture, titre et auteur extraits automatiquement</span>
+            </div>
+            <div class="ol-upload-zone-filled" id="olUploadFilled" style="display:none;">
+              <img id="olCoverPreview" class="ol-upload-cover-preview" alt="">
+              <span class="ol-upload-filename" id="olChosenFileName"></span>
+              <span class="ol-upload-status" id="olUploadStatus"></span>
+              <span class="ol-upload-change" id="olUploadChange">Cliquez pour changer de fichier</span>
+            </div>
+            <input type="file" id="olFileInput" accept=".pdf,.epub,application/pdf,application/epub+zip" tabindex="-1" aria-hidden="true">
+          </div>
+          <p class="ol-hint" id="olUploadHint"></p>
+        </div>
+        <div class="ol-field">
+          <details class="ol-cat-submenu">
+            <summary id="olLinkSummary">Lien vers le fichier (optionnel)</summary>
+            <div class="ol-cat-submenu-body">
+              <input type="text" id="olLink" placeholder="https://... ou /chemin/vers/fichier">
+              <p class="ol-hint" id="olLinkHint">Si aucun fichier n'est choisi ci-dessus (ou sur un navigateur qui ne le permet pas), indiquez ici une URL ou un chemin pour retrouver le fichier plus tard. Le fichier lui-même n'est jamais copié dans le navigateur.</p>
+            </div>
+          </details>
+        </div>
+        <div class="ol-field ol-field-checkbox">
+          <label class="ol-checkbox-label">
+            <input type="checkbox" id="olExcludeAi">
+            <span id="olExcludeAiLabel">Exclure du Tri IA</span>
+          </label>
+          <p class="ol-hint" id="olExcludeAiHint">Ce livre ne sera jamais envoyé à un service IA externe — utile pour un document sensible (ex. liste de classe) ajouté par erreur ou volontairement à la bibliothèque.</p>
+        </div>
+        <div class="ol-modal-actions">
+          <button type="button" class="ol-btn-ghost" id="olCancelBtn">Annuler</button>
+          <button type="submit" class="ol-btn-primary" id="olSubmitBtn">Ajouter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script src="../js/core/osiris-core.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var LS_KEY = "osirisLibraryBooks_v1";
+  var THEME_KEY = "osiris_library_theme";
+  var BG_KEY = "osiris_library_bg";
+  var COLORS = ["#7a2e2e","#2f4a3c","#2c3e63","#6b4226","#5c3a63","#3d5a4a","#8a5a2b","#3a3a5c"];
+  var SUN_PATH = '<svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 18a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zM3 11a1 1 0 0 1 1 1v0a1 1 0 1 1-2 0 1 1 0 0 1 1-1zm18 0a1 1 0 0 1 1 1 1 1 0 1 1-2 0 1 1 0 0 1 1-1zM4.9 4.9a1 1 0 0 1 1.42 0l1.4 1.4a1 1 0 1 1-1.41 1.42l-1.41-1.4a1 1 0 0 1 0-1.42zm11.38 11.38a1 1 0 0 1 1.41 0l1.41 1.41a1 1 0 1 1-1.41 1.41l-1.41-1.41a1 1 0 0 1 0-1.41zM19.1 4.9a1 1 0 0 1 0 1.42l-1.4 1.4a1 1 0 1 1-1.42-1.41l1.4-1.41a1 1 0 0 1 1.42 0zM7.72 16.28a1 1 0 0 1 0 1.41l-1.4 1.41a1 1 0 1 1-1.42-1.41l1.41-1.41a1 1 0 0 1 1.41 0z"/></svg>';
+  var MOON_PATH = '<svg viewBox="0 0 24 24"><path d="M20.7 15.3a8.5 8.5 0 0 1-11-11 1 1 0 0 0-1.27-1.27A10.5 10.5 0 1 0 22 16.57a1 1 0 0 0-1.3-1.27z"/></svg>';
+
+  /* ---------------- FR/DE translation (Hub SET_LANG bridge) ----------------
+     French is the file's native language and stays the default when this
+     shelf is opened standalone (no parent Hub, e.g. testing the file
+     directly). When mounted inside the Hub, OsirisCore.MSG.SET_LANG below
+     pushes the Hub's current language down on mount and on every toggle,
+     the same way SET_SORT already does for sort order — see the SET_SORT/
+     LIBRARY_UPDATED listener further down. */
+  var I18N = {
+    FR: {
+      pageTitle: "Bibliothèque — Démo Osiris",
+      headerTitle: "Mes livres",
+      count: function (n) { return n + " ouvrage(s)"; },
+      bgUploadTitle: "Choisir un fond d'écran",
+      bgOpacityTitle: "Opacité du fond",
+      bgClearTitle: "Retirer le fond",
+      themeToggleTitle: "Changer de thème",
+      tabShelf: "Vue Étagère",
+      tabGallery: "Vue Galerie",
+      tabList: "Vue Liste",
+      addBookBtn: "Ajouter un livre / document",
+      modalTitle: "Nouvel ouvrage",
+      titleLabel: "Titre (optionnel)",
+      titlePlaceholder: "Déduit du fichier si laissé vide",
+      authorLabel: "Auteur (optionnel)",
+      commentLabel: "Commentaire / note",
+      colorLabel: "Couleur de tranche",
+      categorySummary: "Catégorie (optionnel)",
+      categoryPlaceholder: "ex. Roman, Poésie, Philosophie…",
+      categoryOptions: ["Roman", "Poésie", "Philosophie", "Histoire", "Théâtre", "Essai", "Science-fiction", "Biographie"],
+      fileLabel: "Fichier (optionnel)",
+      uploadZoneAriaLabel: "Choisir un fichier — la couverture, le titre et l'auteur sont déduits automatiquement quand c'est possible",
+      uploadText: "Cliquez pour ouvrir un fichier",
+      uploadSubtext: "PDF / EPUB — couverture, titre et auteur extraits automatiquement",
+      uploadChange: "Cliquez pour changer de fichier",
+      uploadHintHandles: "Le fichier est mémorisé pour un accès direct ultérieur (Chrome/Edge). Sur un PDF ou un EPUB, la couverture, le titre et l'auteur sont extraits automatiquement.",
+      uploadHintNoHandles: "Sur un PDF ou un EPUB, la couverture, le titre et l'auteur sont extraits automatiquement. Pour retrouver le fichier plus tard, indiquez un lien ci-dessous — le fichier lui-même n'est jamais copié dans le navigateur.",
+      linkSummary: "Lien vers le fichier (optionnel)",
+      linkPlaceholder: "https://... ou /chemin/vers/fichier",
+      linkHint: "Si aucun fichier n'est choisi ci-dessus (ou sur un navigateur qui ne le permet pas), indiquez ici une URL ou un chemin pour retrouver le fichier plus tard. Le fichier lui-même n'est jamais copié dans le navigateur.",
+      excludeAiLabel: "Exclure du Tri IA",
+      excludeAiHint: "Ce livre ne sera jamais envoyé à un service IA externe — utile pour un document sensible (ex. liste de classe) ajouté par erreur ou volontairement à la bibliothèque.",
+      cancelBtn: "Annuler",
+      submitBtn: "Ajouter",
+      storageFullImage: "Image trop lourde pour être enregistrée — elle reste affichée pour cette session.",
+      storageFullLibrary: "Espace de stockage insuffisant pour enregistrer la bibliothèque.",
+      shelfEmpty: "Étagère vide — ajoutez un livre.",
+      galleryEmpty: "Galerie vide — ajoutez un livre.",
+      listEmpty: "Liste vide — ajoutez un livre.",
+      clickToOpenAria: function (title) { return "Cliquer pour ouvrir " + title; },
+      clickToOpen: "Cliquer pour ouvrir",
+      openFileBtn: "📂 Ouvrir le fichier",
+      noLink: "Aucun lien renseigné",
+      aiTagTitle: function (hasExcerpt) { return hasExcerpt ? "Estimation IA (à partir d'un extrait du texte) — indicatif" : "Estimation IA (métadonnées seules) — indicatif uniquement"; },
+      noComment: "Aucun commentaire",
+      noCommentLong: "Aucun commentaire pour cet ouvrage.",
+      authorUnknown: "Auteur inconnu",
+      deleteBtn: "Supprimer",
+      deleteConfirm: function (title) { return 'Supprimer "' + title + '" ?'; },
+      opening: "Ouverture…",
+      fileNotFound: "Fichier introuvable (déplacé, supprimé, ou permission refusée) et aucun lien de secours n'est renseigné.",
+      extracting: "Extraction en cours…",
+      coverExtracted: "Couverture extraite",
+      noCoverExtracted: "Aucune couverture extraite — le fichier est tout de même retenu",
+      untitled: "Sans titre"
+    },
+    DE: {
+      pageTitle: "Bibliothek — Osiris Demo",
+      headerTitle: "Meine Bücher",
+      count: function (n) { return n + " Werk(e)"; },
+      bgUploadTitle: "Hintergrundbild wählen",
+      bgOpacityTitle: "Hintergrund-Deckkraft",
+      bgClearTitle: "Hintergrund entfernen",
+      themeToggleTitle: "Design wechseln",
+      tabShelf: "Regalansicht",
+      tabGallery: "Galerieansicht",
+      tabList: "Listenansicht",
+      addBookBtn: "Buch / Dokument hinzufügen",
+      modalTitle: "Neues Werk",
+      titleLabel: "Titel (optional)",
+      titlePlaceholder: "Wird aus der Datei übernommen, falls leer",
+      authorLabel: "Autor (optional)",
+      commentLabel: "Kommentar / Notiz",
+      colorLabel: "Buchrückenfarbe",
+      categorySummary: "Kategorie (optional)",
+      categoryPlaceholder: "z. B. Roman, Lyrik, Philosophie…",
+      categoryOptions: ["Roman", "Lyrik", "Philosophie", "Geschichte", "Theater", "Essay", "Science-Fiction", "Biografie"],
+      fileLabel: "Datei (optional)",
+      uploadZoneAriaLabel: "Datei wählen — Umschlag, Titel und Autor werden nach Möglichkeit automatisch übernommen",
+      uploadText: "Klicken, um eine Datei zu öffnen",
+      uploadSubtext: "PDF / EPUB — Umschlag, Titel und Autor werden automatisch extrahiert",
+      uploadChange: "Klicken, um die Datei zu ändern",
+      uploadHintHandles: "Die Datei wird für einen späteren direkten Zugriff gespeichert (Chrome/Edge). Bei PDF oder EPUB werden Umschlag, Titel und Autor automatisch extrahiert.",
+      uploadHintNoHandles: "Bei PDF oder EPUB werden Umschlag, Titel und Autor automatisch extrahiert. Um die Datei später wiederzufinden, geben Sie unten einen Link an — die Datei selbst wird nie in den Browser kopiert.",
+      linkSummary: "Link zur Datei (optional)",
+      linkPlaceholder: "https://... oder /pfad/zur/datei",
+      linkHint: "Wenn oben keine Datei gewählt wurde (oder der Browser dies nicht erlaubt), geben Sie hier eine URL oder einen Pfad an, um die Datei später wiederzufinden. Die Datei selbst wird nie in den Browser kopiert.",
+      excludeAiLabel: "Von KI-Sortierung ausschließen",
+      excludeAiHint: "Dieses Buch wird nie an einen externen KI-Dienst gesendet — nützlich für ein sensibles Dokument (z. B. eine Klassenliste), das versehentlich oder absichtlich zur Bibliothek hinzugefügt wurde.",
+      cancelBtn: "Abbrechen",
+      submitBtn: "Hinzufügen",
+      storageFullImage: "Bild zu groß zum Speichern — es bleibt nur für diese Sitzung sichtbar.",
+      storageFullLibrary: "Nicht genügend Speicherplatz, um die Bibliothek zu speichern.",
+      shelfEmpty: "Regal leer — fügen Sie ein Buch hinzu.",
+      galleryEmpty: "Galerie leer — fügen Sie ein Buch hinzu.",
+      listEmpty: "Liste leer — fügen Sie ein Buch hinzu.",
+      clickToOpenAria: function (title) { return "Klicken, um " + title + " zu öffnen"; },
+      clickToOpen: "Klicken zum Öffnen",
+      openFileBtn: "📂 Datei öffnen",
+      noLink: "Kein Link angegeben",
+      aiTagTitle: function (hasExcerpt) { return hasExcerpt ? "KI-Schätzung (basierend auf einem Textauszug) — indikativ" : "KI-Schätzung (nur Metadaten) — nur indikativ"; },
+      noComment: "Kein Kommentar",
+      noCommentLong: "Kein Kommentar für dieses Werk.",
+      authorUnknown: "Unbekannter Autor",
+      deleteBtn: "Löschen",
+      deleteConfirm: function (title) { return '„' + title + '" löschen?'; },
+      opening: "Wird geöffnet…",
+      fileNotFound: "Datei nicht gefunden (verschoben, gelöscht oder Zugriff verweigert) und kein Ersatzlink hinterlegt.",
+      extracting: "Extraktion läuft…",
+      coverExtracted: "Umschlag extrahiert",
+      noCoverExtracted: "Kein Umschlag gefunden — die Datei wird trotzdem übernommen",
+      untitled: "Ohne Titel"
+    }
+  };
+
+
+  function readInitialLang() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+      return saved.lang === 'DE' ? 'DE' : 'FR';
+    } catch (e) { return 'FR'; }
+  }
+  var currentLang = readInitialLang();
+  var t = I18N[currentLang];
+
+  function applyLang(lang) {
+    if (!I18N[lang]) return;
+    currentLang = lang;
+    t = I18N[lang];
+    document.documentElement.lang = lang.toLowerCase();
+    document.title = t.pageTitle;
+    document.getElementById("olHeaderTitle").textContent = t.headerTitle;
+    document.getElementById("olBgUploadBtn").title = t.bgUploadTitle;
+    document.getElementById("olBgOpacity").title = t.bgOpacityTitle;
+    document.getElementById("olBgClearBtn").title = t.bgClearTitle;
+    document.getElementById("olThemeToggleBtn").title = t.themeToggleTitle;
+    document.getElementById("olTabShelf").textContent = t.tabShelf;
+    document.getElementById("olTabGallery").textContent = t.tabGallery;
+    document.getElementById("olTabList").textContent = t.tabList;
+    document.getElementById("olAddBtn").textContent = "+ " + t.addBookBtn;
+    document.getElementById("olModalTitle").textContent = t.modalTitle;
+    document.getElementById("olTitleLabel").textContent = t.titleLabel;
+    document.getElementById("olTitle").placeholder = t.titlePlaceholder;
+    document.getElementById("olAuthorLabel").textContent = t.authorLabel;
+    document.getElementById("olCommentLabel").textContent = t.commentLabel;
+    document.getElementById("olColorLabel").textContent = t.colorLabel;
+    document.getElementById("olCategorySummary").textContent = t.categorySummary;
+    document.getElementById("olCategory").placeholder = t.categoryPlaceholder;
+    var catOptions = document.getElementById("olCategoryOptions");
+    catOptions.innerHTML = t.categoryOptions.map(function (v) { return '<option value="' + escapeHTML(v) + '"></option>'; }).join("");
+    document.getElementById("olFileLabel").textContent = t.fileLabel;
+    document.getElementById("olUploadZone").setAttribute("aria-label", t.uploadZoneAriaLabel);
+    document.getElementById("olUploadText").textContent = t.uploadText;
+    document.getElementById("olUploadSubtext").textContent = t.uploadSubtext;
+    document.getElementById("olUploadChange").textContent = t.uploadChange;
+    document.getElementById("olUploadHint").textContent = fileHandlesOk ? t.uploadHintHandles : t.uploadHintNoHandles;
+    document.getElementById("olLinkSummary").textContent = t.linkSummary;
+    document.getElementById("olLink").placeholder = t.linkPlaceholder;
+    document.getElementById("olExcludeAiLabel").textContent = t.excludeAiLabel;
+    document.getElementById("olExcludeAiHint").textContent = t.excludeAiHint;
+    document.getElementById("olLinkHint").textContent = t.linkHint;
+    document.getElementById("olCancelBtn").textContent = t.cancelBtn;
+    document.getElementById("olSubmitBtn").textContent = t.submitBtn;
+    renderAll();
+  }
+
+  var root = document.getElementById("osirisLibrary");
+  var books = [];
+  var currentOpenMode = "popup"; // see the SET_OPEN_MODE handler below
+
+
+  var sessionFiles = {};
+
+  /* ---------------- Theme: light/dark ---------------- */
+
+
+  function applyTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    document.getElementById("olThemeIcon").innerHTML = theme === "dark" ? SUN_PATH : MOON_PATH;
+    document.body.style.background = theme === "dark" ? "#0e0d0c" : "#c9bb90";
+    try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
+  }
+  document.getElementById("olThemeToggleBtn").addEventListener("click", function(){
+    var current = root.getAttribute("data-theme") === "light" ? "light" : "dark";
+    applyTheme(current === "dark" ? "light" : "dark");
+  });
+
+  /* ---------------- Custom background image ---------------- */
+  var bgImageEl = document.getElementById("olBgImage");
+  var bgOpacitySlider = document.getElementById("olBgOpacity");
+  var bgClearBtn = document.getElementById("olBgClearBtn");
+
+  function compressDataUrl(dataUrl, maxWidth, quality) {
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){
+        var scale = Math.min(1, maxWidth / img.width);
+        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality || 0.85));
+      };
+      img.onerror = function(){ resolve(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
+  function setBackground(dataUrl, opacity) {
+    bgImageEl.style.backgroundImage = "url(" + dataUrl + ")";
+    bgImageEl.style.setProperty("--ol-bg-opacity", opacity / 100);
+    bgImageEl.classList.add("ol-bg-active");
+    bgOpacitySlider.value = opacity;
+    bgOpacitySlider.hidden = false;
+    bgClearBtn.hidden = false;
+  }
+
+  function clearBackground() {
+    bgImageEl.classList.remove("ol-bg-active");
+    bgImageEl.style.backgroundImage = "";
+    bgOpacitySlider.hidden = true;
+    bgClearBtn.hidden = true;
+    try { localStorage.removeItem(BG_KEY); } catch(e) {}
+  }
+
+  document.getElementById("olBgInput").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      compressDataUrl(reader.result, 1600, 0.82).then(function(compressed){
+        var opacity = Number(bgOpacitySlider.value) || 35;
+        setBackground(compressed, opacity);
+        try {
+          localStorage.setItem(BG_KEY, JSON.stringify({ dataUrl: compressed, opacity: opacity }));
+        } catch(err) {
+          alert(t.storageFullImage);
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
+
+  bgOpacitySlider.addEventListener("input", function(){
+    var opacity = Number(bgOpacitySlider.value);
+    bgImageEl.style.setProperty("--ol-bg-opacity", opacity / 100);
+    try {
+      var stored = JSON.parse(localStorage.getItem(BG_KEY) || "null");
+      if (stored) {
+        stored.opacity = opacity;
+        localStorage.setItem(BG_KEY, JSON.stringify(stored));
+      }
+    } catch(e) {}
+  });
+
+  bgClearBtn.addEventListener("click", clearBackground);
+
+  function loadBackground() {
+    try {
+      var stored = JSON.parse(localStorage.getItem(BG_KEY) || "null");
+      if (stored && stored.dataUrl) setBackground(stored.dataUrl, stored.opacity || 35);
+    } catch(e) {}
+  }
+
+  /* ---------------- Cross-theme sort row (Hub SET_SORT) ----------------
+     Step 5 of the workplan: the Hub's sort row computes one shared order
+     across the whole library (core.sortBooks) and pushes it down to
+     whichever shelf is currently mounted via postMessage. This shelf
+     just needs to remember the last order it was given and apply it at
+     render time — no sorting logic lives here, that's all in
+     osiris-core.js's sortBooks(), same helper the Hub itself calls. */
+  var sortOrder = null; // array of book ids in display order, or null = no sort applied yet
+  function applySortOrder(list) {
+    if (!sortOrder || !sortOrder.length) return list;
+    var pos = {};
+    sortOrder.forEach(function (id, i) { pos[id] = i; });
+    return list.slice().sort(function (a, b) {
+      var pa = pos.hasOwnProperty(a.id) ? pos[a.id] : Infinity;
+      var pb = pos.hasOwnProperty(b.id) ? pos[b.id] : Infinity;
+      return pa - pb;
+    });
+  }
+  if (window.OsirisCore && window.parent !== window) {
+    OsirisCore.listen(window.parent, (function () {
+      var handlers = {};
+      handlers[OsirisCore.MSG.SET_SORT] = function (payload) {
+        sortOrder = (payload && payload.orderedIds) || null;
+        renderAll();
+      };
+
+
+      handlers[OsirisCore.MSG.LIBRARY_UPDATED] = function () {
+        loadBooks();
+        renderAll();
+      };
+
+
+      handlers[OsirisCore.MSG.OPEN_BOOK] = function (payload) {
+        if (payload && payload.id) focusBookHighlight(payload.id);
+      };
+
+
+      handlers[OsirisCore.MSG.SET_OPEN_MODE] = function (payload) {
+        if (payload && payload.mode) currentOpenMode = payload.mode;
+      };
+
+
+      handlers[OsirisCore.MSG.SET_LANG] = function (payload) {
+        if (payload && payload.lang) applyLang(payload.lang);
+      };
+      return handlers;
+    })());
+  }
+
+  /* ---------------- Storage: metadata (localStorage) ---------------- */
+
+
+  var MIGRATION_FLAG = "osiris_migrated_classique";
+  function migrateLegacyIfNeeded() {
+    if (localStorage.getItem(MIGRATION_FLAG)) return;
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      var legacy = raw ? JSON.parse(raw) : [];
+      if (legacy.length) {
+        var shared = OsirisCore.loadLibrary();
+        legacy.forEach(function(b){
+          shared.push({
+            id: b.id || OsirisCore.makeBookId(),
+            title: b.title || "",
+            author: b.author || "",
+            comment: b.comment || "",
+            category: b.category || null,
+            color: b.color || COLORS[0],
+            link: b.link || "",
+            addedAt: b.addedAt ? (Date.parse(b.addedAt) || Date.now()) : Date.now(),
+            openCount: 0,
+            fileMeta: null,
+            shelf: "classique"
+          });
+        });
+        OsirisCore.saveLibrary(shared);
+      }
+    } catch(e) { /* legacy key missing or corrupt — nothing to migrate */ }
+    localStorage.setItem(MIGRATION_FLAG, "1");
+  }
+  function loadBooks() {
+    if (window.OsirisCore) {
+      migrateLegacyIfNeeded();
+      books = OsirisCore.loadLibrary();
+      return;
+    }
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      books = raw ? JSON.parse(raw) : [];
+    } catch(e) { books = []; }
+  }
+  function saveBooks() {
+    if (window.OsirisCore) {
+      if (!OsirisCore.saveLibrary(books)) {
+        alert(t.storageFullLibrary);
+      }
+      return;
+    }
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(books));
+    } catch(e) {
+      alert(t.storageFullLibrary);
+    }
+  }
+
+  /* ---------------- Rendering (three independent views) -------------- */
+  function escapeHTML(s) {
+    var d = document.createElement("div");
+    d.textContent = s || "";
+    return d.innerHTML;
+  }
+
+
+  function renderLink(book) {
+    if (book.fileHandle && window.OsirisCore && OsirisCore.fileHandlesSupported()) {
+      return '<button type="button" class="ol-btn-small" data-action="open-file" data-id="' + book.id + '">' + t.openFileBtn + '</button>';
+    }
+    var link = book.link;
+    if (!link) return '<span class="ol-list-no-link">' + t.noLink + '</span>';
+    var isUrl = /^https?:\/\//i.test(link);
+    return isUrl
+      ? '<a class="ol-list-link" href="' + escapeHTML(link) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(link) + ' ↗</a>'
+      : '<span class="ol-list-plain-path">' + escapeHTML(link) + '</span>';
+  }
+
+
+  function aiTagMarkup(book) {
+    if (!book.aiTags || !book.aiTags.theme) return "";
+    var label = escapeHTML(book.aiTags.theme) + (book.aiTags.cecr ? " · " + escapeHTML(book.aiTags.cecr) : "");
+    var hasExcerpt = book.aiTags.confidence === "text-based";
+    var title = typeof t.aiTagTitle === "function" ? t.aiTagTitle(hasExcerpt) : t.aiTagTitle;
+    return '<span class="ol-ai-tag' + (hasExcerpt ? ' ol-ai-tag-text' : '') + '" title="' + escapeHTML(title) + '">' + label + '</span>';
+  }
+
+
+  function resolveColor(b) {
+    if (b.color || b.spine || b.hex || b.accent) {
+      return b.color || b.spine || b.hex || b.accent;
+    }
+    var h = 0;
+    for (var i = 0; i < b.id.length; i++) h = (h * 31 + b.id.charCodeAt(i)) | 0;
+    return COLORS[Math.abs(h) % COLORS.length];
+  }
+
+
+  function canOpenFile(b) {
+    return !!(sessionFiles[b.id] || (b.fileHandle && window.OsirisCore && OsirisCore.fileHandlesSupported()) || b.fileBlob || b.link);
+  }
+
+
+  function focusBookHighlight(id) {
+    var el = document.querySelector('[data-id="' + CSS.escape(id) + '"]');
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('osiris-open-highlight');
+    setTimeout(function () { el.classList.remove('osiris-open-highlight'); }, 2200);
+  }
+
+  function renderAll() {
+    var count = document.getElementById("olCount");
+    count.textContent = t.count(books.length);
+    renderShelf();
+    renderGallery();
+    renderList();
+  }
+
+
+  function renderShelf() {
+    var row = document.getElementById("olShelfRow");
+    if (!books.length) {
+      row.innerHTML = '<div class="ol-empty" style="flex:1;border:none;">' + t.shelfEmpty + '</div>';
+      return;
+    }
+    row.innerHTML = applySortOrder(books).map(function(b){
+      var h = 90 + (b.title.length % 5) * 8;
+      var interactiveAttrs = canOpenFile(b)
+        ? ' role="button" tabindex="0" aria-label="' + escapeHTML(t.clickToOpenAria(b.title)) + '"'
+        : '';
+      return '<div class="ol-shelf-book" data-id="' + b.id + '" style="background:' + resolveColor(b) + ';height:' + h + 'px;" title="' + escapeHTML(b.title) + '"' + interactiveAttrs + '>' +
+        '<span class="ol-spine-label">' + escapeHTML(b.title) + '</span></div>';
+    }).join("");
+  }
+
+  function renderGallery() {
+    var grid = document.getElementById("olGalGrid");
+    if (!books.length) {
+      grid.innerHTML = '<div class="ol-empty">' + t.galleryEmpty + '</div>';
+      return;
+    }
+    grid.innerHTML = applySortOrder(books).map(function(b){
+      var coverStyle = b.cover
+        ? "background-image:url('" + escapeHTML(b.cover) + "');background-size:cover;background-position:center;"
+        : 'background:' + resolveColor(b) + ';';
+
+
+      var openMarkup = canOpenFile(b)
+        ? '<button type="button" class="ol-gal-open" data-action="open-file" data-id="' + b.id + '" aria-label="' + escapeHTML(t.clickToOpenAria(b.title)) + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' +
+            '<span>' + escapeHTML(t.clickToOpen) + '</span>' +
+          '</button>'
+        : '';
+      return '<div class="ol-gal-item">' +
+        '<div class="ol-gal-book" data-id="' + b.id + '">' +
+          '<div class="ol-gal-pages"></div>' +
+          '<div class="ol-gal-edge"></div>' +
+          '<div class="ol-gal-cover" style="' + coverStyle + '">' +
+            (b.cover ? '' : '<span class="ol-gal-title">' + escapeHTML(b.title) + '</span>') +
+          '</div>' +
+          openMarkup +
+        '</div>' +
+        '<div class="ol-gal-meta"><div class="ol-gal-author">' + escapeHTML(b.author || "") + (b.category ? '<span class="ol-tag">' + escapeHTML(b.category) + '</span>' : "") + aiTagMarkup(b) + '</div></div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function renderList() {
+    var wrap = document.getElementById("olListWrap");
+    if (!books.length) {
+      wrap.innerHTML = '<div class="ol-empty">' + t.listEmpty + '</div>';
+      return;
+    }
+    wrap.innerHTML = applySortOrder(books).map(function(b){
+      var previewComment = b.comment ? escapeHTML(b.comment) : t.noComment;
+      var swatchStyle = b.cover
+        ? "background-image:url('" + escapeHTML(b.cover) + "');background-size:cover;background-position:center;"
+        : 'background:' + resolveColor(b) + ';';
+
+
+      var thumbOpenMarkup = canOpenFile(b)
+        ? '<button type="button" class="ol-list-thumb-open" data-action="open-file" data-id="' + b.id + '" aria-label="' + escapeHTML(t.clickToOpenAria(b.title)) + '">' + escapeHTML(t.clickToOpen) + '</button>'
+        : '';
+      return (
+        '<div class="ol-list-row" data-id="' + b.id + '">' +
+          '<div class="ol-list-thumb-wrap">' +
+            '<div class="ol-list-swatch" style="' + swatchStyle + '"></div>' +
+            thumbOpenMarkup +
+          '</div>' +
+          '<div class="ol-list-info">' +
+            '<div class="ol-list-title">' + escapeHTML(b.title) + '</div>' +
+            '<div class="ol-list-author">' + escapeHTML(b.author || t.authorUnknown) + (b.category ? '<span class="ol-tag">' + escapeHTML(b.category) + '</span>' : "") + aiTagMarkup(b) + '</div>' +
+          '</div>' +
+          '<div class="ol-list-comment-preview">' + previewComment + '</div>' +
+        '</div>' +
+        '<div class="ol-list-expand">' +
+          '<div class="ol-list-expand-inner">' +
+            '<div>' + (b.comment ? escapeHTML(b.comment) : '<em>' + t.noCommentLong + '</em>') + '</div>' +
+            '<div class="ol-list-actions">' +
+              renderLink(b) +
+              '<button class="ol-btn-small ol-danger" data-action="delete" data-id="' + b.id + '">' + t.deleteBtn + '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  /* ---------------- View switcher ---------------- */
+  root.querySelectorAll(".ol-tab").forEach(function(tab){
+    tab.addEventListener("click", function(){
+      root.querySelectorAll(".ol-tab").forEach(function(t){ t.setAttribute("aria-selected","false"); });
+      tab.setAttribute("aria-selected","true");
+      var view = tab.getAttribute("data-view");
+      root.querySelectorAll(".ol-view").forEach(function(panel){
+        panel.classList.toggle("ol-active", panel.getAttribute("data-view-panel") === view);
+      });
+    });
+  });
+
+  /* ---------------- List row expand (one open at a time) ---------------- */
+  document.getElementById("olListWrap").addEventListener("click", function(e){
+    var actionBtn = e.target.closest("[data-action]");
+    if (actionBtn) {
+      var id = actionBtn.getAttribute("data-id");
+      var action = actionBtn.getAttribute("data-action");
+      if (action === "delete") {
+        var book = books.find(function(b){ return b.id === id; });
+        if (book && confirm(t.deleteConfirm(book.title))) { removeBook(id); }
+      } else if (action === "open-file") {
+        openFileBook(id, actionBtn);
+      }
+      e.stopPropagation();
+      return;
+    }
+    var row = e.target.closest(".ol-list-row");
+    if (!row) return;
+    var wasOpen = row.classList.contains("ol-open");
+    document.querySelectorAll("#olListWrap .ol-list-row.ol-open").forEach(function(r){
+      r.classList.remove("ol-open");
+    });
+    if (!wasOpen) row.classList.add("ol-open");
+  });
+
+  /* ---------------- Gallery-view click-to-open (Codex pattern) ---------------- */
+  document.getElementById("olGalGrid").addEventListener("click", function(e){
+    var openBtn = e.target.closest('[data-action="open-file"]');
+    if (!openBtn) return;
+    e.stopPropagation();
+    openFileBookBusy(openBtn.getAttribute("data-id"), openBtn);
+  });
+
+  /* ---------------- Shelf-view click-to-open (invisible affordance) ----------------
+     No icon/label is ever rendered on the spine (see renderShelf) — the
+     whole spine is the click target, silently, only when there's
+     actually something to open (canOpenFile()). */
+  document.getElementById("olShelfRow").addEventListener("click", function(e){
+    var spine = e.target.closest(".ol-shelf-book");
+    if (!spine) return;
+    var book = books.find(function(b){ return b.id === spine.getAttribute("data-id"); });
+    if (!book || !canOpenFile(book)) return;
+    openFileBookBusy(book.id, spine);
+  });
+  document.getElementById("olShelfRow").addEventListener("keydown", function(e){
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var spine = e.target.closest(".ol-shelf-book");
+    if (!spine) return;
+    e.preventDefault();
+    spine.click();
+  });
+
+  function removeBook(id) {
+    if (window.OsirisCore) { OsirisCore.deleteFileHandle(id); OsirisCore.deleteFileBlob(id); } // no-op if none was ever saved
+    delete sessionFiles[id];
+    books = books.filter(function(b){ return b.id !== id; });
+    saveBooks();
+    renderAll();
+  }
+
+
+  function resolveAndOpenFile(id) {
+
+
+    if (currentOpenMode === "reader") {
+      if (window.OsirisCore && window.parent !== window) {
+        var readerBook = books.filter(function (b) { return b.id === id; })[0];
+        OsirisCore.send(window.parent, OsirisCore.MSG.REQUEST_READER_OPEN, {
+          id: id,
+          title: readerBook ? readerBook.title : "",
+          author: readerBook ? readerBook.author : ""
+        });
+        return Promise.resolve("opened");
+      }
+
+
+    }
+    var cached = sessionFiles[id];
+    if (cached) {
+      openRawFile(cached);
+      return Promise.resolve("opened");
+    }
+    if (!window.OsirisCore) return Promise.resolve("unavailable");
+    return OsirisCore.getFileHandle(id).then(function (handle) {
+      if (!handle) return "unavailable";
+      return OsirisCore.openFileHandle(handle, currentOpenMode);
+    }).then(function (status) {
+      if (status === "opened") return "opened";
+      return OsirisCore.openFileBlob(id, currentOpenMode);
+    });
+  }
+
+  function openFileBook(id, btn) {
+    var book = books.find(function(b){ return b.id === id; });
+    if (!book) return;
+    var originalLabel = btn.textContent;
+    btn.textContent = t.opening;
+    btn.disabled = true;
+    resolveAndOpenFile(id).then(function (status) {
+      btn.textContent = originalLabel;
+      btn.disabled = false;
+      if (status === "opened") return;
+      if (book.link) {
+        window.open(book.link, "_blank", "noopener,noreferrer");
+      } else {
+        alert(t.fileNotFound);
+      }
+    });
+  }
+
+
+  function openRawFile(file) {
+    var url = URL.createObjectURL(file);
+    if (currentOpenMode === "popup") {
+      window.open(url, "osirisReader", "width=820,height=1040");
+    } else {
+      window.open(url, "_blank");
+    }
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+
+
+  function openFileBookBusy(id, el) {
+    var book = books.find(function(b){ return b.id === id; });
+    if (!book) return;
+    el.classList.add("ol-open-busy");
+    resolveAndOpenFile(id).then(function (status) {
+      el.classList.remove("ol-open-busy");
+      if (status === "opened") return;
+      if (book.link) {
+        window.open(book.link, "_blank", "noopener,noreferrer");
+      } else {
+        alert(t.fileNotFound);
+      }
+    });
+  }
+
+  /* ---------------- Add-book modal + upload ---------------- */
+  var backdrop = document.getElementById("olModalBackdrop");
+  var form = document.getElementById("olAddForm");
+  var swatchWrap = document.getElementById("olSwatches");
+  var selectedColor = COLORS[0];
+  var pendingFileHandle = null; // FileSystemFileHandle chosen this session, not yet saved to IndexedDB (Chromium only)
+  var pendingFile = null;       // actual File, used for cover/metadata extraction on any browser
+  var pendingCoverDataUrl = null;
+  var pendingTextExcerpt = null; // step 9: plain-text sample for aiClassifyBatch, see extractPdfCover/extractEpubCover
+
+  var titleInput = document.getElementById("olTitle");
+  var authorInput = document.getElementById("olAuthor");
+  var titleTouched = false;   // once the user types in Titre, auto-fill stops overwriting it
+  var authorTouched = false;  // same for Auteur
+  titleInput.addEventListener("input", function(){ titleTouched = true; });
+  authorInput.addEventListener("input", function(){ authorTouched = true; });
+
+  var olUploadZone = document.getElementById("olUploadZone");
+  var olUploadEmpty = document.getElementById("olUploadEmpty");
+  var olUploadFilled = document.getElementById("olUploadFilled");
+  var olCoverPreview = document.getElementById("olCoverPreview");
+  var olChosenFileName = document.getElementById("olChosenFileName");
+  var olUploadStatus = document.getElementById("olUploadStatus");
+  var olFileInput = document.getElementById("olFileInput");
+  var olUploadHint = document.getElementById("olUploadHint");
+
+  var fileHandlesOk = !!(window.OsirisCore && OsirisCore.fileHandlesSupported());
+  olUploadHint.textContent = fileHandlesOk ? t.uploadHintHandles : t.uploadHintNoHandles;
+
+
+  olUploadZone.addEventListener("click", function(e){
+    if (e.target === olFileInput) return;
+    if (fileHandlesOk) {
+      OsirisCore.pickFileHandle().then(function (handle) {
+        if (!handle) return; // user cancelled
+        pendingFileHandle = handle;
+        handle.getFile().then(handleChosenFile);
+      }).catch(function () {
+
+
+        pendingFileHandle = null;
+        olFileInput.click();
+      });
+    } else {
+      olFileInput.click();
+    }
+  });
+  olUploadZone.addEventListener("keydown", function(e){
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); olUploadZone.click(); }
+  });
+  olFileInput.addEventListener("click", function(e){ e.stopPropagation(); });
+  olFileInput.addEventListener("change", function(){
+    var f = olFileInput.files && olFileInput.files[0];
+    if (f) { pendingFileHandle = null; handleChosenFile(f); }
+  });
+
+  function deriveTitleFromFilename(name) {
+    var base = String(name || "").replace(/\.[^/.]+$/, "");
+    base = base.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+    return base;
+  }
+
+  function handleChosenFile(file) {
+    pendingFile = file;
+    pendingCoverDataUrl = null;
+    pendingTextExcerpt = null;
+    olUploadEmpty.style.display = "none";
+    olUploadFilled.style.display = "";
+    olChosenFileName.textContent = file.name;
+    olCoverPreview.style.display = "none";
+    olCoverPreview.removeAttribute("src");
+    olUploadStatus.textContent = t.extracting;
+
+    if (!titleTouched) titleInput.value = deriveTitleFromFilename(file.name);
+
+    extractCoverAndMeta(file).then(function (result) {
+      if (pendingFile !== file) return; // a newer file was chosen meanwhile
+      if (result && result.cover) {
+        pendingCoverDataUrl = result.cover;
+        olCoverPreview.src = result.cover;
+        olCoverPreview.style.display = "";
+      }
+      if (result && result.title && !titleTouched) titleInput.value = result.title;
+      if (result && result.author && !authorTouched) authorInput.value = result.author;
+      if (result && result.excerpt) pendingTextExcerpt = result.excerpt;
+      olUploadStatus.textContent = result && result.cover
+        ? t.coverExtracted
+        : t.noCoverExtracted;
+    });
+  }
+
+  var _pdfjsLoading = null;
+  function ensurePdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (_pdfjsLoading) return _pdfjsLoading;
+    _pdfjsLoading = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "../lib/pdf/v1/pdf.min.js";
+      s.onload = function () {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../lib/pdf/v1/pdf.worker.min.js";
+        resolve(window.pdfjsLib);
+      };
+      s.onerror = function () { reject(new Error("pdf.js load failed")); };
+      document.head.appendChild(s);
+    });
+    return _pdfjsLoading;
+  }
+
+  var _jsZipLoading = null;
+  function ensureJsZip() {
+    if (window.JSZip) return Promise.resolve(window.JSZip);
+    if (_jsZipLoading) return _jsZipLoading;
+    _jsZipLoading = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "../lib/jszip/v1/jszip.min.js";
+      s.onload = function () { resolve(window.JSZip); };
+      s.onerror = function () { reject(new Error("JSZip load failed")); };
+      document.head.appendChild(s);
+    });
+    return _jsZipLoading;
+  }
+
+  function normalizeZipPath(p) {
+    var out = [];
+    String(p || "").split("/").forEach(function (seg) {
+      if (seg === "" || seg === ".") return;
+      if (seg === "..") { out.pop(); return; }
+      out.push(seg);
+    });
+    return out.join("/");
+  }
+
+
+  var MAX_EXCERPT_CHARS = 700;
+
+
+  var MIN_EXCERPT_CHARS_BEFORE_FALLBACK = 40;
+
+  function cleanExcerptText(raw) {
+    return String(raw || "").replace(/\s+/g, " ").trim();
+  }
+
+
+  function extractPdfCover(file) {
+    return ensurePdfJs().then(function (pdfjsLib) {
+      return file.arrayBuffer().then(function (buf) {
+        return pdfjsLib.getDocument({ data: buf }).promise.then(function (pdf) {
+          var result = {};
+          return pdf.getMetadata().then(function (meta) {
+            var info = (meta && meta.info) || {};
+            if (info.Title) result.title = String(info.Title).trim();
+            if (info.Author) result.author = String(info.Author).trim();
+            return pdf.getPage(1);
+          }).then(function (page) {
+            var viewport = page.getViewport({ scale: 1 });
+            var scale = 360 / viewport.width;
+            var scaledViewport = page.getViewport({ scale: scale });
+            var canvas = document.createElement("canvas");
+            canvas.width = scaledViewport.width;
+            canvas.height = scaledViewport.height;
+            return page.render({ canvasContext: canvas.getContext("2d"), viewport: scaledViewport }).promise.then(function () {
+              result.cover = canvas.toDataURL("image/jpeg", 0.85);
+              return page.getTextContent();
+            });
+          }).then(function (textContent) {
+            var text = cleanExcerptText(textContent.items.map(function (it) { return it.str; }).join(" "));
+            if (text.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || pdf.numPages < 2) {
+              if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+              return result;
+            }
+            return pdf.getPage(2).then(function (page2) {
+              return page2.getTextContent();
+            }).then(function (textContent2) {
+              var text2 = cleanExcerptText(textContent2.items.map(function (it) { return it.str; }).join(" "));
+              var combined = (text + " " + text2).trim();
+              if (combined) result.excerpt = combined.slice(0, MAX_EXCERPT_CHARS);
+              return result;
+            }).catch(function () {
+              if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+              return result;
+            });
+          });
+        });
+      });
+    }).catch(function (err) {
+      console.warn("Extraction de couverture PDF impossible :", err);
+      return null;
+    });
+  }
+
+
+  function extractEpubCover(file) {
+    return ensureJsZip().then(function (JSZip) {
+      return JSZip.loadAsync(file).then(function (zip) {
+        var containerEntry = zip.file("META-INF/container.xml");
+        if (!containerEntry) return null;
+        return containerEntry.async("string").then(function (containerXml) {
+          var parser = new DOMParser();
+          var containerDoc = parser.parseFromString(containerXml, "application/xml");
+          var rootfileEl = containerDoc.querySelector("rootfile");
+          var opfPath = rootfileEl ? rootfileEl.getAttribute("full-path") : null;
+          var opfEntry = opfPath ? zip.file(opfPath) : null;
+          if (!opfEntry) return null;
+          var opfDir = opfPath.split("/").slice(0, -1).join("/");
+
+          return opfEntry.async("string").then(function (opfXml) {
+            var opfDoc = parser.parseFromString(opfXml, "application/xml");
+            var result = {};
+
+            var titleEl = opfDoc.getElementsByTagNameNS("*", "title")[0];
+            if (titleEl && titleEl.textContent) result.title = titleEl.textContent.trim();
+            var creatorEl = opfDoc.getElementsByTagNameNS("*", "creator")[0];
+            if (creatorEl && creatorEl.textContent) result.author = creatorEl.textContent.trim();
+
+            var manifestItems = Array.prototype.slice.call(opfDoc.querySelectorAll("manifest > item"));
+            var metaCover = opfDoc.querySelector('metadata > meta[name="cover"]');
+            var coverId = metaCover ? metaCover.getAttribute("content") : null;
+
+            var coverItem = manifestItems.find(function (item) {
+              return (item.getAttribute("properties") || "").indexOf("cover-image") !== -1;
+            });
+            if (!coverItem && coverId) {
+              coverItem = manifestItems.find(function (item) { return item.getAttribute("id") === coverId; });
+            }
+            if (!coverItem) {
+              coverItem = manifestItems.find(function (item) {
+                return (item.getAttribute("media-type") || "").indexOf("image/") === 0;
+              });
+            }
+
+
+            var spineIds = Array.prototype.slice.call(opfDoc.querySelectorAll("spine > itemref"))
+              .map(function (el) { return el.getAttribute("idref"); })
+              .filter(Boolean);
+            var manifestById = {};
+            manifestItems.forEach(function (item) { manifestById[item.getAttribute("id")] = item; });
+
+            function readSpineText(spineIndex, acc) {
+              if (spineIndex >= spineIds.length || spineIndex >= 3) {
+                return Promise.resolve(cleanExcerptText(acc));
+              }
+              var manifestItem = manifestById[spineIds[spineIndex]];
+              var href = manifestItem && manifestItem.getAttribute("href");
+              if (!href) return readSpineText(spineIndex + 1, acc);
+              var fullPath = normalizeZipPath(opfDir ? opfDir + "/" + href : href);
+              var docEntry = zip.file(fullPath);
+              if (!docEntry) return readSpineText(spineIndex + 1, acc);
+              return docEntry.async("string").then(function (html) {
+                var doc = parser.parseFromString(html, "text/html");
+                var text = cleanExcerptText((doc.body && doc.body.textContent) || "");
+                var combined = (acc + " " + text).trim();
+                if (combined.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || spineIndex >= 2) {
+                  return combined;
+                }
+                return readSpineText(spineIndex + 1, combined);
+              }).catch(function () { return readSpineText(spineIndex + 1, acc); });
+            }
+
+            function attachCover() {
+              if (!coverItem) return result;
+              var href = coverItem.getAttribute("href");
+              var fullPath = normalizeZipPath(opfDir ? opfDir + "/" + href : href);
+              var mediaType = coverItem.getAttribute("media-type") || "image/jpeg";
+              var imgEntry = zip.file(fullPath);
+              if (!imgEntry) return result;
+              return imgEntry.async("base64").then(function (b64) {
+                result.cover = "data:" + mediaType + ";base64," + b64;
+                return result;
+              });
+            }
+
+            return readSpineText(0, "").then(function (excerpt) {
+              if (excerpt) result.excerpt = excerpt.slice(0, MAX_EXCERPT_CHARS);
+              return attachCover();
+            });
+          });
+        });
+      });
+    }).catch(function (err) {
+      console.warn("Extraction de couverture EPUB impossible :", err);
+      return null;
+    });
+  }
+
+  function extractCoverAndMeta(file) {
+    var name = (file.name || "").toLowerCase();
+    var type = file.type || "";
+    if (type === "application/pdf" || name.endsWith(".pdf")) return extractPdfCover(file);
+    if (type === "application/epub+zip" || name.endsWith(".epub")) return extractEpubCover(file);
+    return Promise.resolve(null); // other file types: filename fallback only, no cover
+  }
+
+  COLORS.forEach(function(c, i){
+    var s = document.createElement("button");
+    s.type = "button";
+    s.className = "ol-swatch-opt";
+    s.style.background = c;
+    s.setAttribute("aria-checked", i === 0 ? "true" : "false");
+    s.addEventListener("click", function(){
+      selectedColor = c;
+      swatchWrap.querySelectorAll(".ol-swatch-opt").forEach(function(el){ el.setAttribute("aria-checked","false"); });
+      s.setAttribute("aria-checked","true");
+    });
+    swatchWrap.appendChild(s);
+  });
+
+  document.getElementById("olAddBtn").addEventListener("click", function(){
+    backdrop.classList.add("ol-show");
+    document.getElementById("olTitle").focus();
+  });
+  document.getElementById("olCancelBtn").addEventListener("click", closeModal);
+  backdrop.addEventListener("click", function(e){ if (e.target === backdrop) closeModal(); });
+
+  function closeModal() {
+    backdrop.classList.remove("ol-show");
+    form.reset();
+    selectedColor = COLORS[0];
+    pendingFileHandle = null;
+    pendingFile = null;
+    pendingCoverDataUrl = null;
+    pendingTextExcerpt = null;
+    titleTouched = false;
+    authorTouched = false;
+    olFileInput.value = "";
+    olUploadEmpty.style.display = "";
+    olUploadFilled.style.display = "none";
+    olCoverPreview.style.display = "none";
+    olCoverPreview.removeAttribute("src");
+    olChosenFileName.textContent = "";
+    olUploadStatus.textContent = "";
+    swatchWrap.querySelectorAll(".ol-swatch-opt").forEach(function(el, i){
+      el.setAttribute("aria-checked", i === 0 ? "true" : "false");
+    });
+  }
+
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var title = titleInput.value.trim();
+    if (!title && pendingFile) title = deriveTitleFromFilename(pendingFile.name);
+    if (!title) title = t.untitled;
+    var author = authorInput.value.trim();
+    var comment = document.getElementById("olComment").value.trim();
+    var category = document.getElementById("olCategory").value.trim();
+    var link = document.getElementById("olLink").value.trim();
+    var excludeAi = document.getElementById("olExcludeAi").checked;
+    var id = "b_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7);
+
+    var book = {
+      id: id,
+      title: title,
+      author: author,
+      comment: comment,
+      category: category || null,
+      color: selectedColor,
+      cover: pendingCoverDataUrl || null,
+      excerpt: pendingTextExcerpt || null,
+      aiExcluded: excludeAi,
+      link: link,
+      fileHandle: !!pendingFileHandle,
+      fileBlob: !!(pendingFile && !pendingFileHandle),
+      addedAt: Date.now(),
+      openCount: 0,
+      fileMeta: pendingFile ? { name: pendingFile.name, size: pendingFile.size, type: pendingFile.type } : (pendingFileHandle ? { name: pendingFileHandle.name, size: null, type: null } : null),
+      shelf: "classique"
+    };
+
+    books.unshift(book);
+    saveBooks();
+    if (pendingFileHandle && window.OsirisCore) {
+      OsirisCore.saveFileHandle(id, pendingFileHandle); // fire-and-forget; "Open" falls back to link if this never lands
+    } else if (pendingFile) {
+
+
+      sessionFiles[id] = pendingFile;
+      if (window.OsirisCore) OsirisCore.saveFileBlob(id, pendingFile);
+    }
+    renderAll();
+    closeModal();
+  });
+
+  /* ---------------- Boot ---------------- */
+  applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+  loadBackground();
+  loadBooks();
+  applyLang(currentLang); // pre-paint read above already picked the Hub's current language when available; the Hub still overrides via SET_LANG right after SHELF_READY, e.g. if it changed since our last read
+
+  if (window.OsirisCore && window.parent !== window) {
+    OsirisCore.send(window.parent, OsirisCore.MSG.SHELF_READY, {});
+  }
+
+  window.OsirisLibrary = {
+    getBooks: function(){ return books.slice(); },
+    refresh: renderAll
+  };
+})();
+</script>
+</body>
+</html>

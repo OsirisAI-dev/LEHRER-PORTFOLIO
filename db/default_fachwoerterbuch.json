@@ -1,0 +1,29 @@
+﻿{
+  "app": "iaDictLocalDB",
+  "version": 1,
+  "count": 2,
+  "words": [
+    {
+      "word": "Pädagogik",
+      "definitionPrimaryDe": "Die Wissenschaft von der Erziehung und Bildung.",
+      "levels": {
+        "A1/A2": { "synonyms": [], "antonyms": [], "examples": ["Er studiert Pädagogik."] },
+        "B1/B2": { "synonyms": [], "antonyms": [], "examples": ["Die moderne Pädagogik fordert mehr Praxisbezug."] },
+        "C1/C2": { "synonyms": [], "antonyms": [], "examples": ["In der Heilpädagogik werden spezielle Ansätze verfolgt."] }
+      },
+      "lastUpdated": 1700000000000,
+      "audioBase64": null
+    },
+    {
+      "word": "Didaktik",
+      "definitionPrimaryDe": "Lehre vom Lehren und Lernen.",
+      "levels": {
+        "A1/A2": { "synonyms": [], "antonyms": [], "examples": ["Die Didaktik ist wichtig."] },
+        "B1/B2": { "synonyms": [], "antonyms": [], "examples": ["Seine Didaktik im Unterricht ist hervorragend."] },
+        "C1/C2": { "synonyms": [], "antonyms": [], "examples": ["Mediendidaktik befasst sich mit digitalen Lehrformaten."] }
+      },
+      "lastUpdated": 1700000000000,
+      "audioBase64": null
+    }
+  ]
+}

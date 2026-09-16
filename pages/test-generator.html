@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassenarbeit Editor</title>
+    
+    <script src="/lib/htmldocx/v1/html-docx.js"></script>
+    <script src="/js/core/osiris-educore.js"></script>
+    <script src="/lib/mammoth/v1/mammoth.browser.js"></script>
+    <script>
+
+
+        (function () {
+            try {
+                var prefs = {};
+try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } catch(e){}
+                if (prefs.font) {
+                    document.documentElement.style.setProperty('--klass-font-family', prefs.font);
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #f4f4f9; --container-bg: #ffffff; --text-color: #000000;
+            --border-color: #cccccc; --primary: #4CAF50; --primary-hover: #45a049;
+            --danger: #f44336; --action-bg: #f9f9f9;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a; --container-bg: #2d2d2d; --text-color: #f0f0f0;
+            --border-color: #444444; --primary: #81c784; --primary-hover: #66bb6a;
+            --danger: #e57373; --action-bg: #3d3d3d;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 10px 10px 92px 10px; transition: 0.3s; }
+        
+        .app-title-main { font-family: var(--klass-font-family, 'Brush Script MT', cursive); text-align: center; font-size: 1.15em; margin: 15px 0 0 0; color: var(--primary); transition: color 0.3s ease, font-size 0.2s ease; }
+        .app-title-sub { font-family: var(--klass-font-family, 'Brush Script MT', cursive); text-align: center; font-size: 0.62em; margin: 0 0 20px 0; color: var(--text-color); opacity: 0.8; font-style: italic; }
+
+        /* Hidden rather than deleted: the language dropdown duplicates the
+           Hub's own FR/DE toggle (this tool's version also offers EN/ES,
+           but the Hub-parity convention established for the other tools
+           takes priority) — hidden via CSS rather than removed from the
+           DOM so setLanguage()/toggleLangMenu() (still used by the new
+           SET_LANG listener below) don't hit a null reference. */
+        .globe-menu button[onclick^="toggleLangMenu"],
+        #lang-dropdown { display: none; }
+
+        .toolbar { display: flex; gap: 8px; margin-bottom: 0; background: var(--container-bg); padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-wrap: wrap; justify-content: space-between; }
+        .globe-menu { margin-left: auto; display: flex; gap: 8px; }
+
+        /* Header (title + toolbar) pinned together at the top — the main
+           document content scrolls underneath instead of the title
+           scrolling away while only the toolbar row used to stay put. */
+        #app-header-sticky {
+            position: sticky; top: 0; z-index: 101;
+            background: var(--bg-color); padding-top: 10px; margin-bottom: 20px;
+        }
+        
+        .container { 
+            background: var(--container-bg); 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            max-width: 100%;
+            width: 100%;
+            margin: auto; 
+            overflow-x: auto; 
+            box-sizing: border-box;
+            transition: padding 0.3s ease; /* Smooth transition for margins */
+        }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th, td { 
+            border: 1px solid var(--border-color); 
+            padding: 2px 5px; 
+            text-align: left; 
+            position: relative; 
+            vertical-align: middle;
+        }
+                
+        input, textarea, select { width: 100%; border: 1px solid transparent; background: transparent; color: inherit; font-family: inherit; font-size: 14px; padding: 2px; box-sizing: border-box; }
+        input:focus, textarea:focus, select:focus { border-bottom: 1px solid var(--primary); outline: none; background: rgba(0,0,0,0.02); }
+        textarea { 
+            resize: none; 
+            overflow: hidden; 
+            min-height: 18px; 
+            line-height: 1.5;
+            padding: 2px; 
+        }
+
+        /* Immunity for line numbering against format changes */
+        #line-numbers { text-align: right !important; }
+
+        #source-box { min-height: 18px; padding: 1px 4px; }
+        
+        #extra-header-row textarea {
+            min-height: 60px; height: 60px; padding: 1px 4px;
+        }
+                
+        .grid-header td { font-size: 0.9em; font-weight: bold; }
+        .grid-header .flex-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-weight:bold; }
+        .grid-header input { font-weight: normal; width: auto; flex-grow: 1; }
+
+        .action-cell { width: 30px; text-align: center; background: var(--action-bg); }
+        button { padding: 4px 8px; cursor: pointer; border: none; border-radius: 4px; background: var(--primary); color: white; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; }
+
+        button[onclick*="toggleParamMenu"] { padding: 4px 8px !important; }
+                
+        #lang-dropdown { display:none; position:absolute; right:0; background:var(--container-bg); border:1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 200;}
+        #lang-dropdown button { display:block; width:100%; background:none; color:inherit; text-align: left; padding: 10px; border-radius: 0; }
+
+        .vocab-section { border: 1px solid var(--border-color); padding: 10px; margin-top: 10px; }
+        .vocab-table td { padding: 2px; }
+
+        #main-text { text-align: justify; }
+
+        #ghost-measure {
+            position: absolute; top: -9999px; left: -9999px; visibility: hidden; 
+            white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; 
+            text-align: justify; padding: 4px 8px; box-sizing: border-box; font-size: 14px;
+        }
+
+        .numbering-wrapper { position: relative; height: 100%; }
+        .excel-controls {
+            position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%);
+            display: none; gap: 5px; z-index: 10;
+        }
+        .excel-btn {
+            background: var(--primary); color: white; border-radius: 50%;
+            width: 22px; height: 22px; text-align: center; line-height: 20px;
+            font-size: 16px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.3); font-weight: bold;
+        }
+        .excel-btn.minus { background: var(--danger); } 
+
+        @media print { 
+            .no-print { display: none !important; } 
+            table, th, td { border: none !important; }
+        }
+
+        #logo-wrapper button:hover {
+            transform: scale(1.2);
+            opacity: 1;
+            background: transparent;
+        }
+        #logo-wrapper button {
+            opacity: 0.5;
+            transition: 0.2s;
+        }
+
+    /* Centrage dissocié du logo */
+    .auto-center #top-header-row td, 
+    .auto-center #top-header-row input,
+    .auto-center #extra-header-row td,
+    .auto-center #extra-header-row textarea { 
+        text-align: center !important; 
+    }
+
+    .auto-center #top-header-row .flex-item { 
+        justify-content: center; 
+    }
+
+        /* Floating Moveable Auto-Hideable Toolbar */
+        #floating-toolbar {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            gap: 6px;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            cursor: move;
+        }
+        #floating-toolbar.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Same auto-hide treatment as #floating-toolbar above (shares its
+           resetHideTimer(), not a second independent timer) — the DOCX
+           export used to live in the top toolbar row; moved here per
+           request so the row stays lighter and export reads as a
+           persistent-but-unobtrusive action, consistent with the
+           formatting bar's own "recedes when idle" behavior. */
+        #docx-fab {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: #2b579a;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border-radius: 50px;
+            padding: 14px 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease, transform 0.15s ease;
+        }
+        #docx-fab:hover { transform: scale(1.05); }
+        #docx-fab.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* AI generation left drawer — same scrim + slide-in pattern as the
+           Power Phoenix / Hub MODES panel this was modeled on. */
+        #ai-scrim {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 1400;
+        }
+        #ai-scrim.open { opacity: 1; pointer-events: auto; }
+        #ai-panel {
+            position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 88vw);
+            background: var(--container-bg); border-right: 1px solid var(--border-color);
+            transform: translateX(-100%); transition: transform 0.25s ease;
+            z-index: 1500; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.25);
+        }
+        #ai-panel.open { transform: translateX(0); }
+        #ai-panel-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; border-bottom: 1px solid var(--border-color); flex-shrink: 0;
+        }
+        #ai-panel-head h3 { margin: 0; font-size: 15px; color: var(--text-color); }
+        #ai-panel-body { flex: 1; overflow-y: auto; padding: 14px 16px 24px; }
+        /* Generate button — loading animation */
+        @keyframes gen-spin { to { transform: rotate(360deg); } }
+        @keyframes gen-pulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(var(--primary-rgb,60,100,180),.5); } 60%{ box-shadow: 0 0 0 7px rgba(var(--primary-rgb,60,100,180),0); } }
+
+        #ai-generate-btn { transition: background 0.2s, opacity 0.2s; position: relative; }
+        #ai-generate-btn.generating {
+            opacity: 0.85;
+            animation: gen-pulse 1.4s ease-in-out infinite;
+            cursor: wait;
+        }
+        #ai-generate-btn.generating::before {
+            content: '';
+            display: inline-block;
+            width: 11px; height: 11px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: gen-spin 0.65s linear infinite;
+            margin-right: 7px;
+            vertical-align: middle;
+        }
+
+        /* Exercises-only generate button (for pasted text) */
+        #ai-exercises-only-btn {
+            width: 100%; margin-top: 10px;
+            background: transparent;
+            border: 1.5px dashed var(--border-color);
+            color: var(--primary);
+            font-size: 12px;
+            padding: 7px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        #ai-exercises-only-btn:hover { background: var(--container-bg); border-color: var(--primary); }
+        #ai-exercises-only-btn.generating {
+            opacity: 0.7; cursor: wait; animation: gen-pulse 1.4s ease-in-out infinite;
+        }
+        #ai-exercises-only-btn.generating::before {
+            content: '';
+            display: inline-block;
+            width: 10px; height: 10px;
+            border: 2px solid color-mix(in srgb, var(--primary) 40%, transparent);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: gen-spin 0.65s linear infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .ai-section-label {
+            font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: .03em;
+            color: var(--primary); margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);
+        }
+        .ai-section-label:first-child { margin-top: 0; }
+
+        /* Collapsible exercise categories (I/II/III per the exercise-type
+           spec) — each is a clickable header + a body of checkboxes that
+           show/hide together. Same pattern reused for every category as
+           they're added in later steps, not just this first one. */
+        .ex-cat-header {
+            display: flex; align-items: center; gap: 5px; cursor: pointer;
+            font-size: 12px; font-weight: bold; color: var(--text-color);
+            margin: 10px 0 4px; user-select: none;
+        }
+        .ex-cat-header .ex-cat-arrow { font-size: 9px; width: 10px; display: inline-block; }
+
+        /* Grid, not flex: every row's text lands in column 1 and every
+           checkbox lands in column 2 at the exact same x-position, no
+           matter how long or short each label is or whether it wraps —
+           that's what flex + "gap" couldn't guarantee before. Text comes
+           first in both the DOM and visually (checkbox reads as trailing
+           the exercise name, not leading it). `display: contents` on the
+           label lets its two children become direct grid items of the
+           body itself, while keeping the native label-click-toggles-
+           checkbox behavior intact. Nested sub-categories (II.A/B/C) sit
+           in their own indented grid, one level in from their parent.
+           */
+        .ex-cat-body {
+            display: grid; grid-template-columns: 1fr auto;
+            column-gap: 8px; row-gap: 6px; align-items: start;
+            padding-left: 15px;
+        }
+        .ex-cat-body > label { display: contents; cursor: pointer; }
+        .ex-check-text { font-size: 12px; color: var(--text-color); line-height: 1.3; }
+        .ex-cat-body input[type="checkbox"] { margin: 2px 0 0; }
+
+        .ex-subcat-header {
+            grid-column: 1 / -1; display: flex; align-items: center; gap: 5px;
+            cursor: pointer; font-size: 11.5px; font-weight: bold;
+            color: var(--text-color); margin: 8px 0 2px; user-select: none;
+        }
+        .ex-subcat-header .ex-cat-arrow { font-size: 9px; width: 10px; display: inline-block; }
+        .ex-subcat-body {
+            grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto;
+            column-gap: 8px; row-gap: 6px; align-items: start; padding-left: 12px;
+        }
+        .ex-subcat-body > label { display: contents; cursor: pointer; }
+        /* Section A (AI Text Generation) only — greyed + non-interactive
+           until the toggle at its top is switched on. Vocabulary and
+           Exercises sections below it are never wrapped in this class:
+           they're "anytime selectable" regardless of Section A's state. */
+        #ai-textgen-fields.disabled { opacity: 0.45; pointer-events: none; }
+        .ai-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .ai-toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+        .ai-toggle-switch input { opacity: 0; width: 100%; height: 100%; position: absolute; margin: 0; cursor: pointer; z-index: 1; }
+        .ai-toggle-track { position: absolute; inset: 0; background: var(--border-color); border-radius: 999px; transition: background .2s ease; }
+        .ai-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--container-bg); box-shadow: 0 1px 3px rgba(0,0,0,.4); transition: transform .2s ease; }
+        .ai-toggle-switch input:checked + .ai-toggle-track { background: var(--primary); }
+        .ai-toggle-switch input:checked + .ai-toggle-track .ai-toggle-thumb { transform: translateX(18px); }
+                .fmt-btn {
+            background: var(--action-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            font-family: 'Times New Roman', serif;
+        }
+        .fmt-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Hover Notification Style */
+        #margin-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 9999;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .text-ruler-bg {
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 9px, var(--border-color) 10px);
+        }
+    
+        .big-loader-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 2000;
+        }
+        .big-loader-overlay.show { display: flex; }
+        .big-loader-inner { position: relative; display: flex; align-items: center; justify-content: center; }
+        .big-spinner {
+            width: 72px;
+            height: 72px;
+            border: 7px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: big-spin 0.9s linear infinite;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        }
+        @keyframes big-spin { to { transform: rotate(360deg); } }
+        .big-loader-cancel {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.875rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .big-loader-cancel:hover { border-color: var(--danger); color: var(--danger); }
+
+</style>
+</head>
+<body onclick="handleGlobalClick(event)">
+
+    <div class="big-loader-overlay" id="bigLoader">
+        <div class="big-loader-inner">
+            <div class="big-spinner"></div>
+            <button type="button" class="big-loader-cancel" id="bigLoaderCancel" title="Annuler">&#215;</button>
+        </div>
+    </div>
+
+
+<div id="ai-scrim" onclick="closeAiPanel()"></div>
+<div id="ai-panel">
+    <div id="ai-panel-head">
+        <h3>🤖 Générer IA</h3>
+        <button onclick="closeAiPanel()" style="padding: 4px 9px;">✕</button>
+    </div>
+    <div id="ai-panel-body">
+        <div id="ai-model-display" style="font-size: 10.5px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-color); opacity: 0.85;">
+            ? Choisissez un modèle IA dans le Vault du Hub.
+        </div>
+
+        <div class="ai-section-label">Génération de texte</div>
+        <div class="ai-toggle-row">
+            <span style="font-size: 13px; color: var(--text-color);">Rédiger le texte avec l'IA</span>
+            <label class="ai-toggle-switch">
+                <input type="checkbox" id="ai-textgen-toggle" onchange="toggleAiTextGenFields()">
+                <div class="ai-toggle-track"><div class="ai-toggle-thumb"></div></div>
+            </label>
+        </div>
+        
+        <div id="ai-textgen-fields" class="disabled" style="margin-top: 10px;">
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--text-color);">Thème</div>
+            <input type="text" id="ai-theme" placeholder="Ex : l'environnement" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; font-size: 12px; background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 4px;">
+
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--text-color);">Niveau (CECR)</div>
+            <select id="ai-niveau" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; font-size: 12px; background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+                <option value="B1" selected>B1</option>
+                <option value="B2">B2</option>
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+            </select>
+
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--text-color);">Nombre de lignes (max 50)</div>
+            <select id="ai-lignes" style="width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 12px; background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                <option value="10" selected>10 lignes</option>
+                <option value="15">15 lignes</option>
+                <option value="20">20 lignes</option>
+                <option value="25">25 lignes</option>
+                <option value="30">30 lignes</option>
+                <option value="40">40 lignes</option>
+                <option value="50">50 lignes</option>
+            </select>
+
+            <button id="ai-generate-btn" onclick="generateText()" style="width: 100%; background: var(--primary); margin-bottom: 4px;"><img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Générer</button>
+            <button id="ai-stop-btn" onclick="stopGeneration()" disabled style="width: 100%; background: var(--danger);">? Stop</button>
+        </div>
+
+        
+        <div class="ai-section-label">Vocabulaire</div>
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--text-color);">Vocabulaire IA (mots aléatoires)</div>
+        <select id="ai-vocab-count" style="width: 100%; box-sizing: border-box; font-size: 12px; background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+            <option value="0" selected>Aucun (mode manuel)</option>
+            <option value="5">5 mots</option>
+            <option value="8">8 mots</option>
+            <option value="10">10 mots (max)</option>
+        </select>
+
+        <div class="ai-section-label">Exercices</div>
+
+        <div class="ex-cat-header" onclick="toggleExCategory('textverstandnis')">
+            <span class="ex-cat-arrow" id="arrow-textverstandnis">▾</span> I — TEXTVERSTÄNDNIS
+        </div>
+        <div class="ex-cat-body" id="body-textverstandnis">
+            <label><span class="ex-check-text">Richtig oder Falsch</span><input type="checkbox" id="chk-tf"></label>
+            <label><span class="ex-check-text">Was ist richtig</span><input type="checkbox" id="chk-mc"></label>
+            <label><span class="ex-check-text">Wie heißt es im Text</span><input type="checkbox" id="chk-reform"></label>
+            <label><span class="ex-check-text">Antworte auf die Fragen</span><input type="checkbox" id="chk-questions"></label>
+        </div>
+
+        <div class="ex-cat-header" onclick="toggleExCategory('sprachkompetenz')">
+            <span class="ex-cat-arrow" id="arrow-sprachkompetenz">▸</span> II — SPRACHKOMPETENZ
+        </div>
+        <div class="ex-cat-body" id="body-sprachkompetenz" style="display:none;">
+            <div class="ex-subcat-header" onclick="toggleExCategory('vocab')">
+                <span class="ex-cat-arrow" id="arrow-vocab">▾</span> A. Vokabular
+            </div>
+            <div class="ex-subcat-body" id="body-vocab">
+                <label><span class="ex-check-text">Wortbildung (-keit/-schaft/-heit, Nominalisierung)</span><input type="checkbox" id="chk-vocab-formation" checked></label>
+                <label><span class="ex-check-text">Lückentext mit Wortbank</span><input type="checkbox" id="chk-vocab-lueckentext" checked></label>
+                <label><span class="ex-check-text">Zuordnung (Was passt zusammen)</span><input type="checkbox" id="chk-vocab-match" checked></label>
+                <label><span class="ex-check-text">Sprechbereich (passende Situationsantwort)</span><input type="checkbox" id="chk-vocab-sprechbereich" checked></label>
+                <label><span class="ex-check-text">Synonyme / Antonyme / Was passt nicht</span><input type="checkbox" id="chk-vocab-synonyms"></label>
+            </div>
+            <div class="ex-subcat-header" onclick="toggleExCategory('grammaire')">
+                <span class="ex-cat-arrow" id="arrow-grammaire">▸</span> B. Grammatik
+            </div>
+            <div class="ex-subcat-body" id="body-grammaire" style="display:none;">
+                <label><span class="ex-check-text">Perfekt</span><input type="checkbox" id="chk-gram-perfekt" checked></label>
+                <label><span class="ex-check-text">Plusquamperfekt</span><input type="checkbox" id="chk-gram-plusquam" checked></label>
+                <label><span class="ex-check-text">Präteritum</span><input type="checkbox" id="chk-gram-praeteritum" checked></label>
+                <label><span class="ex-check-text">Subordinierende Konjunktionen (weil/dass/wenn/als)</span><input type="checkbox" id="chk-gram-subord" checked></label>
+                <label><span class="ex-check-text">Passiv / Aktiv</span><input type="checkbox" id="chk-gram-passiv" checked></label>
+                <label><span class="ex-check-text">Präpositionen (zu/um/für/an/nach)</span><input type="checkbox" id="chk-gram-praep" checked></label>
+                <label><span class="ex-check-text">Pronominaladverbien (dafür/davon/worauf…)</span><input type="checkbox" id="chk-gram-pronadv" checked></label>
+                <label><span class="ex-check-text">Relativpronomen (wo/der/die)</span><input type="checkbox" id="chk-gram-relpron" checked></label>
+                <label><span class="ex-check-text">Satzbau (Wörter richtig anordnen)</span><input type="checkbox" id="chk-gram-satzbau"></label>
+                <label><span class="ex-check-text">Zahlen in Worten</span><input type="checkbox" id="chk-gram-zahlen"></label>
+                <label><span class="ex-check-text">Präsens-Konjugation (MCQ)</span><input type="checkbox" id="chk-gram-praesens"></label>
+                <label><span class="ex-check-text">Sonstige Strukturen (Modalverben, Possessivpronomen, indirekte Rede, Infinitiv+zu, Verneinung)</span><input type="checkbox" id="chk-gram-sonstige"></label>
+                <label><span class="ex-check-text">Futur / Konjunktiv (selten)</span><input type="checkbox" id="chk-gram-futurkonj"></label>
+            </div>
+
+            <div class="ex-subcat-header" onclick="toggleExCategory('uebersetzung')">
+                <span class="ex-cat-arrow" id="arrow-uebersetzung">▸</span> C. Übersetzung
+            </div>
+            <div class="ex-subcat-body" id="body-uebersetzung" style="display:none;">
+                <label><span class="ex-check-text">Übersetzung einbeziehen</span><input type="checkbox" id="chk-translation" checked onchange="toggleTranslationOptions()"></label>
+                <div class="ex-subcat-body" id="translation-options">
+                    <label>
+                        <span class="ex-check-text">Anzahl Satzpaare</span>
+                        <select id="translation-pairs" style="font-size:12px; background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                            <option value="1" selected>1 Paar (FR/DE, DE/FR)</option>
+                            <option value="2">2 Paare</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="ex-cat-header" onclick="toggleExCategory('production')">
+            <span class="ex-cat-arrow" id="arrow-production">▸</span> III — FREIE PRODUKTION
+        </div>
+        <div class="ex-cat-body" id="body-production" style="display:none;">
+            <label><span class="ex-check-text">Situationsaufgabe einbeziehen</span><input type="checkbox" id="chk-production" checked onchange="toggleProductionOptions()"></label>
+            <div class="ex-subcat-body" id="production-options">
+                <label><span class="ex-check-text">Mit Wortschatzhilfe</span><input type="checkbox" id="chk-production-wordbank" checked></label>
+                <label>
+                    <span class="ex-check-text">Max. Zeilenanzahl</span>
+                    <select id="production-linecap" style="font-size:12px; background: var(--container-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                        <option value="5">5 Zeilen</option>
+                        <option value="4-6" selected>4–6 Zeilen</option>
+                        <option value="">Keine Begrenzung</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        
+        <button id="ai-exercises-only-btn" onclick="generateExercisesOnly()">
+            <span data-i18n="genExOnlyBtn"><img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Générer les exercices (à partir du texte actuel)</span>
+        </button>
+    </div>
+</div>
+
+<div id="margin-toast">Marges actuelles: Normales</div>
+<div id="ghost-measure"></div>
+
+<div id="floating-toolbar" class="no-print">
+    <button class="fmt-btn" style="font-weight: bold;" onclick="applyFormat('fontWeight', 'bold', 'normal')" title="Bold">B</button>
+    <button class="fmt-btn" style="font-style: italic;" onclick="applyFormat('fontStyle', 'italic', 'normal')" title="Italic">I</button>
+    <button class="fmt-btn" style="text-decoration: underline;" onclick="applyFormat('textDecoration', 'underline', 'none')" title="Underline">U</button>
+    <div style="border-left: 1px solid var(--border-color); margin: 0 2px;"></div>
+    <button class="fmt-btn" onclick="applyFormat('textAlign', 'left', 'left')" title="Left">⫷</button>
+    <button class="fmt-btn" onclick="applyFormat('textAlign', 'center', 'left')" title="Center">≣</button>
+    <button class="fmt-btn" onclick="applyFormat('textAlign', 'right', 'left')" title="Right">⫸</button>
+    <button class="fmt-btn" onclick="applyFormat('textAlign', 'justify', 'left')" title="Justify">=</button>
+</div>
+
+<button id="docx-fab" class="no-print" onclick="exportTestToDOCX()" title="Exporter en Word (.docx)">📄 DOCX</button>
+
+<div id="app-header-sticky">
+<div class="no-print">
+    <h2 class="app-title-main">KLASSENARBEIT EDITOR</h2>
+    <h3 class="app-title-sub">By Osiris Inc.</h3>
+</div>
+
+<div class="toolbar no-print">
+    <button id="theme-toggle"><span data-i18n="theme">🎨 Theme</span></button>
+    <button onclick="toggleCenter()">↔️ <span data-i18n="center">Centrer</span></button>
+    <button onclick="exportJSON()">💾 <span data-i18n="save">Exporter</span></button>
+    
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <label style="font-size: 11px; cursor: pointer;">
+            <input type="checkbox" id="auto-backup-check" onchange="toggleBackupTimer()"> <span data-i18n="auto-backup">Auto-Backup</span>
+        </label>
+        <select id="backup-interval" style="font-size: 11px; width:auto; border: 1px solid var(--border-color);" onchange="toggleBackupTimer()">
+            <option value="900000">15m</option>
+            <option value="1800000">30m</option>
+        </select>
+    </div>
+
+    <button onclick="document.getElementById('importFile').click()">📂 <span data-i18n="load">Importer</span></button>
+    <button onclick="clearAutofill()"><span data-i18n="sweep">Sweep 🧹</span></button>
+    
+ <div style="position: relative; display: flex; align-items: stretch;">
+    <button onclick="toggleParamMenu(event)"><span data-i18n="paramBtn">Param. ⚙️</span></button>
+    <div id="param-dropdown" style="display:none; position:absolute; top:100%; left:0; background:var(--container-bg); border:1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 200; padding: 10px; width: 160px; margin-top: 5px; border-radius: 4px;">
+        <div data-i18n="margins" style="font-size: 11px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--text-color);">Marges Word</div>
+        <select id="doc-margins" onchange="applyMargins()" style="width: 100%; font-size: 12px; margin-bottom: 10px; background: var(--container-bg); color: var(--text-color);">
+            <option value="normal" data-i18n="margin-normal">Normales</option>
+            <option value="narrow" data-i18n="margin-narrow">Étroites</option>
+            <option value="moderate" data-i18n="margin-moderate">Moyennes</option>
+            <option value="wide" data-i18n="margin-wide">Larges</option>
+        </select>
+
+        <div data-i18n="font" style="font-size: 11px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--text-color);">Police</div>
+        <select id="doc-font" onchange="applyTypography()" style="width: 100%; font-size: 12px; margin-bottom: 10px; background: var(--container-bg); color: var(--text-color);">
+            <option value="Calibri, sans-serif">Calibri</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Cambria, serif">Cambria</option>
+        </select>
+
+        <div data-i18n="size" style="font-size: 11px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--text-color);">Taille</div>
+        <select id="doc-font-size" onchange="applyTypography()" style="width: 100%; font-size: 12px; background: var(--container-bg); color: var(--text-color);">
+            <option value="11">11 pt</option>
+            <option value="12" selected>12 pt</option>
+            <option value="14">14 pt</option>
+        </select>
+
+        <div data-i18n="rulerTitle" style="font-size: 11px; font-weight: bold; margin-bottom: 5px; margin-top: 10px; border-bottom: 1px solid var(--border-color); color: var(--text-color);">Règle de texte</div>
+        <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; color: var(--text-color); cursor: pointer;">
+            <input type="checkbox" id="show-ruler-btn" onchange="toggleRuler()"> <span data-i18n="showRuler">Afficher</span>
+        </label>
+    </div>
+
+    </div>
+    <input type="file" id="importFile" style="display:none" onchange="importJSON(this)">
+
+    <div style="position: relative; display: flex; align-items: stretch;">
+        <button onclick="toggleAiMenu(event)"><span data-i18n="aiGenBtn">🤖 Générer IA</span></button>
+    </div>
+
+    <div class="globe-menu" style="margin-left: auto; display: flex; gap: 8px; padding-left: 32px;">
+        <button onclick="toggleLangMenu(event)">🌐 <span id="current-lang">FR</span> ?</button>
+        <div id="lang-dropdown">
+            <button onclick="setLanguage('fr')">Français</button>
+            <button onclick="setLanguage('en')">English</button>
+            <button onclick="setLanguage('de')">Deutsch</button>
+            <button onclick="setLanguage('es')">Español</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<div id="export-content" class="container">
+    
+    <table id="header-table" class="grid-header" style="margin-bottom: 5px; width: 100%; table-layout: auto;">
+        <tbody>
+            <tr id="top-header-row" style="height: 25px;">
+                <td style="white-space: nowrap;"><div class="flex-item">DRENAET: <input type="text" style="min-width: 70px;"></div></td>
+                <td style="white-space: nowrap;"><div class="flex-item">ANTENNE: <input type="text" style="min-width: 70px;"></div></td>
+                <td style="width: 1%; white-space: nowrap;">
+                    <div class="flex-item">
+                        <span data-i18n="schoolYear">ANNÉE&nbsp;SCOLAIRE:</span>&nbsp;<span style="display: inline-flex; align-items: center; gap: 2px;">
+                            20<input type="text" maxlength="2" placeholder=".." style="width: 32px; text-align: center; border-bottom: 1px dotted var(--border-color);">
+                            - 20<input type="text" maxlength="2" placeholder=".." style="width: 32px; text-align: center; border-bottom: 1px dotted var(--border-color);">
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+        <table id="header-table" class="grid-header" style="margin-bottom: 5px; width: 100%; table-layout: auto;">
+        <tbody>
+            <tr id="top-header-row" style="height: 25px;">
+                <td style="width: 1%; white-space: nowrap;"><div class="flex-item"><span data-i18n="serie">SERIE</span>: <input type="text" style="width: 36px;"></div></td>
+                <td style="white-space: nowrap;"><div class="flex-item"><span data-i18n="option">OPTION</span>: LV <input type="text" placeholder="..." style="min-width: 90px;"></div></td>
+                <td style="width: 1%; white-space: nowrap;"><div class="flex-item"><span data-i18n="coef">COEFFICIENT</span>: <input type="text" style="width: 36px;"></div></td>
+                <td style="width: 1%; white-space: nowrap;">
+                    <div class="flex-item"><span data-i18n="duration">DURÉE</span>: 
+                        <input type="text" style="width: 40px;">
+                        <select style="width: 74px; border: 1px solid; background: var(--container-bg); color: var(--text-color);">
+                            <option value="mins" data-i18n="mins">Minutes</option>
+                            <option value="h" data-i18n="hours">Heures</option>
+                        </select>
+                    </div>
+                </td>
+                <td style="width: 1%; white-space: nowrap;"><div class="flex-item"><span data-i18n="trimester">TRIMESTRE</span>: <input type="text" style="width: 36px; border-radius: 2px;"></div></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="logo-box-header" class="no-print" onclick="toggleLogoBox()" style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: bold; color: var(--primary); margin: 8px 0 2px; user-select: none;">
+        <span id="logo-box-arrow" style="display: inline-block; transition: transform .15s ease;">▼</span>
+        <span data-i18n="logoBoxTitle">En-tête / Logo</span>
+    </div>
+    <table id="logo-table" style="margin-bottom: 5px; width: 100%; max-width: 19cm; height: 5cm; border-collapse: collapse; margin-left: auto; margin-right: auto;">
+        <tbody>
+            <tr id="extra-header-row">
+                <td style="padding: 4px; position: relative; height: 5cm; vertical-align: top;">
+                    <div id="logo-wrapper" style="display: none; text-align: center; margin: 10px 0; width: 100%; position: relative;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 15px; position: relative;">
+                            <button class="no-print" onclick="alignLogo('left')" style="background: none; color: var(--primary); font-size: 20px; padding: 0;">←</button>
+                            
+                            <div id="resizer-container" style="position: relative; display: inline-block;">
+                                <img id="logo-img" style="display: block; object-fit: contain;">
+                                
+                                <div class="no-print" id="resize-handle" style="position: absolute; bottom: -5px; right: -5px; cursor: nwse-resize; font-size: 12px; color: var(--primary); font-weight: bold; background: var(--container-bg); border: 1px solid var(--border-color); border-radius: 2px; line-height: 1; padding: 1px;">⬊</div>
+                                
+                                <button class="no-print" onclick="removeLogo()" style="position: absolute; top: -10px; right: -10px; background: var(--danger); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; line-height: 18px; padding: 0;">X</button>
+                                
+                                <button class="no-print" onclick="alignLogo('center')" style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; border-radius: 10px; width: 24px; height: 18px; font-size: 12px; line-height: 16px; padding: 0;" title="Centrer l'image">↔</button>
+                            </div>
+
+                            <button class="no-print" onclick="alignLogo('right')" style="background: none; color: var(--primary); font-size: 20px; padding: 0;">←</button>
+                        </div>
+                    </div>
+                    
+                    <textarea 
+                        oninput="this.style.height = 'auto'; this.style.height = Math.max(60, this.scrollHeight) + 'px';" 
+                        placeholder="Infos établissement / Logo (Max: 633x250px, 100ko)..." data-i18n-placeholder="logoPlac"
+                        style="font-style: italic; opacity: 0.7; min-height: 60px; height: 100%; width: 100%; border: none; overflow: hidden; display: block; resize: none;"></textarea>
+                    
+                    <input type="file" id="logoInput" accept="image/*" style="display: none;" onchange="loadLogo(event)">
+                    <button class="no-print" onclick="addHeaderRow()" title="Ajouter une ligne" style="position: absolute; right: 2px; bottom: 2px; padding: 2px 8px; font-size: 20px;">+</button>
+                    <div class="no-print" style="position: absolute; right: 2px; top: 2px; display: flex; flex-direction: column; gap: 2px;">
+                        <button onclick="document.getElementById('logoInput').click()" title="Ajouter Logo" style="padding: 4px 6px; font-size: 12px;">🖼️</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table style="margin-bottom: 5px;">
+        <tr>
+            <td style="padding: 0;">
+                <input type="text" placeholder="TITRE:" data-i18n-placeholder="titlePlac" style="font-weight: bold; text-decoration: underline; width: 100%; padding: 4px 8px;">
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom: 5px;">
+        <tr>
+             <td id="numbering-td" style="width: 40px; padding: 0; background: rgba(0,0,0,0.02); vertical-align: top;">
+                <div class="numbering-wrapper" onmouseenter="toggleExcelControls(true)" onmouseleave="toggleExcelControls(false)">
+                    <textarea id="line-numbers" readonly style="width: 100%; text-align: right; border: none; padding: 4px 4px 0 0; font-size: 13px; overflow: hidden;"></textarea>
+                    <div id="excel-btns" class="excel-controls no-print">
+                        <div class="excel-btn minus" onclick="removeLastLine()" title="Retirer une ligne">-</div>
+                        <div class="excel-btn" onclick="addEmptyLine()" title="Ajouter une ligne">+</div>
+                    </div>
+                </div>
+            </td>
+            <td style="padding: 0; position: relative;">
+                <div id="text-ruler" class="no-print text-ruler-bg" style="display: none; width: 100%; height: 16px; background-color: rgba(0,0,0,0.03); border-bottom: 1px solid var(--border-color); border-top: 1px solid var(--border-color); position: absolute; box-sizing: border-box; opacity: 1;">
+                    <div id="ruler-left" style="position: absolute; left: 8px; top: -1px; height: 16px; width: 10px; background: var(--primary); transform: translateX(-50%); cursor: ew-resize; z-index: 10; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.4);" title="Ajuster marge gauche"></div>
+                    <div id="ruler-right" style="position: absolute; right: 8px; top: -1px; height: 16px; width: 10px; background: var(--primary); transform: translateX(50%); cursor: ew-resize; z-index: 10; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.4);" title="Ajuster marge droite"></div>
+                </div>
+                <textarea id="main-text" oninput="updateLineNumbers(); updateWordCount();"  ondblclick="autoAddSelectedToVocab()" onpaste="setTimeout(updateLineNumbers, 20)" placeholder="Saisissez votre texte ici..." data-i18n-placeholder="mainTextPlac" style="width: 100%; min-height: 200px; border: none; padding: 4px 8px; box-sizing: border-box;"></textarea>
+
+            <td class="no-print" style="width: 4cm; padding: 0; background: rgba(0,0,0,0.02); vertical-align: top;">
+                <div style="position: absolute; width: 100%; height: 100%; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px 0; box-sizing: border-box;">
+                 <button onclick="jumpToText('end')" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" style="background: transparent; border: none; font-size: 20px; color: var(--primary); cursor: pointer; opacity: 0.6; padding: 0;" title="Fin du texte">▼</button>
+        
+                <button onclick="selectAllText()" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" style="background: transparent; border: none; cursor: pointer; opacity: 0.6; padding: 0; color: var(--primary);" title="Tout sélectionner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke-dasharray="3 3"></rect>
+                <rect x="7" y="9" width="10" height="6" rx="1"></rect>
+            </svg>
+                </button>
+        
+                <button id="copy-text-btn" onclick="copyMainText()" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" style="background: transparent; border: none; cursor: pointer; opacity: 0.6; padding: 0; color: var(--primary);" title="Copier (Sélection ou Tout)">
+            <svg id="svg-copy-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+                </button>
+        
+                <button id="paste-text-btn" onclick="pasteMainText()" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" style="background: transparent; border: none; cursor: pointer; opacity: 0.6; padding: 0; color: var(--primary);" title="Coller">
+            <svg id="svg-paste-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+                </button>
+
+        <div id="word-count" style="font-size: 11px; font-weight: bold; color: var(--primary); opacity: 0.7; writing-mode: horizontal-tb; transform: rotate(0deg);">0 Mots</div>
+        
+                <button onclick="jumpToText('start')" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" style="background: transparent; border: none; font-size: 20px; color: var(--primary); cursor: pointer; opacity: 0.6; padding: 0;" title="Début du texte">▲</button>
+
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table style="margin-bottom: 10px;">
+        <tr>
+            <td class="no-export" style="width: 100px; vertical-align: middle; padding: 2px 5px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+                    <span data-i18n="from">From:</span> <input type="number" id="num-from" value="1" min="0" oninput="this.value = Math.abs(this.value); updateLineNumbers()" style="width: 35px; background: #4a7ebb; color: white; text-align: center;">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-top: 2px;">
+                    <span data-i18n="step">Step:</span> <input type="number" id="num-increm" value="1" min="0" oninput="this.value = Math.abs(this.value); updateLineNumbers()" style="width: 35px; background: #4a7ebb; color: white; text-align: center;">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-top: 2px;">
+                    <span data-i18n="spacing">Spacing:</span> 
+                    <select id="line-spacing" onchange="updateLineNumbers()" style="width: 50px; background: #4a7ebb; color: white; text-align: center; border: none; border-radius: 2px; padding: 1px;">
+                        <option value="1.15">1.15</option>
+                        <option value="1.5" selected>1.50</option>
+                        <option value="2">2.00</option>
+                    </select>
+                </div>
+            </td>
+            <td style="vertical-align: top; padding: 2px 8px;">
+                <div class="source-container" style="display: block;">
+                    <span data-i18n="sourceLabel" style="font-weight: bold; font-size: inherit;">Source:</span>
+                    <input type="text" id="source-box" style="font-style: italic; border:none; width: 80%;">
+                </div>
+            </td>
+        </tr>
+    </table>
+
+<div class="vocab-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <input type="text" value="VOCABULAIRE :" data-i18n-value="vocabTitle" style="font-weight: bold; text-decoration: underline; width: auto; flex-grow: 0; background: transparent; border: none;">
+        
+        <div class="print no-print" style="display: flex; align-items: center; gap: 4px;">
+            <select id="vocab-spacing-select" onchange="updateVocabSpacing()" style="background: var(--primary); color: white; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 10px; padding: 0 5px; cursor: pointer; height: 22px; box-sizing: border-box; white-space: nowrap;">
+                <option value="1.0" selected data-i18n="spacing100">Espacement: 1.00</option>
+                <option value="1.15" data-i18n="spacing115">Espacement: 1.15</option>
+                <option value="1.5" data-i18n="spacing150">Espacement: 1.50</option>
+            </select>
+
+            <button onclick="removeVocabCol()" style="font-size: 10px; padding: 0 8px; height: 22px; box-sizing: border-box; white-space: nowrap; flex-shrink: 0;" data-i18n="minusCol">- Colonne</button>
+            <button onclick="addVocabCol()" style="font-size: 10px; padding: 0 8px; height: 22px; box-sizing: border-box; white-space: nowrap; flex-shrink: 0;" data-i18n="plusCol">+ Colonne</button>
+            <button onclick="addVocabRow()" style="font-size: 10px; padding: 0 8px; height: 22px; box-sizing: border-box; white-space: nowrap; flex-shrink: 0;" data-i18n="plusRow">+ Ligne</button>
+            <button onclick="fetchAITranslations()" title="Sélectionne des mots aléatoires si la table est vide, sinon traduit les mots déjà saisis" style="font-size: 10px; padding: 0 8px; height: 22px; box-sizing: border-box; white-space: nowrap; flex-shrink: 0; background: var(--primary);"><span data-i18n="aiTranslationsBtn">🤖 Traductions IA</span></button>
+        </div>
+    </div>
+</div>
+    
+    <table id="vocab-table" class="vocab-table">
+        <tbody>
+            <tr class="fixed-vocab-row">
+                <td><input type="text" placeholder="..."></td>
+                <td><input type="text" placeholder="..."></td>
+                <td class="action-cell no-print" style="width: 30px;"></td>
+            </tr>
+        </tbody>
+    </table>
+
+<div id="exercises-section" class="no-export-when-empty" style="margin-top: 15px;">
+    <input type="text" value="EXERCICES :" data-i18n-value="exercisesTitle" style="font-weight: bold; text-decoration: underline; width: auto; background: transparent; border: none; display: block; margin-bottom: 4px;">
+    <textarea id="exercises-zone" placeholder="les exercices générés apparaîtront ici" data-i18n-placeholder="exZonePlac" rows="1" oninput="autoGrowExercises(this)" style="width: 100%; min-height: 22px; padding: 2px 4px; border: none; background: transparent; box-sizing: border-box; font-family: inherit; resize: none; overflow: hidden;"></textarea>
+</div>
+
+</div>
+
+<script>
+
+function jumpToText(pos) {
+    const txt = document.getElementById('main-text');
+    if (!txt) return;
+    txt.focus();
+    if (pos === 'start') {
+        txt.setSelectionRange(0, 0);
+        txt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        const len = txt.value.length;
+        txt.setSelectionRange(len, len);
+        txt.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+}
+
+const translations = {
+    fr: { 
+        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Centrer", "auto-backup": "Auto-Backup", "load": "Importer", "save": "Exporter",
+        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Paramètres ⚙️", margins: "Marges Word",
+        "margin-normal": "Normales", "margin-narrow": "Étroites", "margin-moderate": "Moyennes", "margin-wide": "Larges",
+        font: "Police", size: "Taille", rulerTitle: "Règle de texte", showRuler: "Afficher",
+        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer IA", logoBoxTitle: "En-tête / Logo", titlePlac: "TITRE:", logoPlac: "Infos établissement / Logo (Max: 633x250px, 100ko)...",
+        schoolYear: "ANNÉE SCOLAIRE:", serie: "SERIE", option: "OPTION", coef: "COEFFICIENT", duration: "DURÉE",
+        mins: "Minutes", hours: "Heures", trimester: "TRIMESTRE", mainTextPlac: "Saisissez votre texte ici...",
+        from: "From:", step: "Step:", spacing: "Spacing:", sourceLabel: "Source:",
+        vocabTitle: "VOCABULAIRE :", spacing100: "Espacement: 1.00", spacing115: "Espacement: 1.15", spacing150: "Espacement: 1.50",
+        minusCol: "- Colonne", plusCol: "+ Colonne", plusRow: "+ Ligne", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Traductions IA",
+        exercisesTitle: "EXERCICES :", exZonePlac: "les exercices générés apparaîtront ici", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer les exercices (à partir du texte actuel)",
+        marginsPrefix: "Marges : ", aiModelWarning: "Choisissez un modèle IA dans le Vault du Hub."
+    },
+    en: { 
+        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Center", "auto-backup": "Auto-Backup", "load": "Import", "save": "Export",
+        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters ⚙️", margins: "Word Margins",
+        "margin-normal": "Normal", "margin-narrow": "Narrow", "margin-moderate": "Moderate", "margin-wide": "Wide",
+        font: "Font", size: "Size", rulerTitle: "Text Ruler", showRuler: "Show",
+        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Generate", logoBoxTitle: "Header / Logo", titlePlac: "TITLE:", logoPlac: "School Info / Logo (Max: 633x250px, 100kb)...",
+        schoolYear: "SCHOOL YEAR:", serie: "CLASS", option: "OPTION", coef: "COEFFICIENT", duration: "DURATION",
+        mins: "Minutes", hours: "Hours", trimester: "TERM", mainTextPlac: "Enter your text here...",
+        from: "From:", step: "Step:", spacing: "Spacing:", sourceLabel: "Source:",
+        vocabTitle: "VOCABULARY :", spacing100: "Spacing: 1.00", spacing115: "Spacing: 1.15", spacing150: "Spacing: 1.50",
+        minusCol: "- Column", plusCol: "+ Column", plusRow: "+ Row", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Translations",
+        exercisesTitle: "EXERCISES :", exZonePlac: "generated exercises will appear here", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generate exercises (from current text)",
+        marginsPrefix: "Margins : ", aiModelWarning: "Choose an AI model in the Hub Vault."
+    },
+    es: { 
+        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Tema", center: "Centrar", "auto-backup": "Auto-Respaldo", "load": "Importar", "save": "Exportar",
+        sweep: "Limpiar <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Param. ⚙️", margins: "Márgenes Word",
+        "margin-normal": "Normal", "margin-narrow": "Estrecho", "margin-moderate": "Moderado", "margin-wide": "Ancho",
+        font: "Fuente", size: "Tamaño", rulerTitle: "Regla de texto", showRuler: "Mostrar",
+        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar IA", logoBoxTitle: "Encabezado / Logo", titlePlac: "TÍTULO:", logoPlac: "Info escolar / Logo (Max: 633x250px, 100kb)...",
+        schoolYear: "AÑO ESCOLAR:", serie: "CURSO", option: "OPCIÓN", coef: "COEFICIENTE", duration: "DURACIÓN",
+        mins: "Minutos", hours: "Horas", trimester: "TRIMESTRE", mainTextPlac: "Introduzca su texto aquí...",
+        from: "De:", step: "Paso:", spacing: "Espaciado:", sourceLabel: "Fuente:",
+        vocabTitle: "VOCABULARIO :", spacing100: "Espaciado: 1.00", spacing115: "Espaciado: 1.15", spacing150: "Espaciado: 1.50",
+        minusCol: "- Columna", plusCol: "+ Columna", plusRow: "+ Fila", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Traducciones IA",
+        exercisesTitle: "EJERCICIOS :", exZonePlac: "los ejercicios generados aparecerán aquí", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar ejercicios (del texto actual)",
+        marginsPrefix: "Márgenes : ", aiModelWarning: "Elige un modelo de IA en el Vault del Hub."
+    },
+    de: { 
+        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Design", center: "Zentrieren", "auto-backup": "Auto-Backup", "load": "Importieren", "save": "Exportieren",
+        sweep: "Aufräumen <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters ⚙️", margins: "Word Ränder",
+        "margin-normal": "Normal", "margin-narrow": "Schmal", "margin-moderate": "Mittel", "margin-wide": "Breit",
+        font: "Schriftart", size: "Größe", rulerTitle: "Textlineal", showRuler: "Anzeigen",
+        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Generieren", logoBoxTitle: "Kopfzeile / Logo", titlePlac: "TITEL:", logoPlac: "Schulinfo / Logo (Max: 633x250px, 100kb)...",
+        schoolYear: "SCHULJAHR:", serie: "KLASSE", option: "WAHLFACH", coef: "KOEFFIZIENT", duration: "DAUER",
+        mins: "Minuten", hours: "Stunden", trimester: "TRIMESTER", mainTextPlac: "Geben Sie hier Ihren Text ein...",
+        from: "Von:", step: "Schritt:", spacing: "Abstand:", sourceLabel: "Quelle:",
+        vocabTitle: "VOKABULAR :", spacing100: "Abstand: 1.00", spacing115: "Abstand: 1.15", spacing150: "Abstand: 1.50",
+        minusCol: "- Spalte", plusCol: "+ Spalte", plusRow: "+ Zeile", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Übersetzungen",
+        exercisesTitle: "ÜBUNGEN :", exZonePlac: "Generierte Übungen erscheinen hier", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Übungen generieren (aus aktuellem Text)",
+        marginsPrefix: "Ränder : ", aiModelWarning: "Wählen Sie ein KI-Modell im Hub-Vault aus."
+    }
+};
+
+function handleGlobalClick(e) {
+    const langDropdown = document.getElementById('lang-dropdown');
+    const paramDropdown = document.getElementById('param-dropdown');
+    
+    if (langDropdown && langDropdown.style.display === 'block' && !e.target.closest('.globe-menu')) {
+        langDropdown.style.display = 'none';
+    }
+    if (paramDropdown && paramDropdown.style.display === 'block' && !e.target.closest('button[onclick*="toggleParamMenu"]') && !e.target.closest('#param-dropdown')) {
+        paramDropdown.style.display = 'none';
+    }
+
+
+}
+
+function toggleParamMenu(e) {
+    e.stopPropagation();
+    const d = document.getElementById('param-dropdown');
+    d.style.display = d.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleAiMenu(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('ai-panel').classList.add('open');
+    document.getElementById('ai-scrim').classList.add('open');
+}
+
+function closeAiPanel() {
+    document.getElementById('ai-panel').classList.remove('open');
+    document.getElementById('ai-scrim').classList.remove('open');
+}
+
+
+function toggleAiTextGenFields() {
+    const on = document.getElementById('ai-textgen-toggle').checked;
+    document.getElementById('ai-textgen-fields').classList.toggle('disabled', !on);
+}
+
+
+function toggleExCategory(name) {
+    const body = document.getElementById('body-' + name);
+    const arrow = document.getElementById('arrow-' + name);
+    if (!body || !arrow) return;
+    const collapsed = body.style.display === 'none';
+    body.style.display = collapsed ? '' : 'none';
+    arrow.textContent = collapsed ? '?' : '?';
+}
+
+function applyMargins() {
+    const marginSelect = document.getElementById('doc-margins');
+    if (!marginSelect) return;
+    const value = marginSelect.value;
+    const container = document.getElementById('export-content');
+    
+    if (value === 'normal') {
+        container.style.padding = '2.54cm';
+    } else if (value === 'narrow') {
+        container.style.padding = '1.27cm';
+    } else if (value === 'moderate') {
+        container.style.padding = '2.54cm 1.91cm';
+    } else if (value === 'wide') {
+        container.style.padding = '2.54cm 5.08cm';
+    }
+    saveAll();
+}
+
+let marginToastTimeout;
+document.getElementById('export-content').addEventListener('mouseenter', () => {
+    const marginSelect = document.getElementById('doc-margins');
+    const marginText = marginSelect.options[marginSelect.selectedIndex].text;
+    const toast = document.getElementById('margin-toast');
+    const lang = localStorage.getItem('lang') || 'fr';
+    const prefix = (translations[lang] && translations[lang]['marginsPrefix']) ? translations[lang]['marginsPrefix'] : 'Marges : ';
+    toast.innerText = `${prefix}${marginText}`;
+    toast.style.opacity = '1';
+    
+    clearTimeout(marginToastTimeout);
+    marginToastTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 1500);
+});
+
+function applyTypography() {
+    const font = document.getElementById('doc-font').value;
+    const size = document.getElementById('doc-font-size').value + 'pt';
+    const container = document.getElementById('export-content');
+    
+    container.style.fontFamily = font;
+    container.style.fontSize = size;
+    
+    container.querySelectorAll('input, textarea, select').forEach(el => {
+        el.style.fontFamily = font;
+        el.style.fontSize = size;
+    });
+    
+    updateLineNumbers();
+    saveAll();
+}
+
+function loadLogo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        if (file.size > 102400) {
+            alert("Erreur : Image non valide ou trop volumineuse (Max: 100ko).");
+            event.target.value = ''; 
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                if (tempImg.width > 633 || tempImg.height > 250) {
+                    alert("Erreur : Image non valide ou trop grande (Max: 633x250px).");
+                    document.getElementById('logoInput').value = ''; 
+                    return;
+                }
+
+                const img = document.getElementById('logo-img');
+                img.src = e.target.result;
+                
+                img.style.height = tempImg.height + "px";
+                img.style.width = tempImg.width + "px";
+                img.setAttribute('height', tempImg.height);
+                img.setAttribute('width', tempImg.width);
+                
+                document.getElementById('logo-wrapper').style.display = 'block';
+                alignLogo('center'); 
+                initResizer(); 
+                saveAll();
+            };
+            tempImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function alignLogo(pos) {
+    const wrapper = document.getElementById('logo-wrapper');
+    if (pos === 'left') wrapper.style.textAlign = 'left';
+    else if (pos === 'right') wrapper.style.textAlign = 'right';
+    else wrapper.style.textAlign = 'center';
+    saveAll();
+}
+
+
+function selectAllText() {
+    const txt = document.getElementById('main-text');
+    if (!txt) return;
+    txt.focus();
+    txt.setSelectionRange(0, txt.value.length);
+}
+
+function copyMainText() {
+    const txt = document.getElementById('main-text');
+    if (!txt) return;
+    
+    const textToCopy = txt.value.substring(txt.selectionStart, txt.selectionEnd) || txt.value;
+    navigator.clipboard.writeText(textToCopy);
+    
+    const btn = document.getElementById('copy-text-btn');
+    if (btn) {
+        btn.innerHTML = '✅';
+        setTimeout(() => {
+
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+        }, 1500);
+    }
+}
+
+async function pasteMainText() {
+    try {
+        const text = await navigator.clipboard.readText();
+        const txt = document.getElementById('main-text');
+        if(!txt) return;
+        
+        const start = txt.selectionStart;
+        const end = txt.selectionEnd;
+        
+        txt.value = txt.value.substring(0, start) + text + txt.value.substring(end);
+        txt.selectionStart = txt.selectionEnd = start + text.length;
+        
+        updateLineNumbers();
+        updateWordCount();
+        saveAll();
+        
+        const btn = document.getElementById('paste-text-btn');
+        if (btn) {
+            btn.innerHTML = '✅';
+            setTimeout(() => {
+
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
+            }, 1500);
+        }
+    } catch (err) {
+        console.error('Erreur d\'accès au presse-papiers: ', err);
+        alert("Veuillez autoriser l'accès au presse-papiers dans votre navigateur pour utiliser ce bouton.");
+    }
+}
+
+function updateWordCount() {
+    const text = document.getElementById('main-text').value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const wc = document.getElementById('word-count');
+    if (wc) wc.innerText = words + (words > 1 ? " Mots" : " Mot");
+}
+
+function autoAddSelectedToVocab() {
+    const selection = window.getSelection().toString().trim();
+    
+    if (selection.length > 1) {
+        const formattedWord = selection.endsWith(":") ? selection : selection + " : ";
+        
+        const table = document.getElementById('vocab-table').querySelector('tbody');
+        let added = false;
+
+        const inputs = table.querySelectorAll('input');
+        for (let input of inputs) {
+            if (input.value === "") {
+                input.value = formattedWord;
+                added = true;
+                setTimeout(() => input.focus(), 10);
+                break;
+            }
+        }
+
+        if (!added) {
+            addVocabRow();
+            const newInputs = table.querySelectorAll('tr:last-child input');
+            if (newInputs.length > 0) {
+                newInputs[0].value = formattedWord;
+                setTimeout(() => newInputs[0].focus(), 10);
+            }
+        }
+        
+        saveAll();
+    }
+}
+
+function updateVocabSpacing() {
+    const select = document.getElementById('vocab-spacing-select');
+    if (!select) return;
+
+    const spacing = parseFloat(select.value);
+    const vocabTable = document.getElementById('vocab-table');
+
+    if (vocabTable) {
+        vocabTable.querySelectorAll('input').forEach(input => {
+            input.style.lineHeight = spacing;
+            const basePadding = 2;
+            const extraPadding = (spacing - 1) * 20;
+            const finalPadding = Math.max(0, basePadding + extraPadding) + 'px';
+
+            input.style.paddingTop = finalPadding;
+            input.style.paddingBottom = finalPadding;
+        });
+    }
+    
+    if (typeof saveAll === "function") saveAll();
+}
+
+function toggleCenter() {
+    const container = document.getElementById('export-content');
+    container.classList.toggle('auto-center');
+    saveAll();
+}
+
+function initResizer() {
+    const handle = document.getElementById('resize-handle');
+    const img = document.getElementById('logo-img');
+    let isResizing = false;
+
+    handle.onmousedown = function(e) {
+        e.preventDefault();
+        isResizing = true;
+        document.onmousemove = function(e) {
+            if (!isResizing) return;
+            let newHeight = e.clientY - img.getBoundingClientRect().top;
+            if (newHeight > 20 && newHeight <= 250) { 
+                img.style.height = newHeight + 'px';
+            }
+        };
+        document.onmouseup = function() {
+            isResizing = false;
+            document.onmousemove = null;
+            saveAll();
+        };
+    };
+}
+
+function toggleRuler() {
+    const ruler = document.getElementById('text-ruler');
+    const isChecked = document.getElementById('show-ruler-btn').checked;
+    ruler.style.display = isChecked ? 'block' : 'none';
+    saveAll();
+}
+
+function initTextRuler() {
+    const leftHandle = document.getElementById('ruler-left');
+    const rightHandle = document.getElementById('ruler-right');
+    const textArea = document.getElementById('main-text');
+    const ruler = document.getElementById('text-ruler');
+    if(!leftHandle || !rightHandle || !textArea || !ruler) return;
+    
+    let isDraggingLeft = false;
+    let isDraggingRight = false;
+    let startX = 0;
+    let startPadding = 0;
+
+    leftHandle.onmousedown = function(e) {
+        e.preventDefault();
+        isDraggingLeft = true;
+        startX = e.clientX;
+        startPadding = parseFloat(window.getComputedStyle(textArea).paddingLeft) || 8;
+        document.body.style.userSelect = 'none';
+    };
+
+    rightHandle.onmousedown = function(e) {
+        e.preventDefault();
+        isDraggingRight = true;
+        startX = e.clientX;
+        startPadding = parseFloat(window.getComputedStyle(textArea).paddingRight) || 8;
+        document.body.style.userSelect = 'none';
+    };
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDraggingLeft && !isDraggingRight) return;
+        
+        const rulerRect = ruler.getBoundingClientRect();
+        const maxPadding = rulerRect.width - 40; 
+
+        if (isDraggingLeft) {
+            let diff = e.clientX - startX;
+            let newPadding = startPadding + diff;
+            newPadding = Math.max(0, newPadding);
+            const currentRight = parseFloat(window.getComputedStyle(textArea).paddingRight) || 8;
+            if(newPadding + currentRight < maxPadding) {
+                textArea.style.paddingLeft = newPadding + 'px';
+                leftHandle.style.left = newPadding + 'px';
+                updateLineNumbers();
+            }
+        }
+
+        if (isDraggingRight) {
+            let diff = startX - e.clientX;
+            let newPadding = startPadding + diff;
+            newPadding = Math.max(0, newPadding); 
+            const currentLeft = parseFloat(window.getComputedStyle(textArea).paddingLeft) || 8;
+            if(newPadding + currentLeft < maxPadding) {
+                textArea.style.paddingRight = newPadding + 'px';
+                rightHandle.style.right = newPadding + 'px';
+                updateLineNumbers();
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (isDraggingLeft || isDraggingRight) {
+            isDraggingLeft = false;
+            isDraggingRight = false;
+            document.body.style.userSelect = 'auto';
+            updateLineNumbers();
+            saveAll();
+        }
+    });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('logo-img').src) {
+        initResizer();
+    }
+
+    applyMargins();
+
+    initTextRuler();
+    const rulerBtn = document.getElementById('show-ruler-btn');
+    if(rulerBtn && rulerBtn.checked) {
+        document.getElementById('text-ruler').style.display = 'block';
+    }
+
+
+    autoGrowExercises(document.getElementById('exercises-zone'));
+});
+
+
+function autoGrowExercises(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
+function removeLogo() {
+    document.getElementById('logo-wrapper').style.display = 'none';
+    document.getElementById('logo-img').src = '';
+    document.getElementById('logoInput').value = '';
+    saveAll();
+}
+
+
+function toggleLogoBox() {
+    const box = document.getElementById('logo-table');
+    const arrow = document.getElementById('logo-box-arrow');
+    const collapsed = box.style.display !== 'none';
+    box.style.display = collapsed ? 'none' : '';
+    arrow.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
+function toggleExcelControls(show) {
+    document.getElementById('excel-btns').style.display = show ? 'flex' : 'none';
+}
+
+function addEmptyLine() {
+    const txt = document.getElementById('main-text');
+    txt.value += '\n';
+    updateLineNumbers();
+    txt.scrollTop = txt.scrollHeight;
+}
+
+function removeLastLine() {
+    const txt = document.getElementById('main-text');
+    const lines = txt.value.split('\n');
+    if (lines.length > 1) {
+        lines.pop();
+        txt.value = lines.join('\n');
+        updateLineNumbers();
+    }
+}
+
+function saveAll() {
+    document.querySelectorAll('#export-content input').forEach(i => {
+        if(i.type === "checkbox") i.setAttribute('checked', i.checked);
+        else if(i.type !== "file") i.setAttribute('value', i.value);
+    });
+    document.querySelectorAll('#export-content select, #doc-margins').forEach(s => {
+        const opts = s.options;
+        for (let opt, j = 0; opt = opts[j]; j++) {
+            if (opt.value === s.value) opt.setAttribute('selected', 'selected');
+            else opt.removeAttribute('selected');
+        }
+    });
+    document.querySelectorAll('#export-content textarea').forEach(t => t.textContent = t.value);
+    localStorage.setItem('klassenarbeit1.6_final', document.getElementById('export-content').innerHTML);
+    localStorage.setItem('fiche_theme', document.documentElement.getAttribute('data-theme'));
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target.tagName.toLowerCase() === 'textarea' && e.target.id !== 'line-numbers') {
+        e.target.style.height = 'auto';
+        e.target.style.height = (e.target.scrollHeight) + 'px';
+        if (e.target.id === 'main-text') updateLineNumbers();
+    }
+    saveAll();
+});
+
+document.addEventListener('paste', function(e) {
+    if (e.target.id === 'main-text') {
+        setTimeout(updateLineNumbers, 10);
+    }
+});
+
+function updateLineNumbers() {
+    const textArea = document.getElementById('main-text');
+    const linesBox = document.getElementById('line-numbers');
+    const ghost = document.getElementById('ghost-measure');
+    if(!textArea || !linesBox || !ghost) return;
+
+    const spacing = document.getElementById('line-spacing') ? document.getElementById('line-spacing').value : '1.5';
+    textArea.style.lineHeight = spacing;
+    linesBox.style.lineHeight = spacing;
+
+    const computedStyle = window.getComputedStyle(textArea);
+    ghost.style.width = computedStyle.width;
+    ghost.style.font = computedStyle.font;
+    ghost.style.lineHeight = computedStyle.lineHeight;
+
+    ghost.style.paddingLeft = computedStyle.paddingLeft;
+    ghost.style.paddingRight = computedStyle.paddingRight;
+
+    const paragraphs = textArea.value.split('\n');
+    let numbers = [];
+    
+    const fromVal = Math.max(1, parseInt(document.getElementById('num-from').value) || 1);
+    const stepVal = parseInt(document.getElementById('num-increm').value) || 1;
+    let currentLineNumber = fromVal;
+
+    ghost.textContent = 'A';
+    const singleLineHeight = ghost.getBoundingClientRect().height;
+
+    for (let i = 0; i < paragraphs.length; i++) {
+        ghost.textContent = paragraphs[i] || ' '; 
+        const pHeight = ghost.getBoundingClientRect().height;
+        const linesInP = Math.max(1, Math.round(pHeight / singleLineHeight));
+        
+        for (let j = 0; j < linesInP; j++) {
+            if (stepVal === 1 || currentLineNumber % stepVal === 0) {
+                numbers.push(currentLineNumber);
+            } else {
+                numbers.push(''); 
+            }
+            currentLineNumber++;
+        }
+    }
+    
+    linesBox.value = numbers.join('\n');
+    
+    linesBox.style.height = 'auto';
+    textArea.style.height = 'auto';
+    const targetHeight = Math.max(textArea.scrollHeight, 200);
+    linesBox.style.height = targetHeight + 'px';
+    textArea.style.height = targetHeight + 'px';
+    saveAll();
+}
+
+function addHeaderRow() {
+    const tbody = document.getElementById('logo-table').querySelector('tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = '<td style="position: relative; padding: 0px 4px;"><textarea oninput="this.style.height = \'auto\'; this.style.height = this.scrollHeight + \'px\';" placeholder="..." style="font-style:italic; min-height:30px; height: 30px; width: 100%; border: none; overflow: hidden; display: block;"></textarea><button class="no-print btn-danger" onclick="this.closest(\'tr\').remove(); saveAll();" title="Supprimer la ligne" style="position: absolute; right: 2px; top: 1px; padding: 2px 8px; font-size: 15px;">X</button></td>';
+    tbody.appendChild(newRow);
+    saveAll();
+}
+
+function addVocabRow() {
+    const table = document.getElementById('vocab-table').querySelector('tbody');
+    const colCount = table.rows[0].cells.length - 1; 
+    const newRow = table.insertRow();
+    for(let i=0; i<colCount; i++) {
+        newRow.insertCell().innerHTML = '<input type="text" placeholder="...">';
+    }
+    const actionCell = newRow.insertCell();
+    actionCell.className = "action-cell no-print";
+    actionCell.style.width = "30px";
+    actionCell.innerHTML = '<button class="btn-danger" style="font-size: 10px; padding: 2px 5px;" onclick="this.closest(\'tr\').remove(); saveAll();">X</button>';
+    saveAll();
+}
+
+function addVocabCol() {
+    const table = document.getElementById('vocab-table').querySelector('tbody');
+    for(let i=0; i<table.rows.length; i++) {
+        const actionCell = table.rows[i].querySelector('.action-cell');
+        const newCell = document.createElement('td');
+        newCell.innerHTML = '<input type="text" placeholder="...">';
+        table.rows[i].insertBefore(newCell, actionCell);
+    }
+    saveAll();
+}
+
+function removeVocabCol() {
+    const table = document.getElementById('vocab-table').querySelector('tbody');
+    if (table.rows[0].cells.length > 2) { 
+        for(let i=0; i<table.rows.length; i++) {
+            table.rows[i].deleteCell(table.rows[i].cells.length - 2);
+        }
+        saveAll();
+    }
+}
+
+let activeElement = null;
+
+document.addEventListener('focusin', (e) => {
+    if(e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+        if(e.target.id === 'line-numbers') {
+            activeElement = null; // Prevent format bleeding into numbering box
+        } else {
+            activeElement = e.target;
+        }
+    }
+});
+
+function applyFormat(styleProp, value, resetValue) {
+    if(!activeElement) return;
+    const current = activeElement.style[styleProp];
+    activeElement.style[styleProp] = (current === value) ? resetValue : value;
+    saveAll();
+}
+
+const fToolbar = document.getElementById('floating-toolbar');
+let isDragging = false, startXToolbar, startYToolbar, initXToolbar, initYToolbar;
+
+fToolbar.addEventListener('mousedown', (e) => {
+    if(e.target.tagName === 'BUTTON') return;
+    isDragging = true;
+    startXToolbar = e.clientX; startYToolbar = e.clientY;
+    initXToolbar = fToolbar.offsetLeft; initYToolbar = fToolbar.offsetTop;
+    document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if(!isDragging) return;
+    const dx = e.clientX - startXToolbar;
+    const dy = e.clientY - startYToolbar;
+    fToolbar.style.left = (initXToolbar + dx) + 'px';
+    fToolbar.style.top = (initYToolbar + dy) + 'px';
+    fToolbar.style.bottom = 'auto';
+    fToolbar.style.right = 'auto';
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.style.userSelect = 'auto';
+});
+
+
+const docxFab = document.getElementById('docx-fab');
+let hideTimeout;
+function resetHideTimer() {
+    fToolbar.classList.remove('hidden');
+    if (docxFab) docxFab.classList.remove('hidden');
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+        fToolbar.classList.add('hidden');
+        if (docxFab) docxFab.classList.add('hidden');
+    }, 4000); 
+}
+document.addEventListener('mousemove', resetHideTimer);
+document.addEventListener('click', resetHideTimer);
+resetHideTimer();
+
+
+function exportTestToDOCX() {
+    const clone = document.getElementById('export-content').cloneNode(true);
+
+
+    const logoTableClone = clone.querySelector('#logo-table');
+    if (logoTableClone) logoTableClone.style.display = '';
+
+    clone.querySelectorAll('.no-print, .no-export, .excel-controls, button, input[type="file"]').forEach(e => e.remove());
+
+
+    const exercisesZoneLive = document.getElementById('exercises-zone');
+    if (exercisesZoneLive && !exercisesZoneLive.value.trim()) {
+        const exSection = clone.querySelector('#exercises-section');
+        if (exSection) exSection.remove();
+    }
+
+    const img = clone.querySelector('#logo-img');
+    if (img && img.src) {
+        img.style.display = "block";
+        img.style.margin = "0 auto";
+        img.setAttribute('width', img.clientWidth);
+        img.setAttribute('height', img.clientHeight);
+    }
+
+
+    const origTextareas  = document.getElementById('export-content').querySelectorAll('textarea');
+    const cloneTextareas = clone.querySelectorAll('textarea');
+    cloneTextareas.forEach((el, idx) => {
+        const orig = origTextareas[idx];
+        if (!orig) return;
+        const cs = window.getComputedStyle(orig);
+        el.dataset.lineHeight = cs.lineHeight;
+        if (el.id === 'main-text') {
+            el.dataset.padLeftCm  = (parseFloat(cs.paddingLeft)  / 96 * 2.54).toFixed(2);
+            el.dataset.padRightCm = (parseFloat(cs.paddingRight) / 96 * 2.54).toFixed(2);
+        }
+    });
+    clone.querySelectorAll('input, textarea').forEach(i => {
+        const s = document.createElement('span'); 
+        s.innerText = i.value; 
+        s.style.fontWeight = "normal"; 
+        if (i.id === 'source-box') s.style.fontStyle = 'italic';
+        if (i.tagName === 'TEXTAREA') {
+            s.style.display = 'block';
+            if (i.dataset.lineHeight) s.style.lineHeight = i.dataset.lineHeight;
+            if (i.id === 'main-text') {
+                s.style.marginLeft  = i.dataset.padLeftCm  + 'cm';
+                s.style.marginRight = i.dataset.padRightCm + 'cm';
+            }
+        }
+        i.parentNode.replaceChild(s, i);
+    });
+
+    clone.querySelectorAll('select').forEach(sel => {
+        const s = document.createElement('span');
+        s.innerText = " " + sel.options[sel.selectedIndex].text;
+        s.style.fontWeight = "normal";
+        sel.parentNode.replaceChild(s, sel);
+    });
+
+    const marginSelect = document.getElementById('doc-margins').value;
+    const selectedFont = document.getElementById('doc-font').value;
+    const selectedSize = document.getElementById('doc-font-size').value + 'pt';
+
+    let marginCSS = "2.54cm"; 
+    if(marginSelect === 'narrow') marginCSS = "1.27cm";
+    else if (marginSelect === 'moderate') marginCSS = "2.54cm 1.91cm";
+    else if (marginSelect === 'wide') marginCSS = "2.54cm 5.08cm";
+    
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="manifest" href="/manifest.json">
+    <style>
+        @page { margin: ${marginCSS}; }
+        body { font-family: ${selectedFont}; font-size: ${selectedSize}; }
+        /* table-layout was "fixed" here but "auto" everywhere on screen
+           (the header tables set it explicitly, everything else defaults
+           to auto) — that mismatch could make Word evenly split/distort
+           columns differently than what the editor actually showed.
+           Matches the screen behavior now. */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td { vertical-align: top; padding: 5px; border: none; }
+        .flex-item { font-weight: bold; } 
+        #main-text { text-align: justify; white-space: pre-wrap; }
+        #line-numbers { text-align: right; white-space: pre-wrap; }
+        #exercises-zone { text-align: left; white-space: pre-wrap; }
+    
+        .big-loader-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 2000;
+        }
+        .big-loader-overlay.show { display: flex; }
+        .big-loader-inner { position: relative; display: flex; align-items: center; justify-content: center; }
+        .big-spinner {
+            width: 72px;
+            height: 72px;
+            border: 7px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: big-spin 0.9s linear infinite;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        }
+        @keyframes big-spin { to { transform: rotate(360deg); } }
+        .big-loader-cancel {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.875rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .big-loader-cancel:hover { border-color: var(--danger); color: var(--danger); }
+
+</style></head>
+    <body>${clone.innerHTML}</body></html>`;
+    
+    const blob = htmlDocx.asBlob(html);
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(blob); 
+    a.download = 'Evaluation.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+document.getElementById('theme-toggle').onclick = () => {
+
+
+    const themes = ['light', 'dark'];
+    let current = document.documentElement.getAttribute('data-theme');
+    let next = themes[(themes.indexOf(current) + 1) % themes.length];
+    document.documentElement.setAttribute('data-theme', next);
+    saveAll();
+};
+
+function setLanguage(l) {
+    localStorage.setItem('lang', l);
+    const langBtn = document.getElementById('current-lang');
+    if (langBtn) langBtn.innerText = l.toUpperCase();
+    
+    if (!translations[l]) return;
+    
+    document.querySelectorAll('[data-i18n]').forEach(e => {
+        const key = e.dataset.i18n;
+        if (translations[l][key]) e.innerHTML = translations[l][key];
+    });
+    
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(e => {
+        const key = e.dataset.i18nPlaceholder;
+        if (translations[l][key]) e.placeholder = translations[l][key];
+    });
+    
+    document.querySelectorAll('[data-i18n-value]').forEach(e => {
+        const key = e.dataset.i18nValue;
+        if (translations[l][key]) e.value = translations[l][key];
+    });
+
+    const box = document.getElementById('ai-model-display');
+    if (box && box.textContent.includes('?')) {
+        box.textContent = translations[l]['aiModelWarning'] || '<img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Choisissez un modèle IA dans le Vault du Hub.';
+    }
+}
+
+function toggleLangMenu(e) { e.stopPropagation(); const d = document.getElementById('lang-dropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+
+
+window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'SET_FONT') {
+        var font = (e.data.payload && e.data.payload.font) || '';
+        if (font) document.documentElement.style.setProperty('--klass-font-family', font);
+    }
+    if (e.data && e.data.type === 'SET_LANG') {
+        var lang = ((e.data.payload && e.data.payload.lang) || '').toLowerCase();
+        if (lang && translations[lang]) setLanguage(lang);
+    }
+    if (e.data && e.data.type === 'SET_MODEL') {
+        var payload = e.data.payload || {};
+        updateAiModelDisplay(payload.provider || '', payload.id || '', payload.name || '');
+    }
+});
+
+
+let aiAbortController = null;
+
+function updateAiModelDisplay(provider, id, name) {
+    const box = document.getElementById('ai-model-display');
+    if (!box) return;
+    if (!id) {
+        const lang = localStorage.getItem('lang') || 'fr';
+        box.textContent = (translations[lang] && translations[lang]['aiModelWarning']) 
+            ? translations[lang]['aiModelWarning'] 
+            : '<img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Choisissez un modèle IA dans le Vault du Hub.';
+        box.style.opacity = '0.85';
+    } else {
+        box.textContent = '🤖 ' + (name || id) + (provider ? ' (' + provider + ')' : '');
+        box.style.opacity = '1';
+    }
+}
+(function () {
+    const storedProvider = localStorage.getItem('ai_selected_provider') || '';
+    if (window.OsirisCore && OsirisCore.pickActiveModel) {
+        OsirisCore.pickActiveModel(storedProvider).then(function (picked) {
+            if (picked) updateAiModelDisplay(picked.provider, picked.id, picked.name);
+            else updateAiModelDisplay('', '', '');
+        });
+    } else {
+
+
+        const id = localStorage.getItem('ai_selected_model_id') || '';
+        updateAiModelDisplay(storedProvider, id, id);
+    }
+})();
+
+
+function splitAiSections(raw) {
+    const out = { texte: raw, exercices: '', vocab: '' };
+    const markers = ['===TEXTE===', '===EXERCICES===', '===VOCAB==='];
+    if (!markers.some(m => raw.includes(m))) return out;
+    const texteMatch = raw.match(/===TEXTE===([\s\S]*?)(?=(?:===EXERCICES===|===VOCAB===|$))/);
+    const exMatch = raw.match(/===EXERCICES===([\s\S]*?)(?=(?:===VOCAB===|$))/);
+    const vocabMatch = raw.match(/===VOCAB===([\s\S]*)$/);
+    if (texteMatch) out.texte = texteMatch[1].trim();
+    if (exMatch) out.exercices = exMatch[1].trim();
+    if (vocabMatch) out.vocab = vocabMatch[1].trim();
+    return out;
+}
+
+
+const EXERCISE_TYPES = [
+
+    ['chk-tf', "des affirmations vrai ou faux à justifier par rapport au texte"],
+    ['chk-mc', "des questions à choix multiple demandant de trouver l'affirmation correcte par rapport au texte"],
+    ['chk-reform', "un exercice de reformulation (retrouver dans le texte la phrase correspondant à une paraphrase donnée)"],
+    ['chk-questions', "des questions ouvertes de compréhension appelant une réponse rédigée"],
+
+    ['chk-vocab-formation', "un exercice de formation de mots (ex. suffixes -keit/-schaft/-heit, nominalisation de verbes)"],
+    ['chk-vocab-lueckentext', "un texte à trous avec une banque de mots à choisir"],
+    ['chk-vocab-match', "un exercice d'association (associer des éléments entre deux colonnes)"],
+    ['chk-vocab-sprechbereich', "un exercice de type « Sprechbereich » : choisir la phrase la plus adaptée à une situation donnée"],
+    ['chk-vocab-synonyms', "un exercice de synonymes, antonymes ou intrus (repérer l'élément qui ne va pas avec les autres)"],
+
+    ['chk-gram-perfekt', "des phrases à mettre au parfait (Perfekt)"],
+    ['chk-gram-plusquam', "des phrases à mettre au plus-que-parfait (Plusquamperfekt)"],
+    ['chk-gram-praeteritum', "des phrases à mettre au prétérit (Präteritum)"],
+    ['chk-gram-subord', "des phrases à compléter avec des conjonctions de subordination (weil/dass/wenn/als)"],
+    ['chk-gram-passiv', "un exercice de transformation actif/passif (Aktiv/Passiv)"],
+    ['chk-gram-praep', "un exercice à trous sur les prépositions (zu/um/für/an/nach)"],
+    ['chk-gram-pronadv', "un exercice sur les pronoms adverbiaux (dafür/davon/worauf, etc.)"],
+    ['chk-gram-relpron', "un exercice à trous sur les pronoms relatifs (wo/der/die)"],
+    ['chk-gram-satzbau', "un exercice de remise en ordre de mots pour former des phrases correctes"],
+    ['chk-gram-zahlen', "un exercice où il faut écrire des nombres en toutes lettres"],
+    ['chk-gram-praesens', "un QCM de conjugaison au présent"],
+    ['chk-gram-sonstige', "un exercice à trous portant sur une structure grammaticale au choix parmi : verbes de modalité, adjectifs possessifs, discours indirect, infinitif+zu, ou la négation"],
+    ['chk-gram-futurkonj', "un exercice sur le futur ou le subjonctif (Futur/Konjunktiv)"],
+];
+
+function buildExerciseChecklist() {
+    const list = EXERCISE_TYPES
+        .filter(([id]) => document.getElementById(id) && document.getElementById(id).checked)
+        .map(([, phrase]) => phrase);
+    const production = buildProductionInstruction();
+    if (production) list.push(production);
+    const translation = buildTranslationInstruction();
+    if (translation) list.push(translation);
+    return list;
+}
+
+
+function buildTranslationInstruction() {
+    const chk = document.getElementById('chk-translation');
+    if (!chk || !chk.checked) return null;
+    const pairsSel = document.getElementById('translation-pairs');
+    const pairs = pairsSel ? pairsSel.value : '1';
+    return pairs === '2'
+        ? "un exercice de traduction avec 2 paires de phrases (une FR/DE et une DE/FR par paire)"
+        : "un exercice de traduction avec une paire de phrases (une FR/DE, une DE/FR)";
+}
+
+function toggleTranslationOptions() {
+    const chk = document.getElementById('chk-translation');
+    const options = document.getElementById('translation-options');
+    if (!chk || !options) return;
+    options.style.display = chk.checked ? '' : 'none';
+}
+
+
+function buildProductionInstruction() {
+    const chk = document.getElementById('chk-production');
+    if (!chk || !chk.checked) return null;
+    const wordbank = document.getElementById('chk-production-wordbank');
+    const linecapSel = document.getElementById('production-linecap');
+    const linecap = linecapSel ? linecapSel.value : '';
+    let phrase = "une tâche de production libre (situation de type élève, 4 à 7 lignes, avec des verbes comme raconter/expliquer/recommander/conseiller)";
+    if (wordbank && wordbank.checked) phrase += ", accompagnée d'une banque de mots/expressions utiles";
+    if (linecap) phrase += ` (réponse limitée à ${linecap === '5' ? '5 lignes maximum' : linecap + ' lignes'})`;
+    return phrase;
+}
+
+
+function toggleProductionOptions() {
+    const chk = document.getElementById('chk-production');
+    const options = document.getElementById('production-options');
+    if (!chk || !options) return;
+    options.style.display = chk.checked ? '' : 'none';
+}
+
+
+function showBigLoader() {
+    const el = document.getElementById('bigLoader');
+    if (el) el.classList.add('show');
+}
+function hideBigLoader() {
+    const el = document.getElementById('bigLoader');
+    if (el) el.classList.remove('show');
+}
+const _bigLoaderCancel = document.getElementById('bigLoaderCancel');
+if (_bigLoaderCancel) _bigLoaderCancel.addEventListener('click', () => {
+    if (aiAbortController) aiAbortController.abort();
+    hideBigLoader();
+});
+
+
+// --- KI TEST GEN: TESTBANK INTEGRATION (RAG) ---
+async function getTestBankContext(niveau, theme) {
+    return new Promise((resolve) => {
+        const req = indexedDB.open("TestBankDB", 1);
+        req.onsuccess = (e) => {
+            const idb = e.target.result;
+            if (!idb.objectStoreNames.contains("documents")) { resolve([]); return; }
+            const tx = idb.transaction(["documents"], "readonly");
+            tx.objectStore("documents").getAll().onsuccess = (ev) => {
+                const docs = ev.target.result || [];
+                const themeLower = theme.toLowerCase();
+                const relevant = docs.filter(d => 
+                    (d.klassen && d.klassen.includes(niveau)) || 
+                    (d.thema && d.thema.toLowerCase().includes(themeLower)) ||
+                    (d.lektion && d.lektion.toLowerCase().includes(themeLower))
+                ).slice(0, 4); // Max 4 pour ne pas surcharger
+                resolve(relevant);
+            };
+        };
+        req.onerror = () => resolve([]);
+    });
+}
+
+async function extractTextFromDoc(doc) {
+    if (doc.fileData && doc.fileType && doc.fileType.includes("wordprocessingml") && typeof mammoth !== 'undefined') {
+        try {
+            const base64 = doc.fileData.split(',')[1];
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+            const result = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
+            return result.value.substring(0, 2000); // Limit to 2000 chars for few-shot example
+        } catch(e) {
+            console.error("Mammoth extraction error:", e);
+            return null;
+        }
+    }
+    return null;
+}
+// -----------------------------------------------
+
+async function generateText() {
+    if (!navigator.onLine) {
+        alert("Vous êtes hors ligne.");
+        return;
+    }
+    const theme = document.getElementById('ai-theme').value.trim() || 'Général';
+    const niveau = document.getElementById('ai-niveau').value;
+    const lignes = document.getElementById('ai-lignes').value;
+    const vocabCount = parseInt(document.getElementById('ai-vocab-count').value) || 0;
+    const lang = (localStorage.getItem('lang') || 'fr').toUpperCase();
+
+    const exChecks = buildExerciseChecklist();
+    const hasExercices = exChecks.length > 0;
+    const wantsVocab = vocabCount > 0;
+
+    const systemPrompt = "Tu es un professeur de langue expert, spécialisé dans la création de textes et d'exercices d'évaluation pour l'enseignement scolaire.";
+    let userPrompt = `Rédige un texte en ${lang} sur le thème "${theme}" adapté pour un niveau de langue CECR ${niveau}. Le texte doit comporter environ ${lignes} lignes.\n`;
+
+    const pastDocs = await getTestBankContext(niveau, theme);
+    let contextPrompt = "";
+    if (pastDocs.length > 0) {
+        contextPrompt += "\n\n=== CONTEXTE DE LA BASE DE DONNEES (TestBankDB) ===\n";
+        contextPrompt += "Voici les themes/titres des evaluations precedentes pour eviter les doublons :\n";
+        pastDocs.forEach(d => contextPrompt += `- ${d.thema || d.fileName}\n`);
+        
+        for (const d of pastDocs) {
+            const docText = await extractTextFromDoc(d);
+            if (docText) {
+                contextPrompt += "\nVoici un extrait d'une de tes anciennes evaluations (pour t'impregner de la difficulte et du format) :\n";
+                contextPrompt += "\"\"\"\n" + docText + "\n\"\"\"\n";
+                break; 
+            }
+        }
+        contextPrompt += "Assure-toi de generer une NOUVELLE evaluation, avec un texte original et des questions differentes, mais en gardant ce niveau de difficulte.\n";
+    }
+
+    userPrompt += contextPrompt;
+
+    if (hasExercices || wantsVocab) {
+        userPrompt += `\nStructure ta réponse en utilisant EXACTEMENT ces marqueurs de section, dans cet ordre, sans les mentionner ni les répéter dans le contenu :\n`;
+        userPrompt += `===TEXTE===\n[texte principal uniquement]\n`;
+        if (hasExercices) userPrompt += `===EXERCICES===\n[génère ${exChecks.join(', ')}, basés sur le texte ci-dessus]\n`;
+        if (wantsVocab) userPrompt += `===VOCAB===\n[choisis exactement ${vocabCount} mots de vocabulaire importants du texte, un par ligne, au format "mot : traduction en français"]\n`;
+    }
+
+    const mainText = document.getElementById('main-text');
+    const exercisesZone = document.getElementById('exercises-zone');
+    const sourceBox = document.getElementById('source-box');
+    const genBtn = document.getElementById('ai-generate-btn');
+    const stopBtn = document.getElementById('ai-stop-btn');
+
+    genBtn.disabled = true;
+    genBtn.classList.add('generating');
+    genBtn.textContent = 'Génération en cours…';
+    stopBtn.disabled = false;
+    showBigLoader();
+    closeAiPanel();    // ? return user to editor immediately
+    mainText.value = '';
+    exercisesZone.value = '';
+
+
+    mainText.placeholder = 'Génération en cours (peut prendre quelques secondes, plusieurs fournisseurs peuvent être essayés)...';
+
+
+    if (!sourceBox.value.trim()) sourceBox.value = 'Texte généré par IA';
+
+    aiAbortController = new AbortController();
+    let fullResponse = '';
+    const storedProvider = localStorage.getItem('ai_selected_provider') || '';
+
+    try {
+
+
+        const result = await OsirisCore.generateWithFailover(storedProvider, systemPrompt, userPrompt, aiAbortController.signal);
+        fullResponse = result.text;
+        updateAiModelDisplay(result.provider, result.id, result.name);
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            if (String(err.message).indexOf('no API key configured') !== -1) {
+                alert("Aucune clé API configurée. Choisissez un fournisseur dans le Vault du Hub.");
+            } else {
+                alert("Échec de la génération IA — tous les fournisseurs configurés ont échoué :\n" + err.message);
+            }
+        }
+    } finally {
+        genBtn.disabled = false;
+        genBtn.classList.remove('generating');
+        genBtn.innerHTML = '? Générer';
+        stopBtn.disabled = true;
+        hideBigLoader();
+        mainText.placeholder = 'Saisissez votre texte ici...';
+
+        const sections = splitAiSections(fullResponse);
+        mainText.value = sections.texte;
+        updateLineNumbers();
+        updateWordCount();
+
+        if (sections.exercices) exercisesZone.value = sections.exercices;
+        autoGrowExercises(exercisesZone);
+
+        if (sections.vocab) {
+            fillVocabFromLines(sections.vocab);
+        }
+        saveAll();
+    }
+}
+
+function stopGeneration() {
+    if (aiAbortController) aiAbortController.abort();
+}
+
+
+async function generateExercisesOnly() {
+    const mainText    = document.getElementById('main-text');
+    const exercisesZone = document.getElementById('exercises-zone');
+    const exBtn       = document.getElementById('ai-exercises-only-btn');
+
+    const textContent = (mainText.value || mainText.textContent || '').trim();
+    if (!textContent) {
+        alert("Collez ou saisissez d'abord un texte dans la zone principale.");
+        return;
+    }
+
+    const exerciseList = buildExerciseChecklist();
+    const vocabCount   = parseInt((document.getElementById('ai-vocab-count') || {}).value || 0, 10);
+
+    if (!exerciseList.length && vocabCount <= 0) {
+        alert("Cochez au moins un type d'exercice (ou activez le vocabulaire) dans le panneau IA.");
+        return;
+    }
+
+    closeAiPanel();
+
+    exBtn.disabled = true;
+    exBtn.classList.add('generating');
+    exBtn.textContent = 'Génération en cours…';
+
+    exercisesZone.textContent = '';
+
+    const systemPrompt =
+        "Tu es un professeur de langue expert, spécialisé dans la création " +
+        "d'exercices d'évaluation pédagogiques pour l'enseignement scolaire.";
+
+    let userPrompt =
+        "Voici un texte :\n\n" + textContent + "\n\n" +
+        "En te basant UNIQUEMENT sur ce texte, génère les éléments demandés " +
+        "ci-dessous. Structure ta réponse avec EXACTEMENT ces marqueurs :\n";
+
+    if (exerciseList.length)
+        userPrompt += "===EXERCICES===\n[génère : " + exerciseList.join(", ") + "]\n";
+    if (vocabCount > 0)
+        userPrompt += "===VOCAB===\n[choisis exactement " + vocabCount +
+            " mots importants du texte, un par ligne, format : mot : traduction]\n";
+
+    aiAbortController = new AbortController();
+    const storedProvider = localStorage.getItem('ai_selected_provider') || '';
+    let fullResponse = '';
+
+    try {
+        const result = await OsirisCore.generateWithFailover(
+            storedProvider, systemPrompt, userPrompt, aiAbortController.signal
+        );
+        fullResponse = result.text;
+        updateAiModelDisplay(result.provider, result.id, result.name);
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            if (String(err.message).indexOf('no API key configured') !== -1) {
+                alert("Aucune clé API configurée. Choisissez un fournisseur dans le Vault du Hub.");
+            } else {
+                alert("Échec — " + err.message);
+            }
+        }
+    } finally {
+        exBtn.disabled = false;
+        exBtn.classList.remove('generating');
+        exBtn.innerHTML = '🤖 Générer les exercices (texte existant)';
+
+        if (fullResponse) {
+            const sections = splitAiSections(fullResponse);
+            if (sections.exercices) {
+                exercisesZone.textContent = sections.exercices;
+                autoGrowExercises(exercisesZone);
+            }
+            if (sections.vocab) fillVocabFromLines(sections.vocab);
+            saveAll();
+        }
+    }
+}
+
+
+function fillVocabFromLines(text) {
+    const table = document.getElementById('vocab-table').querySelector('tbody');
+    const rows = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let rowIdx = 0;
+    for (const line of rows) {
+        if (rowIdx >= 10) break; // hard cap, matches the "Max 10 mots" label
+        const sep = line.indexOf(':');
+        if (sep === -1) continue;
+        const word = line.slice(0, sep).trim();
+        const trans = line.slice(sep + 1).trim();
+        if (!word) continue;
+
+
+        let tr = table.rows[rowIdx];
+        if (!tr) { addVocabRow(); tr = table.rows[rowIdx]; }
+        if (!tr) break;
+        const inputs = tr.querySelectorAll('input');
+        if (inputs[0]) inputs[0].value = word;
+        if (inputs[1] && trans) inputs[1].value = trans;
+        rowIdx++;
+    }
+    saveAll();
+}
+
+
+async function fetchAITranslations() {
+    const storedProvider = localStorage.getItem('ai_selected_provider') || '';
+
+    const table = document.getElementById('vocab-table').querySelector('tbody');
+    const rows = Array.from(table.rows);
+    const existingWords = rows
+        .map(tr => tr.querySelectorAll('input')[0]?.value.trim())
+        .filter(Boolean);
+
+    const mainText = document.getElementById('main-text').value.trim();
+    const lang = (localStorage.getItem('lang') || 'fr').toUpperCase();
+    let promptText;
+
+    if (existingWords.length > 0) {
+
+
+        promptText = `Traduis chacun de ces mots/expressions en ${lang}, un par ligne, au format EXACT "mot : traduction". Ne rajoute rien d'autre.\nMots : ${existingWords.join(', ')}`;
+    } else if (mainText) {
+        const count = Math.min(10, parseInt(document.getElementById('ai-vocab-count').value) || 8);
+        promptText = `Choisis exactement ${count} mots de vocabulaire importants dans ce texte, puis traduis-les en ${lang}. Réponds uniquement avec une ligne par mot, au format EXACT "mot : traduction", sans numérotation ni commentaire.\n\nTexte :\n${mainText}`;
+    } else {
+        alert("Ajoutez du texte ou des mots dans la table de vocabulaire avant de demander des traductions IA.");
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="fetchAITranslations()"]');
+    const originalLabel = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '? ...'; }
+
+    try {
+        const result = await OsirisCore.generateWithFailover(storedProvider, "Tu es un professeur de langue expert.", promptText);
+        const content = result.text;
+        if (!content) throw new Error("Réponse vide");
+        updateAiModelDisplay(result.provider, result.id, result.name);
+
+        if (existingWords.length > 0) {
+
+
+            const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+            let li = 0;
+            rows.forEach(tr => {
+                const inputs = tr.querySelectorAll('input');
+                if (!inputs[0]?.value.trim()) return;
+                if (inputs[1] && inputs[1].value.trim()) return; // don't clobber an existing translation
+                const line = lines[li++];
+                if (!line) return;
+                const sep = line.indexOf(':');
+                inputs[1].value = (sep !== -1 ? line.slice(sep + 1) : line).trim();
+            });
+            saveAll();
+        } else {
+            fillVocabFromLines(content);
+        }
+    } catch (err) {
+        if (String(err.message).indexOf('no API key configured') !== -1) {
+            alert("Aucune clé API configurée. Choisissez un fournisseur dans le Vault du Hub.");
+        } else {
+            alert("Échec des traductions IA — tous les fournisseurs configurés ont échoué :\n" + err.message);
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+    }
+}
+</script>
+
+<footer class="no-print" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; background-color: var(--bg-color); width: 100%; padding: 12px 10px; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.8em; opacity: 0.9;">
+    <p style="margin: 0;">© 2026 - <strong>Das Lehrer-Portfolio</strong> | Osiris Inc.</p>
+</footer>
+</body>
+</html>

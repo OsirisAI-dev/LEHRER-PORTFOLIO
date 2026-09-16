@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSIRIS – Offline</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #1c1c1e;
+      --surface:  #2c2c2e;
+      --accent:   #007aff;
+      --text:     #f2f2f7;
+      --subtext:  #8e8e93;
+      --radius:   14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+
+    .icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      text-align: center;
+    }
+
+    p {
+      color: var(--subtext);
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .badge {
+      background: var(--surface);
+      border-radius: 50px;
+      padding: .35rem .85rem;
+      font-size: .78rem;
+      color: var(--subtext);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .actions {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: .5rem;
+    }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: .75rem 1.5rem;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+
+    button.secondary {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .divider {
+      width: 1px;
+      height: 100%;
+      background: var(--surface);
+    }
+
+    footer {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 0; right: 0;
+      text-align: center;
+      color: var(--subtext);
+      font-size: .75rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="icon">📚</div>
+
+  <span class="badge">Offline</span>
+
+  <h1>Keine Verbindung</h1>
+
+  <p>
+    Diese Seite ist noch nicht im Cache gespeichert.<br>
+    Starte einen lokalen Server und öffne die App über
+    <strong>localhost</strong>, um den vollen Offline-Modus zu nutzen.
+  </p>
+
+  <div class="actions">
+    <button onclick="location.reload()">🔄 Erneut versuchen</button>
+    <button class="secondary" onclick="history.back()">← Zurück</button>
+  </div>
+
+  <footer>OSIRIS Lehrer-Portfolio &nbsp;·&nbsp; Offline-Modus</footer>
+
+  <script>
+
+    window.addEventListener('online', () => location.reload());
+  </script>
+</body>
+</html>

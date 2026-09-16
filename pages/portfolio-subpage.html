@@ -1,0 +1,3637 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+  * { box-sizing: border-box; font-family: var(--font-family); }
+
+  :root {
+    --page-bg: #eef0f3;
+    --panel-bg: #ffffff;
+    --text-color: #1c1c1e;
+    --text-secondary: #565a60;
+    --border-color: #eeeeee;
+    --hover-bg: #f2f3f5;
+    --avatar-color: #e63946;
+    --font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --tab-end-gap: 10px; /* space kept between the last tab and the exit button */
+
+    /* --- Variablen für das Sticker-Popup "Verknüpfung hinzufügen" --- */
+    --bg-color: #ffffff;
+    --surface-color: #f1f3f4;
+    --hover-color: #e8eaed;
+    --accent-color: #1a73e8;
+  }
+
+  html[data-theme="dark"] {
+    --page-bg: #16171b;
+    --panel-bg: #1f2024;
+    --text-color: #f2f2f3;
+    --text-secondary: #a9adb3;
+    --border-color: #2c2d33;
+    --hover-bg: #2a2b30;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh; min-height: 100dvh;
+    background: var(--page-bg);
+    font-family: var(--font-family);
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px;
+    box-sizing: border-box;
+  }
+
+  /* --- Kopfleiste: Avatar, Seiten-Tabs, Einstellungen, Verlassen --- */
+  .topbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 0 4px;
+    position: relative;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--avatar-color);
+    color: #fff;
+    position: relative;
+    font-weight: 700;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+    transition: filter 0.15s ease;
+    padding: 0;
+    overflow: hidden;
+  }
+  .avatar:hover { filter: brightness(1.08); }
+
+  .avatar-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.3px;
+  }
+
+  .avatar-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+
+  .tab-group-wrap {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .tab-group-wrap::before,
+  .tab-group-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 26px;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .tab-group-wrap::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg-color), transparent);
+  }
+  .tab-group-wrap::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg-color), transparent);
+  }
+  .tab-group-wrap.scroll-left::before { opacity: 1; }
+  .tab-group-wrap.scroll-right::after { opacity: 1; }
+
+  .tab-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-group::-webkit-scrollbar { display: none; }
+
+  .page-tab {
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+    padding: 16px 14px 16px 22px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.15s ease, transform 0.15s ease, flex-basis 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 190px;
+    min-width: 92px;
+    max-width: 220px;
+  }
+  .page-tab:hover { opacity: 0.85; }
+  .page-tab.active { opacity: 1; }
+
+  .tab-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tab-icon svg { width: 100%; height: 100%; }
+
+  .tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .tab-close {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+  .tab-close:hover { opacity: 1; background: rgba(255,255,255,0.25); }
+
+  .tab-warning {
+    position: absolute;
+    left: 64px;
+    bottom: -30px;
+    background: #1c1c1e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 40;
+    white-space: nowrap;
+  }
+  .tab-warning.show { opacity: 1; transform: translateY(0); }
+
+  /* --- Navigationsleisten-Varianten --- */
+
+  /* Portfolio: Register-Reiter mit Eckausschnitt (Step-Cut), angelehnt an
+     die physischen Trennblätter aus portefolio_sample_fixed.html. Farben
+     kommen weiterhin aus --tab-accent / item.page.color (bestehendes
+     tabColors-System) statt aus fest verdrahteten Werten. Der aktive Tab
+     "hebt sich ab" (translateY) und wirft einen stärkeren Schatten; der
+     Farb-Akzent wandert zusätzlich als obere Kontur auf das Inhaltspanel
+     (siehe .content im JS/renderContent). */
+  .tab-group.nav-portefolio .page-tab {
+    opacity: 1;
+    border-radius: 0;
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+    filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.14));
+    transform: translateY(6px);
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  .tab-group.nav-portefolio .page-tab:hover {
+    filter: brightness(1.06) drop-shadow(0 -2px 3px rgba(0,0,0,0.14));
+  }
+  .tab-group.nav-portefolio .page-tab.active {
+    transform: translateY(0);
+    filter: drop-shadow(0 -3px 5px rgba(0,0,0,0.2));
+  }
+
+  .tab-group.nav-pills { gap: 8px; }
+  .tab-group.nav-pills .page-tab { border-radius: 999px; padding: 10px 12px 10px 18px; }
+
+  .tab-group.nav-tabs .page-tab { border-radius: 6px 6px 0 0; padding: 12px 10px 12px 16px; }
+
+  /* Akkordeon: farbige Unterstreichung (unten) statt vollflächiger Einfärbung —
+     bleibt horizontal wie die anderen Stile. Farben kommen weiterhin aus
+     --tab-accent, das für jeden Tab aus dem bestehenden Farbsystem
+     (tabColors) gesetzt wird. */
+  .tab-group.nav-accordion .page-tab {
+    background: transparent !important;
+    color: var(--text-color);
+    opacity: 1;
+    font-weight: 600;
+    border-radius: 6px 6px 0 0;
+    border-bottom: 3px solid transparent;
+    padding: 13px 12px 10px 18px;
+    transition: background-color 0.2s ease, border-bottom-color 0.2s ease, color 0.2s ease;
+  }
+  .tab-group.nav-accordion .page-tab:hover,
+  .tab-group.nav-accordion .page-tab.active {
+    border-bottom-color: var(--tab-accent, #1c1c1e);
+    color: var(--tab-accent, var(--text-color));
+    background-color: color-mix(in srgb, var(--tab-accent, #1c1c1e) 10%, transparent) !important;
+  }
+  .tab-group.nav-accordion .page-tab .tab-close { color: inherit; opacity: 0.55; }
+  .tab-group.nav-accordion .page-tab .tab-close:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--tab-accent, #1c1c1e) 18%, transparent);
+  }
+
+  .spacer { flex: 0 0 var(--tab-end-gap); min-width: var(--tab-end-gap); }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { background: rgba(127,127,127,0.15); color: var(--text-color); }
+
+  .exit-btn { background: #e0393f; color: #fff; }
+  .exit-btn:hover { background: #c9313a; color: #fff; }
+
+  /* --- Hauptbereich --- */
+  .panel {
+    display: flex;
+    background: var(--panel-bg);
+    border-radius: 16px 16px 16px 16px;
+    box-shadow: 0 12px 30px rgba(20,20,30,0.10);
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    transition: background 0.2s ease;
+  }
+
+  .rail {
+    width: 64px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+    transition: width 0.25s ease;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .rail.expanded { width: 190px; }
+
+  .rail-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* --- Schwebender Button "Verknüpfung hinzufügen", unten in der Randleiste --- */
+  .rail-add-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--panel-bg);
+    box-shadow: 0 2px 8px rgba(20,20,30,0.14);
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+  .rail-add-btn:hover { background: var(--hover-bg); color: var(--text-color); transform: scale(1.06); }
+  .rail-add-btn svg { width: 20px; height: 20px; fill: currentColor; }
+  .rail.expanded .rail-add-btn { align-self: center; }
+
+  .rail-toggle {
+    border: none;
+    background: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0 20px;
+    cursor: pointer;
+    color: #9aa0a6;
+  }
+
+  .rail-toggle svg { transition: transform 0.25s ease; }
+  .rail.expanded .rail-toggle svg { transform: rotate(180deg); }
+
+  .subpage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 10px;
+  }
+
+  .subpage-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    background: none;
+    padding: 10px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #1c1c1e;
+    width: 100%;
+    text-align: left;
+  }
+
+  .subpage-item:hover { background: var(--hover-bg); }
+  .subpage-item.active { background: var(--hover-bg); }
+
+  .rail-sep {
+    height: 1px;
+    background: var(--border-color, rgba(0,0,0,0.1));
+    margin: 6px 8px;
+    flex-shrink: 0;
+  }
+
+  .subpage-item .glyph {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .subpage-item .label {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .rail.expanded .subpage-item .label { opacity: 1; }
+
+  .subpage-item .rail-item-edit,
+  .subpage-item .rail-item-remove {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .subpage-item .rail-item-edit { margin-left: auto; }
+  .subpage-item .rail-item-remove { margin-left: 2px; }
+  .subpage-item .rail-item-edit svg { width: 11px; height: 11px; }
+  .rail.expanded.edit-unlocked .subpage-item .rail-item-edit,
+  .rail.expanded.edit-unlocked .subpage-item .rail-item-remove { display: flex; }
+  .subpage-item:hover .rail-item-edit,
+  .subpage-item:hover .rail-item-remove { opacity: 0.8; }
+  .subpage-item .rail-item-edit:hover,
+  .subpage-item .rail-item-remove:hover { opacity: 1; background: rgba(127,127,127,0.25); color: var(--text-color); }
+
+  /* --- Bearbeiten-Freischalter: Schalter, der nur bei erweiterter
+       Randleiste sichtbar ist und Bearbeiten-/Entfernen-Symbole an den
+       Verknüpfungen einblendet ----------------------------------------- */
+  .rail-edit-lock {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 10px 12px;
+    margin: 0 0 6px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+  .rail.expanded .rail-edit-lock { display: flex; }
+  .rail-edit-lock-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .edit-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    border: none;
+    background: #c7c7cc;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+  }
+  .edit-toggle .edit-toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease;
+  }
+  .edit-toggle.on { background: var(--accent-color, #34c759); }
+  .edit-toggle.on .edit-toggle-knob { transform: translateX(16px); }
+
+  .rail-group-label {
+    margin: 14px 0 4px;
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+    opacity: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.15s ease;
+  }
+  .rail.expanded .rail-group-label { opacity: 1; }
+  .subpage-list .rail-group-label:first-child { margin-top: 0; }
+
+  .content {
+    flex: 1;
+    padding: 40px 44px;
+    overflow-y: auto;
+    min-width: 0;
+    /* Farb-Akzent des aktiven Tabs (nur im Portfolio-Stil sichtbar,
+       siehe renderContent()) — spiegelt panel-wrap aus
+       portefolio_sample_fixed.html */
+    border-top: 4px solid transparent;
+    transition: border-top-color 0.2s ease;
+  }
+
+  .content.has-frame {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .page-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+  }
+
+  .content h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    color: var(--text-color);
+  }
+
+  .content .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+
+  .content p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  /* ===== Vault-FAB — schwebendes Symbol, nur sichtbar wenn Safe global
+     aktiviert ist UND die aktuell offene Verknüpfung als "API-Seite"
+     markiert wurde (edit-icon-submenu). Öffnet das eingebaute
+     API-VAULT-Popup (kein iframe-Modal mehr). ===== */
+  .vault-fab {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: #133c38;
+    color: #cdf3ee;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(19,60,56,0.4), 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 60;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .vault-fab:hover { transform: scale(1.06); box-shadow: 0 10px 22px rgba(19,60,56,0.48), 0 2px 6px rgba(0,0,0,0.25); }
+  .vault-fab.show { display: flex; }
+  .vault-fab img { width: 22px; height: 22px; }
+
+  /* ===== Vault-Popup — inline sticker submenu (built-in, ersetzt das
+     frühere Vollbild-iframe-Modal). Nutzt dieselben .sticker-frame /
+     .submenu-Klassen wie das "Verknüpfung hinzufügen"-Popup weiter unten;
+     hier nur die zusätzlichen, vault-eigenen Innereien. ===== */
+  #lock-view { display: flex; flex-direction: column; gap: 10px; }
+  .lock-hint { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  #passphrase-input {
+    font-size: 22px; letter-spacing: 10px; text-align: center;
+    padding: 10px; border: 1px solid var(--border-color); border-radius: 8px;
+    outline: none; background: var(--surface-color); color: var(--text-color);
+  }
+  .warning-box {
+    font-size: 11px; color: #a15c00; background: #fff3cd;
+    border: 1px solid #ffe08a; border-radius: 6px; padding: 8px 10px;
+    display: none;
+  }
+  .warning-box.show { display: block; }
+  .btn-primary {
+    font-size: 13px; font-weight: bold; padding: 10px; border: none;
+    border-radius: 8px; background: var(--accent-color); color: #fff; cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .status-msg { font-size: 11px; min-height: 14px; color: #c0392b; }
+  .status-msg.ok { color: #1e7e34; }
+
+  #manage-view { display: flex; flex-direction: column; gap: 12px; }
+
+  .vault-list { display: flex; flex-direction: column; gap: 6px; }
+  .vault-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border-color); background: var(--surface-color);
+    font-size: 13px; color: var(--text-color);
+  }
+  .vault-row:hover { background: var(--hover-color); }
+  .vault-row.selected { border-color: var(--accent-color); background: #eaf2fe; }
+  .vault-row-icon { width: 18px; height: 18px; flex-shrink: 0; object-fit: contain; }
+  .vault-row-icon-fallback { display: none; font-size: 15px; }
+  .vault-row-name { flex: 1; }
+  .vault-row-count { font-size: 10px; color: var(--text-secondary); }
+
+  .add-vault-btn {
+    font-size: 12px; padding: 8px; border: 1px dashed var(--border-color);
+    border-radius: 8px; background: none; cursor: pointer; color: var(--text-secondary);
+  }
+  .add-vault-btn:hover { background: var(--hover-color); }
+
+  .vault-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding-top: 8px; border-top: 1px solid var(--border-color);
+  }
+  .vault-toolbar.hidden { display: none; }
+  /* Eigener Name statt .icon-btn: die Shell nutzt .icon-btn bereits für
+     die 44px runden Randleisten-Symbole — hier braucht es kleine,
+     text-artige Knöpfe wie im ursprünglichen KI_SAFE. */
+  .vault-icon-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 15px; line-height: 1; color: var(--text-secondary);
+    padding: 2px;
+  }
+  .vault-icon-btn:hover { color: var(--text-color); }
+  .apply-keys-btn {
+    margin-left: auto; font-size: 12px; font-weight: bold;
+    padding: 9px 16px; border: none; border-radius: 999px;
+    background: #1c1c1e; color: #fff; cursor: pointer;
+  }
+  .apply-keys-btn:hover { opacity: 0.88; }
+
+  .edit-panel { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+  .edit-panel.hidden { display: none; }
+  .edit-panel h4 { font-size: 12px; color: var(--accent-color); }
+
+  .key-list { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; }
+  .key-row {
+    display: flex; align-items: center; gap: 8px; font-size: 11px;
+    background: var(--surface-color); border-radius: 6px; padding: 6px 8px;
+  }
+  .key-row .kr-provider { font-weight: bold; flex-shrink: 0; }
+  .key-row .kr-email { color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .key-row .kr-remove { background: none; border: none; cursor: pointer; color: #c0392b; font-size: 12px; }
+
+  .key-form { display: flex; flex-direction: column; gap: 6px; }
+  .key-form select, .key-form input {
+    font-size: 12px; padding: 7px 8px; border: 1px solid var(--border-color);
+    border-radius: 6px; background: var(--bg-color); color: var(--text-color); outline: none;
+  }
+  .key-form button, .vault-footer-menu button {
+    font-size: 11px; padding: 7px; border: 1px solid var(--border-color);
+    border-radius: 6px; background: var(--surface-color); cursor: pointer; color: var(--text-color);
+  }
+  .key-form button:hover, .vault-footer-menu button:hover { background: var(--hover-color); }
+
+  .vault-footer-menu { display: flex; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--border-color); }
+  .vault-footer-menu input { flex: 1; font-size: 11px; padding: 7px 8px; border: 1px solid var(--border-color); border-radius: 6px; }
+
+  /* Zwischenschritt vor dem vollen Stapel-Layout (640px): Tabs werden
+     schrittweise verkleinert, bevor sie umbrechen — Icon fällt zuerst weg,
+     danach schrumpft die Mindestbreite, Label und Close-Button bleiben
+     immer sichtbar/erreichbar. */
+  @media (max-width: 990px) {
+    .page-tab {
+      flex: 1 1 120px;
+      min-width: 64px;
+      max-width: 170px;
+      padding: 14px 10px 14px 14px;
+      gap: 6px;
+    }
+  }
+  @media (max-width: 820px) {
+    .page-tab { min-width: 48px; padding: 12px 8px 12px 10px; }
+    .page-tab .tab-icon { display: none; }
+    .page-tab .tab-label { min-width: 24px; }
+    .page-tab .tab-close { min-width: 16px; }
+    /* Eckausschnitt an die geschrumpfte linke Polsterung anpassen, damit
+       er das Label nicht überlappt */
+    .tab-group.nav-portefolio .page-tab {
+      clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .topbar { flex-wrap: wrap; }
+    .tab-group-wrap::before,
+    .tab-group-wrap::after { display: none; }
+    .tab-group {
+      order: 3;
+      width: 100%;
+      max-width: 100%;
+      margin-top: 8px;
+      flex-direction: column;
+      align-items: stretch;
+      overflow-x: visible;
+    }
+    .page-tab { flex: 1 1 auto; width: 100%; max-width: 100%; min-width: 0; padding: 10px 12px; font-size: 13px; text-align: left; border-radius: 8px; }
+    /* Gestapeltes Layout: Eckausschnitt/Anheben passt hier nicht mehr,
+       Tabs verhalten sich wie normale Listenzeilen */
+    .tab-group.nav-portefolio .page-tab {
+      clip-path: none;
+      transform: none;
+      filter: none;
+      border-radius: 8px;
+    }
+    .panel { border-radius: 16px; flex-direction: column; }
+    .rail { width: 100%; flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid #eee; padding: 8px 12px; }
+    .rail.expanded { width: 100%; }
+    .subpage-list { flex-direction: row; padding: 0; overflow-x: auto; }
+    .rail-toggle { display: none; }
+    .subpage-item { flex-shrink: 0; }
+    .subpage-item .label { opacity: 1; max-width: 110px; }
+    .rail-group-label { display: none; }
+    .content { padding: 28px 24px; }
+  }
+
+  /* ===== Sticker-Popup "Verknüpfung hinzufügen" — ausgelöst vom
+     schwebenden Button unten in der Randleiste. Ein farbiger Rahmen mit
+     abgezogenen Ecken, leicht schief, der bei jedem Öffnen Farbe und
+     Neigung wechselt und das weiße Inhaltspanel umschließt. ===== */
+  .sticker-frame {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(var(--tilt, -3deg));
+    width: min(92vw, 340px);
+    max-height: 85vh;
+    display: none;
+    padding: 12px;
+    background: var(--sticker-color, #d9ece6);
+    border-radius: 22px;
+    z-index: 201;
+    overflow: hidden;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 20px 34px rgba(0, 0, 0, 0.32);
+    transition: background-color .4s ease, transform .4s cubic-bezier(.34,1.4,.64,1);
+  }
+
+  .sticker-frame.active { display: block; }
+
+  .sticker-frame::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 34px 34px 0;
+    border-color: transparent var(--paper-color, #fdfdf9) transparent transparent;
+    filter: drop-shadow(-2px 2px 3px rgba(0, 0, 0, 0.28));
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .sticker-frame::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 34px 0 0 34px;
+    border-color: transparent transparent transparent var(--paper-color, #fdfdf9);
+    filter: drop-shadow(2px -2px 3px rgba(0, 0, 0, 0.28));
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .submenu {
+    background-color: var(--submenu-color, var(--bg-color));
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    max-height: calc(85vh - 24px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    cursor: default;
+    padding: 12px;
+    position: relative;
+    z-index: 1;
+    box-shadow: -3px -3px 0 0 var(--paper-color, #fdfdf9), 3px 3px 0 0 var(--paper-color, #fdfdf9);
+    transition: background-color .4s ease, box-shadow .4s ease;
+  }
+
+  .submenu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .submenu-header h3 {
+    font-size: 13px;
+    color: #202124;
+  }
+
+  .submenu-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #5f6368;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .submenu-section {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .submenu-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .submenu-section h4 {
+    font-size: 12px;
+    margin-bottom: 6px;
+    color: var(--accent-color);
+    font-weight: bold;
+  }
+
+  .submenu-note {
+    font-size: 10px;
+    color: #5f6368;
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  .file-input-wrapper input[type="file"] {
+    width: 100%;
+    font-size: 11px;
+    color: #202124;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px;
+    margin-bottom: 6px;
+    outline: none;
+  }
+
+  .resizer-gui {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .preview-box {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border: 1px dashed var(--border-color);
+    border-radius: 4px;
+    background: var(--surface-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .preview-box img {
+    display: none;
+    object-fit: contain;
+  }
+
+  .range-slider { flex-grow: 1; }
+
+  .range-slider input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+  }
+
+  .theme-btn {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-color);
+    color: #202124;
+    cursor: pointer;
+  }
+
+  .theme-btn:hover { background: var(--hover-color); }
+
+  .bg-remove-btn { margin-top: 6px; }
+
+  #link-save-btn { margin-top: 2px; }
+
+  /* --- Anpassungs-Popup im Stil eines Klebezettels --- */
+  .sticky-menu {
+    position: absolute;
+    top: 56px;
+    left: 4px;
+    width: 320px;
+    max-height: calc(100vh - 90px); max-height: calc(100dvh - 90px);
+    overflow-y: auto;
+    background: linear-gradient(160deg, #7fe0d6 0%, #5fd1c8 55%, #4fc4bb 100%);
+    color: #133c38;
+    padding: 14px 15px 12px;
+    border-radius: 2px 14px 14px 14px;
+    box-shadow: 0 14px 26px rgba(20,40,38,0.28), 0 2px 6px rgba(20,40,38,0.18);
+    transform: rotate(-2deg);
+    transform-origin: top left;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    scrollbar-width: thin;
+  }
+
+  .sticky-menu.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: rotate(-1deg);
+  }
+
+  .sticky-menu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, transparent 50%, rgba(19,60,56,0.25) 50%);
+    border-radius: 0 0 0 4px;
+  }
+
+  .sticky-menu::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 22px;
+    height: 22px;
+    background: #cdf3ee;
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    border-radius: 0 2px 0 0;
+  }
+
+  .sticky-close {
+    position: absolute;
+    top: 8px;
+    right: 26px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    color: #133c38;
+    opacity: 0.55;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+  }
+  .sticky-close:hover { opacity: 1; }
+
+  .sticky-menu h3 {
+    margin: 0 0 9px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .sticky-section {
+    margin-bottom: 7px;
+  }
+  .sticky-section:last-of-type { margin-bottom: 6px; }
+
+  .sticky-label {
+    margin: 0 0 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    opacity: 0.7;
+  }
+
+  .sticky-divider {
+    border: none;
+    border-top: 1px solid rgba(19,60,56,0.18);
+    margin: 8px 0;
+  }
+
+  .inline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .inline-label {
+    margin: 0;
+    white-space: nowrap;
+  }
+  
+  .theme-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .theme-swatch {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    border: 2px solid rgba(19,60,56,0.35);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    padding: 0;
+    background: #ffffff;
+  }
+  .theme-swatch.active { outline: 2px solid #133c38; outline-offset: 2px; }
+  .theme-swatch-dark { background: #1c1c1e; border-color: #1c1c1e; }
+  .theme-swatch-custom {
+    background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(255,255,255,0.7);
+  }
+  .theme-swatch-custom input[type="color"] {
+    position: absolute;
+    inset: -4px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .theme-swatch-bgimage {
+    background: repeating-conic-gradient(#c9d2d6 0% 25%, #e8edf0 0% 50%) 0 0 / 8px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #133c38;
+    position: relative;
+    overflow: hidden;
+  }
+  .theme-swatch-bgimage.has-image {
+    background-size: cover;
+    background-position: center;
+  }
+  .theme-swatch-bgimage input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .username-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .username-row .sticky-input { flex: 1; }
+
+  .swatch {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: var(--sc);
+    border: 2px solid rgba(255,255,255,0.7);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .swatch.active { outline: 2px solid #133c38; outline-offset: 2px; }
+
+  .swatch.custom {
+    background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .swatch.custom input[type="color"] {
+    position: absolute;
+    inset: -4px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .swatch-live {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(255,255,255,0.7);
+  }
+  .swatch-live input[type="color"] {
+    position: absolute;
+    inset: -4px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .font-toggle-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(19,60,56,0.35);
+    background: rgba(255,255,255,0.45);
+    color: #133c38;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease;
+  }
+  .font-toggle-btn:hover { background: rgba(255,255,255,0.65); }
+
+  .sticky-input {
+    width: 100%;
+    border: 1.5px solid rgba(19,60,56,0.35);
+    background: rgba(255,255,255,0.45);
+    color: #133c38;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 7px;
+    border-radius: 7px;
+  }
+  .sticky-input::placeholder { color: rgba(19,60,56,0.55); }
+
+  .sticky-file {
+    width: 100%;
+    font-size: 10.5px;
+    color: #133c38;
+  }
+
+  .sticky-note {
+    margin: 3px 0 0;
+    font-size: 9px;
+    line-height: 1.3;
+    opacity: 0.65;
+  }
+
+  .tab-color-grid {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .tab-color-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tab-color-num {
+    font-size: 8px;
+    font-weight: 700;
+    opacity: 0.7;
+  }
+
+  .tab-color-input {
+    width: 49px;
+    height: 20px;
+    border: 1.5px solid rgba(19,60,56,0.35);
+    border-radius: 5px;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    flex-shrink: 0;
+  }
+  .tab-color-input::-webkit-color-swatch-wrapper { padding: 2px; }
+  .tab-color-input::-webkit-color-swatch { border: none; border-radius: 3px; }
+  .tab-color-input::-moz-color-swatch { border: none; border-radius: 3px; }
+
+  .tab-color-reset-all {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: rgba(19,60,56,0.12);
+    color: #133c38;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-left: 2px;
+    transition: background 0.15s ease;
+  }
+  .tab-color-reset-all:hover { background: rgba(19,60,56,0.22); }
+
+  .menu-color-toggle {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.7);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    padding: 0;
+    flex-shrink: 0;
+    margin-right: 20px;
+  }
+
+  .navstyle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .navstyle-btn {
+    border: 1.5px solid rgba(19,60,56,0.35);
+    background: rgba(255,255,255,0.35);
+    color: #133c38;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 5px 4px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .navstyle-btn:hover { background: rgba(255,255,255,0.55); }
+  .navstyle-btn.active {
+    background: #133c38;
+    color: #cdf3ee;
+    border-color: #133c38;
+  }
+
+  .sticky-footer {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .safe-row { justify-content: space-between; }
+
+  .safe-toggle {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+.safe-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    display: block;
+  }
+  .safe-toggle input { opacity: 0; width: 0; height: 0; }
+  .safe-toggle-slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: rgba(19,60,56,0.25);
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+  .safe-toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .safe-toggle input:checked + .safe-toggle-slider { background: #133c38; }
+  .safe-toggle input:checked + .safe-toggle-slider::before { transform: translateX(16px); }
+
+  /* ---- Checkdot: kompakter runder Ein/Aus-Punkt für den globalen
+     Safe-Schalter in der Menü-Zeile (Anpassungs-Popup) ---- */
+  .safe-checkdot {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    margin-left: auto;
+    cursor: pointer;
+  }
+  .safe-checkdot input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .safe-checkdot-mark {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(19,60,56,0.35);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .safe-checkdot:hover .safe-checkdot-mark { border-color: rgba(19,60,56,0.6); }
+  .safe-checkdot input:checked + .safe-checkdot-mark {
+    background: #133c38;
+    border-color: #133c38;
+    transform: scale(1.05);
+  }
+
+  .export-notice {
+    font-size: 10px;
+    color: #a15c00;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .export-notice.hidden { display: none; }
+
+  .sticky-icon-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: rgba(19,60,56,0.12);
+    color: #133c38;
+    padding: 7px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .sticky-icon-btn:hover { background: rgba(19,60,56,0.22); }
+  .sticky-icon-btn svg { width: 15px; height: 15px; }
+
+  .sticky-reset {
+    width: 100%;
+    border: none;
+    background: rgba(19,60,56,0.12);
+    color: #133c38;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .sticky-reset:hover { background: rgba(19,60,56,0.2); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="topbar">
+    <button class="avatar" id="avatarBtn" title="Einstellungen">
+      <span class="avatar-initials" id="avatarInitials">?</span>
+      <img class="avatar-logo" id="avatarLogo" alt="Logo">
+    </button>
+
+    <div class="tab-group-wrap" id="tabGroupWrap">
+      <div class="tab-group" id="tabGroup"></div>
+    </div>
+    <div class="tab-warning" id="tabWarning">Maximal 10 Tabs geöffnet — schließen Sie zuerst einen Tab.</div>
+
+    <div class="spacer"></div>
+
+    <a class="icon-btn exit-btn" id="dashboardLink" title="Verlassen" href="dashboard.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+    </a>
+
+    <div class="sticky-menu" id="stickyMenu">
+      <button class="sticky-close" id="stickyClose" title="Schließen">&times;</button>
+      <h3>Anpassen</h3>
+
+      <div class="sticky-section inline-row">
+        <p class="sticky-label inline-label">Design</p>
+        <div class="theme-row" id="themeRow">
+          <button class="theme-swatch theme-swatch-light" data-theme="light" title="Hell"></button>
+          <button class="theme-swatch theme-swatch-dark" data-theme="dark" title="Dunkel"></button>
+          <label class="theme-swatch theme-swatch-custom" title="Benutzerdefinierter Hintergrund">
+            <input type="color" id="customThemeColor">
+          </label>
+          <label class="theme-swatch theme-swatch-bgimage" id="bgImageSwatch" title="Hintergrund importieren (Bild)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <input type="file" id="bgImageUploader" accept="image/png,image/jpeg,image/webp">
+          </label>
+        </div>
+      </div>
+
+      <div class="sticky-section inline-row">
+        <p class="sticky-label inline-label">Benutzername</p>
+      </div>
+      <div class="sticky-section username-row">
+        <input class="sticky-input" type="text" id="appNameInput" placeholder="Mein Portfolio" maxlength="40">
+        <label class="swatch swatch-live" id="avatarColorTrigger" title="Avatar-Farbe">
+          <input type="color" id="customAvatarColor">
+        </label>
+      </div>
+
+      <div class="sticky-section">
+        <p class="sticky-label">Logo</p>
+        <input class="sticky-file" type="file" id="logoUploader" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+        <p class="sticky-note">Ersetzt die Initialen durch Ihr Logo (max. 2 MB).</p>
+        <button class="sticky-reset" id="logoRemoveBtn" style="margin-top:6px; font-size:10.5px; padding:5px;">Logo entfernen</button>
+      </div>
+
+      <div class="sticky-section inline-row">
+        <p class="sticky-label inline-label">Schriftart</p>
+        <button class="font-toggle-btn" id="fontToggleBtn" title="Schriftart ändern">Aa</button>
+      </div>
+
+      <hr class="sticky-divider">
+
+      <div class="sticky-section">
+        <input class="sticky-file" type="file" id="fontUploader" accept=".ttf">
+        <button type="button" class="theme-btn" id="browse-font-lib-btn" style="width:100%; margin-top:8px;">Bibliothek durchsuchen</button>
+        <div id="font-lib-list" style="display:none; gap:4px; margin-top:8px; flex-direction:column; max-height:100px; overflow-y:auto; padding:4px; border:1px solid var(--border-color); border-radius:4px; background:var(--surface-color);"></div>
+        <p class="sticky-note">Eigene Schriftart (.ttf, max. 2 MB) oder aus Bibliothek wählen.</p>
+      </div>
+
+      <hr class="sticky-divider">
+
+      <div class="sticky-section">
+        <p class="sticky-label">Tab-Farben</p>
+        <div class="tab-color-grid" id="tabColorGrid">
+          <div class="tab-color-col" data-tab-id="home" title="Startseite">
+            <span class="tab-color-num" title="Startseite">1</span>
+            <input type="color" class="tab-color-input" data-tab-id="home" value="#1c1c1e" title="Startseite">
+          </div>
+          <div class="tab-color-col" data-tab-id="fixed-bibliothek" title="Bibliothek">
+            <span class="tab-color-num" title="Bibliothek">2</span>
+            <input type="color" class="tab-color-input" data-tab-id="fixed-bibliothek" value="#2f6feb" title="Bibliothek">
+          </div>
+          <div class="tab-color-col" data-tab-id="fixed-eduhub" title="Edu Hub">
+            <span class="tab-color-num" title="Edu Hub">3</span>
+            <input type="color" class="tab-color-input" data-tab-id="fixed-eduhub" value="#e0393f" title="Edu Hub">
+          </div>
+          <div class="tab-color-col" data-tab-id="fixed-woerterbuch" title="KI-Wörterbuch">
+            <span class="tab-color-num" title="KI-Wörterbuch">4</span>
+            <input type="color" class="tab-color-input" data-tab-id="fixed-woerterbuch" value="#3aa65a" title="KI-Wörterbuch">
+          </div>
+          <div class="tab-color-col" data-tab-id="fixed-spezwoerterbuch" title="KI-Fachwörterbuch">
+            <span class="tab-color-num" title="KI-Fachwörterbuch">5</span>
+            <input type="color" class="tab-color-input" data-tab-id="fixed-spezwoerterbuch" value="#3aa65a" title="KI-Fachwörterbuch">
+          </div>
+          <button class="tab-color-reset-all" id="tabColorResetAll" title="Alle Tabs zurücksetzen">&#8635;</button>
+        </div>
+      </div>
+
+      <div class="sticky-section">
+        <p class="sticky-label">Navigationsleiste</p>
+        <div class="navstyle-grid" id="navStyleGrid">
+          <button class="navstyle-btn" data-style="portefolio">Portfolio</button>
+          <button class="navstyle-btn" data-style="pills">Pillen</button>
+          <button class="navstyle-btn" data-style="tabs">Registerkarten</button>
+          <button class="navstyle-btn" data-style="accordion">Akkordeon</button>
+        </div>
+      </div>
+
+      <hr class="sticky-divider">
+
+      <div class="sticky-section inline-row">
+        <p class="sticky-label inline-label">Menü</p>
+        <button class="menu-color-toggle" id="menuColorToggle" title="Nächste Farbe (Blau / Rosa / Gelb)"></button>
+        <label class="swatch custom" title="Benutzerdefinierte Farbe">
+          <input type="color" id="customStickyMenuColor">
+        </label>
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; color: #133c38;">
+          <svg class="safe-icon" viewBox="-3 0 32 32">
+            <g id="icomoon-ignore"></g>
+            <path d="M13.113 11.279c-2.429 0-4.429 1.836-4.69 4.196h-1.080v1.049h1.080c0.261 2.36 2.261 4.196 4.69 4.196 2.607 0 4.721-2.113 4.721-4.721s-2.113-4.721-4.721-4.721zM13.113 19.672c-1.846 0-3.373-1.371-3.63-3.147h3.63v-1.049h-3.63c0.256-1.776 1.784-3.147 3.63-3.147 2.024 0 3.672 1.647 3.672 3.672s-1.647 3.672-3.672 3.672z" fill="currentColor"></path>
+            <path d="M3.147 20.786v-3.147h-1.049v4.196h1.049z" fill="currentColor"></path>
+            <path d="M3.147 13.377v-3.147h-1.049v4.196h1.049z" fill="currentColor"></path>
+            <path d="M4.196 7.083v17.834h17.833v-17.834h-17.833zM20.98 23.868h-15.735v-15.735h15.735v15.735h0z" fill="currentColor"></path>
+            <path d="M0 3.936v24.128h26.226v-24.128h-26.226zM25.177 27.015h-24.128v-22.029h24.128v22.029h-0z" fill="currentColor"></path>
+          </svg>
+          <label class="safe-checkdot" title="Safe aktivieren/deaktivieren" style="margin-left: 0;">
+            <input type="checkbox" id="safeEnabledToggle">
+            <span class="safe-checkdot-mark"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sticky-footer">
+        <button class="sticky-icon-btn" id="exportDataBtn" title="Alles exportieren (Einstellungen + Safe-Schlüssel)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        </button>
+        <button class="sticky-icon-btn" id="importDataBtn" title="Alles importieren">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        </button>
+        <button class="sticky-icon-btn" id="stickyReset" title="Zurücksetzen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
+        <input type="file" id="importDataInput" accept=".bak" style="display:none;">
+      </div>
+      <p class="export-notice hidden" id="exportNotice"></p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="rail" id="rail">
+      <button class="rail-toggle" id="railToggle" title="Erweitern / einklappen">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="rail-edit-lock" id="railEditLock">
+        <span class="rail-edit-lock-label">Bearbeiten</span>
+        <button type="button" class="edit-toggle" id="editToggleBtn" role="switch" aria-checked="false" title="Bearbeiten-Symbole ein-/ausblenden">
+          <span class="edit-toggle-knob"></span>
+        </button>
+      </div>
+      <div class="rail-scroll">
+        <div class="subpage-list" id="subpageList"></div>
+      </div>
+      <button class="rail-add-btn" id="railAddBtn" title="Verknüpfung hinzufügen">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M16.5 21.8389C16.4873 21.8417 16.4745 21.8444 16.4617 21.8472L16.4582 21.8479C16.4424 21.8512 16.4266 21.8545 16.4107 21.8578L16.4092 21.8581C16.4256 21.8548 16.4419 21.8514 16.4582 21.8479C16.4722 21.8449 16.4861 21.8419 16.5 21.8389Z" fill="currentColor"/>
+          <path d="M22 15C21.4162 15 20.9239 15 20.5 15.0076C19.5724 15.0241 18.9718 15.0768 18.4549 15.2447C16.9327 15.7393 15.7393 16.9327 15.2447 18.4549C15.0768 18.9718 15.0241 19.5724 15.0076 20.5C15 20.9239 15 21.4162 15 22C15.4827 22 15.954 21.9511 16.4092 21.8581L16.4107 21.8578L16.4582 21.8479L16.4617 21.8472L16.5 21.8389C19.162 21.2577 21.2577 19.162 21.8389 16.5C21.9444 16.0168 22 15.5149 22 15Z" fill="currentColor"/>
+          <path d="M2 12C2 16.714 2 19.0711 3.46447 20.5355C4.92893 22 7.28595 22 12 22H13.5L13.4999 21.7409C13.499 20.1325 13.4984 18.9754 13.8181 17.9914C14.4611 16.0125 16.0125 14.4611 17.9914 13.8181C18.9754 13.4984 20.1325 13.499 21.7409 13.4999L22 13.5V12C22 7.28595 22 4.92893 20.5355 3.46447C19.0711 2 16.714 2 12 2C7.28595 2 4.92893 2 3.46447 3.46447C2 4.92893 2 7.28595 2 12Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="content" id="content"></div>
+  </div>
+
+  <!-- ===== Vault-FAB — erscheint nur auf Verknüpfungen, die im
+       Bearbeiten-Popup als "API-Seite" markiert wurden, und nur wenn
+       der globale Safe-Schalter (Anpassungs-Popup) aktiviert ist.
+       Bewusst AUSSERHALB von .panel platziert (wie die sticker-frame-
+       Popups direkt darunter): .panel hat overflow:hidden, und ein
+       position:fixed-Kind wird trotzdem auf die Box seines nächsten
+       overflow:hidden-Vorfahren zugeschnitten — der FAB konnte dadurch
+       am unteren Rand des Panels abgeschnitten werden statt frei am
+       Viewport-Rand zu schweben. Als Geschwister von .panel (innerhalb
+       .shell, das kein overflow:hidden hat) ist er nicht mehr geclippt. ===== -->
+  <button class="vault-fab" id="vaultFabBtn" title="API Vault öffnen">
+    <img src="../icons/vault.svg" alt="Vault" style="width:22px; height:22px; object-fit:contain;">
+  </button>
+
+  <!-- ===== Vault-Popup — eingebautes Untermenü (ersetzt das frühere
+       Vollbild-iframe-Modal). Gleiche Sticker-Optik wie das
+       "Verknüpfung hinzufügen"-Popup weiter unten; kein eigener
+       Hintergrund mehr nötig, da es jetzt Teil der Shell-Seite ist
+       statt einer eigenständigen Seite mit Wallpaper. ===== -->
+  <div class="sticker-frame" id="vault-sticker-frame">
+    <div class="submenu" id="vault-submenu">
+
+      <div class="submenu-header">
+        <h3>API VAULT</h3>
+        <div class="header-actions" style="display:flex; align-items:center; gap:10px;">
+          <button class="vault-icon-btn" id="delete-all-btn" title="Alle Vaults löschen">🗑️</button>
+          <button class="submenu-close" id="vault-submenu-close-btn">❌</button>
+        </div>
+      </div>
+
+      <!-- ===== LOCK VIEW ===== -->
+      <div id="lock-view">
+        <p class="lock-hint" id="lock-hint"></p>
+        <input type="password" id="passphrase-input" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+        <div class="warning-box" id="warning-box">Achtung: Eine vergessene Passphrase löscht nach 3 Fehlversuchen alle Vaults. Es gibt keine Wiederherstellung.</div>
+        <button class="btn-primary" id="unlock-btn"></button>
+        <div class="status-msg" id="lock-status"></div>
+      </div>
+
+      <!-- ===== MANAGE VIEW ===== -->
+      <div id="manage-view" style="display:none;">
+        <div class="vault-list" id="vault-list"></div>
+        <button class="add-vault-btn" id="add-vault-btn">+ Neuer Vault</button>
+
+        <div class="vault-toolbar hidden" id="vault-toolbar">
+          <button class="vault-icon-btn" id="tb-edit" title="Bearbeiten">✏️</button>
+          <button class="vault-icon-btn" id="tb-export" title="Exportieren">📤</button>
+          <button class="vault-icon-btn" id="tb-import" title="Importieren">📥</button>
+          <button class="vault-icon-btn" id="tb-reset" title="Diesen Vault löschen">💣</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none;">
+          <button class="apply-keys-btn" id="apply-keys-btn">SCHLÜSSEL ANWENDEN</button>
+        </div>
+        <div class="status-msg" id="manage-status"></div>
+
+        <div class="edit-panel hidden" id="edit-panel">
+          <h4>Schlüssel für <span id="edit-vault-name"></span></h4>
+          <div class="key-list" id="key-list"></div>
+          <div class="key-form">
+            <select id="provider-select"></select>
+            <input type="text" id="key-input" placeholder="API-Schlüssel">
+            <input type="email" id="email-input" placeholder="E-Mail (optional)">
+            <button id="add-key-btn">+ Schlüssel hinzufügen</button>
+          </div>
+          <div class="vault-footer-menu">
+            <input type="text" id="new-provider-input" placeholder="Neuer Anbieter…">
+            <button id="add-provider-btn">+ Anbieter</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== Sticker-Popup "Verknüpfung hinzufügen" — vom Button unten
+       links in der Randleiste ausgelöst ===== -->
+  <div class="sticker-frame" id="sticker-frame">
+    <div class="submenu" id="edit-icon-submenu">
+      <div class="submenu-header">
+        <h3 id="submenu-title">Verknüpfung hinzufügen</h3>
+        <button class="submenu-close" id="submenu-close-btn">❌</button>
+      </div>
+
+      <div class="submenu-section">
+        <h4>Name</h4>
+        <div class="file-input-wrapper">
+          <input type="text" id="link-name-input" placeholder="Name der Verknüpfung" style="width:100%; font-size:12px; padding:6px 8px; border-radius:4px; border:1px solid var(--border-color); background:var(--surface-color); color:#202124; outline:none;">
+        </div>
+      </div>
+
+      <div class="submenu-section">
+        <h4>Ajouter icône png/svg 48x48</h4>
+        <div class="file-input-wrapper">
+          <input type="file" id="icon-uploader" accept=".png, .svg">
+          <button type="button" id="browse-icon-lib-btn" class="theme-btn" style="margin-top: 8px;">Bibliothek durchsuchen</button>
+        </div>
+        <div id="icon-lib-grid" style="display:none; gap:8px; margin-top:8px; flex-wrap:wrap; max-height:150px; overflow-y:auto; padding:4px; border:1px solid var(--border-color); border-radius:4px; background:var(--surface-color);"></div>
+        <div class="resizer-gui">
+          <div class="preview-box">
+            <img id="icon-preview" src="" alt="preview">
+          </div>
+          <div class="range-slider">
+            <input type="range" id="icon-size-slider" min="16" max="48" value="48" title="Redimensionner l'icône">
+          </div>
+        </div>
+        <button type="button" class="theme-btn bg-remove-btn" id="remove-shortcut-icon-btn" style="display:none;">Retirer l'icône</button>
+      </div>
+
+      <div class="submenu-section">
+        <h4>Ajouter page HTML</h4>
+        <div class="file-input-wrapper">
+          <input type="file" id="html-uploader" accept=".html">
+        </div>
+        <div class="submenu-note">* Nouvelles pages ouvrent de nouveaux onglets</div>
+        <div class="submenu-note" id="html-page-status" style="display:none;"></div>
+        <button type="button" class="theme-btn bg-remove-btn" id="remove-shortcut-html-btn" style="display:none;">Retirer la page</button>
+      </div>
+
+      <div class="submenu-section inline-row safe-row" style="display:flex; align-items:center;">
+        <h4 style="margin:0;">API-Seite</h4>
+        <label class="safe-toggle" title="Vault-Symbol auf dieser Seite anzeigen (nur wenn Safe global aktiviert ist)">
+          <input type="checkbox" id="link-api-powered-toggle">
+          <span class="safe-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="submenu-section inline-row" id="link-color-section" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <h4 style="margin:0;">Tab-Farbe</h4>
+        <input type="color" id="link-color-input" value="#1c1c1e" style="width:28px; height:28px; padding:0; border:none; border-radius:50%; cursor:pointer; background:none;" title="Tab-Farbe wählen">
+      </div>
+
+      <button type="button" class="theme-btn" id="link-save-btn" style="align-self:flex-start; background:var(--accent-color); color:#fff; border-color:var(--accent-color);">Ajouter au menu</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* --- Verknüpfungen (linkes Panel) ---
+   Früher enthielt das linke Panel fest codierte Platzhalter-Einträge
+   (Blume/Quadrat/Kreis/Raute) für jede Seite. Diese Demo-Icons sind jetzt
+   entfernt: das Panel startet leer und füllt sich ausschließlich über den
+   schwebenden "+"-Button unten in der Randleiste (siehe Sticker-Popup). */
+
+const LINKS_KEY = 'portfolioUserLinks';
+
+const exitLink = document.getElementById('dashboardLink');
+if (exitLink) {
+  exitLink.addEventListener('click', function (e) {
+    if (window.parent && window.parent !== window) {
+      e.preventDefault();
+      window.parent.postMessage({ type: 'exitToGate' }, '*');
+    }
+    // else: not embedded, let the normal href navigation happen
+  });
+}
+
+function loadUserLinks() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LINKS_KEY));
+    if (Array.isArray(raw)) return raw;
+  } catch (e) { /* fehlerhafte Daten -> mit leerer Liste starten */ }
+  return [];
+}
+
+function saveUserLinks() {
+  try {
+    localStorage.setItem(LINKS_KEY, JSON.stringify(userLinks));
+  } catch (e) { /* Speicher nicht verfügbar — Liste übersteht dann keinen Neuladevorgang */ }
+}
+
+let userLinks = loadUserLinks();
+
+// Standard-Glyph für Verknüpfungen ohne eigenes hochgeladenes Icon
+const linkGlyph = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11.5 4.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.36-1.36"/></svg>';
+
+/* --- Tab-System ---
+   Die Seitenleiste (linkes Panel) listet alle vom Benutzer über den
+   "+"-Button hinzugefügten Verknüpfungen auf. Ein Klick öffnet die
+   Verknüpfung als Tab (oder wechselt zu ihr, falls bereits offen) — außer
+   sie hat eine angehängte HTML-Seite, dann öffnet sie direkt in einem
+   neuen Browser-Tab.
+   Tab 0 ist immer der fixierte Standard-Tab "Startseite" (kein
+   Schließen-Kreuz, kann nicht entfernt werden, existiert unabhängig von
+   den Verknüpfungen). Bis zu 4 weitere Tabs können geöffnet werden
+   (5 insgesamt). Wird das überschritten, erscheint eine Warnung. */
+
+const MAX_TABS = 10;
+const DEFAULT_TAB_ID = 'home';
+
+// Icône et page attachée du tab par défaut ("Startseite") — mêmes champs
+// (icon / pageSrc) que ceux stockés sur un lien normal, pour que
+// renderTabs()/renderContent() les affichent sans logique spéciale.
+// Fichiers factices : déposer dashboard.svg et dashboard.html dans le
+// même dossier que ce fichier — ils s'afficheront automatiquement dans
+// le tab par défaut, sans autre modification du code.
+const DEFAULT_TAB_ICON = '../icons/dashboard.svg';
+const DEFAULT_TAB_PAGE = 'dashboard.html';
+
+// Fixed default vertical shortcuts — always present in the rail,
+// pointing at the suite's core tool pages. Deliberately NOT part of
+// userLinks/portfolioUserLinks: they don't get edit/remove controls (see
+// renderRail()) and can't be deleted, same "protected" treatment the
+// 'home' tab already gets via DEFAULT_TAB_ID, just extended to more than
+// one entry. itemFromId() resolves these before falling through to
+// userLinks, so openTabById()/tab close/tab-state persistence all work
+// on them for free — no changes needed to that machinery.
+const FIXED_SHORTCUTS = [
+  { id: 'fixed-bibliothek', name: 'BIBLIOTHEK', pageSrc: 'library.html', icon: '../icons/bibliothek-default.png' },
+  { id: 'fixed-eduhub', name: 'EDU HUB', pageSrc: 'edu-hub.html', icon: '../icons/eduhub-default.png' },
+  { id: 'fixed-woerterbuch', name: 'KI-WÖRTERBUCH', pageSrc: 'woerterbuch.html', icon: '../icons/ki-woerterbuch-v2.png' },
+  { id: 'fixed-spezwoerterbuch', name: 'KI-FACHWÖRTERBUCH', pageSrc: 'fachwoerterbuch.html', icon: '../icons/ki-fachwoerterbuch-v2.png' },
+];
+
+/* Merges a FIXED_SHORTCUTS entry with any persisted override (icon, apiPowered).
+   Returns the original object untouched when no override exists. */
+function getFixedWithOverride(fixed) {
+  const ov = (typeof settings !== 'undefined' && settings.fixedShortcutOverrides)
+    ? settings.fixedShortcutOverrides[fixed.id]
+    : null;
+  if (!ov) return fixed;
+  return { ...fixed, icon: ov.icon || null, apiPowered: !!ov.apiPowered };
+}
+
+const TABS_KEY = 'portfolioTabsState';
+
+const subpageList = document.getElementById('subpageList');
+const content = document.getElementById('content');
+const tabGroup = document.getElementById('tabGroup');
+const tabGroupWrap = document.getElementById('tabGroupWrap');
+const tabWarning = document.getElementById('tabWarning');
+const rail = document.getElementById('rail');
+const railToggle = document.getElementById('railToggle');
+const railAddBtn = document.getElementById('railAddBtn');
+const vaultFabBtn = document.getElementById('vaultFabBtn');
+const vaultStickerFrame = document.getElementById('vault-sticker-frame');
+const vaultSubmenu = document.getElementById('vault-submenu');
+const vaultSubmenuCloseBtn = document.getElementById('vault-submenu-close-btn');
+
+/* =====================================================================
+   API VAULT — built-in submenu (formerly the standalone KI_SAFE.html,
+   loaded through a fullscreen iframe-modal). Now lives directly in the
+   shell as a sticker-popup, exactly like the "Verknüpfung hinzufügen"
+   popup below. Same storage keys as before (ki_safe_vault_store /
+   ki_safe_providers) so existing vault data carries over unchanged.
+   Crypto: PBKDF2 -> AES-GCM, single 4-digit passphrase for all vaults.
+   ===================================================================== */
+
+const VAULT_STORE_KEY = 'ki_safe_vault_store';
+const VAULT_PROVIDERS_KEY = 'ki_safe_providers';
+const VAULT_DEFAULT_PROVIDERS = ['Pollinations AI', 'Cerebras', 'Groq', 'Google Gemini', 'NVIDIA NIM', 'GitHub Models', 'Cloudflare Workers AI', 'OpenRouter', 'Hugging Face'];
+
+function vb64FromBytes(bytes) {
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function vbytesFromB64(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+async function deriveVaultKey(passphrase, saltBytes) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: saltBytes, iterations: 150000, hash: 'SHA-256' },
+    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+async function encryptVault(passphrase, data) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveVaultKey(passphrase, salt);
+  const enc = new TextEncoder();
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(data)));
+  return { v: 1, salt: vb64FromBytes(salt), iv: vb64FromBytes(iv), ct: vb64FromBytes(new Uint8Array(ciphertext)) };
+}
+async function decryptVault(passphrase, blob) {
+  const key = await deriveVaultKey(passphrase, vbytesFromB64(blob.salt));
+  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: vbytesFromB64(blob.iv) }, key, vbytesFromB64(blob.ct));
+  return JSON.parse(new TextDecoder().decode(plainBuf));
+}
+
+/* failCount lebt nur im Speicher (kein localStorage/sessionStorage) —
+   wird bei jedem Neuladen/Schließen der Seite zurückgesetzt. Gewollt:
+   ohne Passphrase-Wiederherstellung soll der Nutzer nach einer Pause
+   eine neue Chance bekommen, statt endgültig ausgesperrt zu werden. */
+let vaults = [];
+let unlockedPassphrase = null;
+let selectedVaultId = null;
+let vaultFailCount = 0;
+
+function loadVaultProviders() {
+  try {
+    const raw = localStorage.getItem(VAULT_PROVIDERS_KEY);
+    return raw ? JSON.parse(raw) : VAULT_DEFAULT_PROVIDERS.slice();
+  } catch (e) { return VAULT_DEFAULT_PROVIDERS.slice(); }
+}
+function saveVaultProviders(list) {
+  try { localStorage.setItem(VAULT_PROVIDERS_KEY, JSON.stringify(list)); } catch (e) {}
+}
+let vaultProviders = loadVaultProviders();
+
+function hasVaultStore() {
+  try { return !!localStorage.getItem(VAULT_STORE_KEY); } catch (e) { return false; }
+}
+function loadVaultStoreBlob() {
+  try {
+    const raw = localStorage.getItem(VAULT_STORE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+async function persistVaults() {
+  const blob = await encryptVault(unlockedPassphrase, vaults);
+  try { localStorage.setItem(VAULT_STORE_KEY, JSON.stringify(blob)); } catch (e) {}
+}
+function wipeVaultStore() {
+  try { localStorage.removeItem(VAULT_STORE_KEY); } catch (e) {}
+  vaults = [];
+  unlockedPassphrase = null;
+  selectedVaultId = null;
+  vaultFailCount = 0;
+}
+
+const vLockView = document.getElementById('lock-view');
+const vManageView = document.getElementById('manage-view');
+const vLockHint = document.getElementById('lock-hint');
+const vPassInput = document.getElementById('passphrase-input');
+const vWarningBox = document.getElementById('warning-box');
+const vUnlockBtn = document.getElementById('unlock-btn');
+const vLockStatus = document.getElementById('lock-status');
+const vVaultListEl = document.getElementById('vault-list');
+const vAddVaultBtn = document.getElementById('add-vault-btn');
+const vVaultToolbar = document.getElementById('vault-toolbar');
+const vEditPanel = document.getElementById('edit-panel');
+const vEditVaultName = document.getElementById('edit-vault-name');
+const vKeyListEl = document.getElementById('key-list');
+const vProviderSelect = document.getElementById('provider-select');
+const vKeyInput = document.getElementById('key-input');
+const vEmailInput = document.getElementById('email-input');
+const vImportFileInput = document.getElementById('import-file-input');
+
+function setVaultLockStatus(msg, ok) {
+  vLockStatus.textContent = msg || '';
+  vLockStatus.className = 'status-msg' + (ok ? ' ok' : '');
+}
+
+function renderVaultLockView() {
+  vPassInput.value = '';
+  setVaultLockStatus('');
+  if (hasVaultStore()) {
+    vLockHint.textContent = 'Passphrase eingeben, um die Vaults zu entsperren.';
+    vWarningBox.classList.remove('show');
+    vUnlockBtn.textContent = 'Entsperren';
+  } else {
+    vLockHint.textContent = 'Noch kein Vault vorhanden. Legen Sie eine 4-stellige Passphrase fest, um zu beginnen.';
+    vWarningBox.classList.add('show');
+    vUnlockBtn.textContent = 'Vault erstellen';
+  }
+}
+
+vUnlockBtn.addEventListener('click', async () => {
+  const pass = vPassInput.value.trim();
+  if (!/^[0-9]{4}$/.test(pass)) {
+    setVaultLockStatus('Bitte eine 4-stellige Passphrase eingeben.', false);
+    return;
+  }
+  if (!hasVaultStore()) {
+    unlockedPassphrase = pass;
+    vaults = [];
+    await persistVaults();
+    enterVaultManageView();
+    return;
+  }
+  const blob = loadVaultStoreBlob();
+  try {
+    const decrypted = await decryptVault(pass, blob);
+    vaults = Array.isArray(decrypted) ? decrypted : [];
+    unlockedPassphrase = pass;
+    vaultFailCount = 0;
+    enterVaultManageView();
+  } catch (err) {
+    vaultFailCount++;
+    if (vaultFailCount >= 3) {
+      wipeVaultStore();
+      setVaultLockStatus('Alle Vaults wurden zurückgesetzt — erstellen Sie neue.', false);
+      renderVaultLockView();
+    } else {
+      setVaultLockStatus(`Falsche Passphrase (Versuch ${vaultFailCount}/3).`, false);
+    }
+  }
+});
+
+function enterVaultManageView() {
+  vLockView.style.display = 'none';
+  vManageView.style.display = 'flex';
+  selectedVaultId = null;
+  renderVaultList();
+  renderVaultToolbarAndEditPanel();
+  renderVaultProviderSelect();
+}
+
+function backToVaultLockView() {
+  vLockView.style.display = 'flex';
+  vManageView.style.display = 'none';
+  unlockedPassphrase = null;
+  vaults = [];
+  selectedVaultId = null;
+  renderVaultLockView();
+}
+
+function renderVaultList() {
+  vVaultListEl.innerHTML = '';
+  vaults.forEach(v => {
+    const row = document.createElement('div');
+    row.className = 'vault-row' + (v.id === selectedVaultId ? ' selected' : '');
+    row.innerHTML = `
+      <img src="../icons/vault.svg" class="vault-row-icon" alt=""
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+      <span class="vault-row-icon-fallback">???</span>
+      <span class="vault-row-name">${escapeHtml(v.name)}</span>
+      <span class="vault-row-count">${v.keys.length} Schlüssel</span>
+    `;
+    row.addEventListener('click', () => {
+      selectedVaultId = v.id;
+      renderVaultList();
+      renderVaultToolbarAndEditPanel();
+    });
+    vVaultListEl.appendChild(row);
+  });
+}
+
+function selectedVault() {
+  return vaults.find(v => v.id === selectedVaultId) || null;
+}
+
+function renderVaultToolbarAndEditPanel() {
+  const v = selectedVault();
+  if (!v) {
+    vVaultToolbar.classList.add('hidden');
+    vEditPanel.classList.add('hidden');
+    return;
+  }
+  vVaultToolbar.classList.remove('hidden');
+  vEditVaultName.textContent = v.name;
+  renderVaultKeyList();
+}
+
+function renderVaultKeyList() {
+  const v = selectedVault();
+  vKeyListEl.innerHTML = '';
+  if (!v) return;
+  v.keys.forEach((k, idx) => {
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    row.innerHTML = `
+      <span class="kr-provider">${escapeHtml(k.provider)}</span>
+      <span class="kr-email">${escapeHtml(k.email || '')}</span>
+      <button class="kr-remove" title="Entfernen">❌</button>
+    `;
+    row.querySelector('.kr-remove').addEventListener('click', async () => {
+      v.keys.splice(idx, 1);
+      await persistVaults();
+      renderVaultList();
+      renderVaultKeyList();
+    });
+    vKeyListEl.appendChild(row);
+  });
+}
+
+function renderVaultProviderSelect() {
+  vProviderSelect.innerHTML = vaultProviders.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+}
+
+function nextVaultId() {
+  return 'v_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+vAddVaultBtn.addEventListener('click', async () => {
+  const id = nextVaultId();
+  vaults.push({ id, name: `Vault ${vaults.length + 1}`, keys: [] });
+  selectedVaultId = id;
+  await persistVaults();
+  renderVaultList();
+  renderVaultToolbarAndEditPanel();
+});
+
+document.getElementById('add-key-btn').addEventListener('click', async () => {
+  const v = selectedVault();
+  if (!v) return;
+  const provider = vProviderSelect.value;
+  const key = vKeyInput.value.trim();
+  const email = vEmailInput.value.trim();
+  if (!key) return;
+  v.keys.push({ provider, key, email });
+  vKeyInput.value = '';
+  vEmailInput.value = '';
+  await persistVaults();
+  renderVaultList();
+  renderVaultKeyList();
+});
+
+document.getElementById('add-provider-btn').addEventListener('click', () => {
+  const input = document.getElementById('new-provider-input');
+  const name = input.value.trim();
+  if (!name || vaultProviders.includes(name)) return;
+  vaultProviders.push(name);
+  saveVaultProviders(vaultProviders);
+  renderVaultProviderSelect();
+  input.value = '';
+});
+
+document.getElementById('tb-edit').addEventListener('click', () => {
+  vEditPanel.classList.toggle('hidden');
+});
+
+document.getElementById('tb-export').addEventListener('click', async () => {
+  const v = selectedVault();
+  if (!v || !unlockedPassphrase) return;
+  const blob = await encryptVault(unlockedPassphrase, { name: v.name, keys: v.keys });
+  const a = document.createElement('a');
+  const file = new Blob([JSON.stringify(blob, null, 2)], { type: 'application/json' });
+  a.href = URL.createObjectURL(file);
+  a.download = v.name.replace(/\s+/g, '_') + '.vault.json';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+vImportFileInput.addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const blob = JSON.parse(reader.result);
+      const data = await decryptVault(unlockedPassphrase, blob);
+      const id = nextVaultId();
+      vaults.push({ id, name: data.name || `Vault ${vaults.length + 1}`, keys: Array.isArray(data.keys) ? data.keys : [] });
+      selectedVaultId = id;
+      await persistVaults();
+      renderVaultList();
+      renderVaultToolbarAndEditPanel();
+    } catch (err) {
+      alert('Import fehlgeschlagen — falsche Passphrase oder ungültige Datei.');
+    }
+    vImportFileInput.value = '';
+  };
+  reader.readAsText(f);
+});
+document.getElementById('tb-import').addEventListener('click', () => vImportFileInput.click());
+
+document.getElementById('tb-reset').addEventListener('click', async () => {
+  const v = selectedVault();
+  if (!v) return;
+  if (!confirm(`"${v.name}" wirklich löschen?`)) return;
+  vaults = vaults.filter(x => x.id !== v.id);
+  selectedVaultId = null;
+  await persistVaults();
+  renderVaultList();
+  renderVaultToolbarAndEditPanel();
+});
+
+/* ---- Schlüssel an die aktive Unterseite anwenden ----
+   Der Vault ist jetzt Teil desselben Dokuments wie die Shell, also kein
+   postMessage-Umweg mehr nötig, um von hier aus zu senden: nur noch das
+   .page-frame-iframe im #content mit der eigentlichen Seite (z.B.
+   KI_WÖRTERBUCH.) bekommt die Schlüssel per postMessage, weil das die
+   einzige echte Fenstergrenze ist, die hier noch überquert wird. */
+document.getElementById('apply-keys-btn').addEventListener('click', () => {
+  const v = selectedVault();
+  if (!v) return;
+  const frame = content.querySelector('.page-frame');
+  const statusEl = document.getElementById('manage-status');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage({ type: 'osirisVaultKeys', keys: v.keys }, '*');
+    statusEl.textContent = `„${v.name}" gesendet — warte auf Rückmeldung der Seite …`;
+    statusEl.className = 'status-msg ok';
+  } else {
+    statusEl.textContent = 'Keine passende Seite geöffnet — Schlüssel wurden nicht übernommen.';
+    statusEl.className = 'status-msg';
+  }
+});
+
+// Rückmeldung der Zielseite, nachdem sie die erhaltenen Schlüssel
+// angewendet hat (siehe KI_WÖRTERBUCH. / KI_SPEZIALISIERTES_WÖRTERBUCH.).
+window.addEventListener('message', (e) => {
+  if (!e.data || e.data.type !== 'osirisVaultKeysApplied') return;
+  const pageFrame = content.querySelector('.page-frame');
+  if (!pageFrame || e.source !== pageFrame.contentWindow) return;
+  const n = e.data.count || 0;
+  const statusEl = document.getElementById('manage-status');
+  statusEl.textContent = n > 0 ? `${n} Schlüssel übernommen.` : 'Kein passender Anbieter im Vault gefunden — nichts übernommen.';
+  statusEl.className = 'status-msg' + (n > 0 ? ' ok' : '');
+});
+
+/* ---- "Im Shell bleiben"-Navigation von einer eingebetteten Seite ----
+   Eine eingebettete Seite (z.B. DASHBOARD.html) möchte statt eines neuen
+   Tabs lieber innerhalb dieser Shell zu einer anderen registrierten
+   Verknüpfung wechseln (z.B. "Buch in der Bibliothek öffnen"). Der
+   Dateiname (pageFileName) ist der einzige stabile Bezugspunkt, den wir
+   für hochgeladene Seiten haben — es gibt keine echte URL, an die man
+   sonst anknüpfen könnte, da der Inhalt als srcdoc eingebettet ist.
+   Vergleich ohne Groß-/Kleinschreibung und ohne führende/folgende
+   Leerzeichen, da der gespeicherte Dateiname genau das ist, was beim
+   Hochladen im Dateisystem stand — leicht abweichende Schreibweisen
+   sollen den Abgleich nicht scheitern lassen.
+   Schickt in jedem Fall eine Antwort (osirisNavigateToAppResult) an die
+   anfragende Seite zurück — Erfolg oder Misserfolg —, damit diese bei
+   einem Fehlschlag zuverlässig auf ihr eigenes Standardverhalten
+   zurückfallen kann, statt dass ein bereits unterdrückter Klick
+   ansonsten spurlos ins Leere läuft. */
+function normalizedFileName(name) {
+  return String(name || '').trim().toLowerCase();
+}
+window.addEventListener('message', (e) => {
+  if (!e.data || e.data.type !== 'osirisNavigateToApp') return;
+  if (e.origin !== window.location.origin) return;
+  console.debug('[osiris-nav] osirisNavigateToApp received', e.data, 'openTabs=', openTabs.slice());
+  const reply = (success) => {
+    console.debug('[osiris-nav] replying', success);
+    if (e.source && e.source.postMessage) {
+      e.source.postMessage({ type: 'osirisNavigateToAppResult', success: success }, window.location.origin);
+    }
+  };
+  const wanted = normalizedFileName(e.data.pageFileName);
+  const match = userLinks.find(l => l.link && normalizedFileName(l.link.pageFileName) === wanted);
+  console.debug('[osiris-nav] match=', match && match.id, 'wasAlreadyOpen=', match && openTabs.includes(match.id));
+  if (!match) { reply(false); return; }
+  openTabById(match.id);
+  console.debug('[osiris-nav] after openTabById, activeTabId=', activeTabId, 'expected=', match.id);
+  if (activeTabId !== match.id) { reply(false); return; } // z.B. MAX_TABS erreicht
+  pendingOpenBookPayload = e.data.bookId || null;
+  reply(true);
+});
+
+// Die Zielseite (z.B. der Bibliothek-Hub) meldet sich, sobald sie fertig
+// initialisiert und tatsächlich eingebettet ist (osirisHubReady) — erst
+// dann darf die wartende Buch-ID losgeschickt werden. Ein einfaches
+// iframe "load"-Ereignis würde zu früh feuern, bevor das eigene JS der
+// Zielseite fertig ist.
+let pendingOpenBookPayload = null;
+window.addEventListener('message', (e) => {
+  if (!e.data || e.data.type !== 'osirisHubReady') return;
+  const pageFrame = content.querySelector('.page-frame');
+  console.debug('[osiris-nav] osirisHubReady received; pendingOpenBookPayload=', pendingOpenBookPayload,
+    'sourceMatchesCurrentFrame=', !!pageFrame && e.source === pageFrame.contentWindow);
+  if (!pendingOpenBookPayload) return;
+  if (!pageFrame || e.source !== pageFrame.contentWindow) return;
+  pageFrame.contentWindow.postMessage({ type: 'osirisOpenBookInHub', id: pendingOpenBookPayload }, window.location.origin);
+  console.debug('[osiris-nav] sent osirisOpenBookInHub', pendingOpenBookPayload);
+  pendingOpenBookPayload = null;
+});
+
+document.getElementById('delete-all-btn').addEventListener('click', () => {
+  if (!confirm('Wirklich ALLE Vaults unwiderruflich löschen?')) return;
+  wipeVaultStore();
+  backToVaultLockView();
+});
+
+/* ---- Sticker: zufällige Farbe/Neigung bei jedem Öffnen (eigener,
+   dezenter Palette-Satz — unabhängig vom "Verknüpfung hinzufügen"-
+   Popup, das dieselben CSS-Klassen aber eigene Variablen nutzt). ---- */
+const vaultStickerPalette = ['#d9ece6', '#f7e6c4', '#e6d9f0', '#f0d9df', '#d9e3f0', '#e3f0d9'];
+let lastVaultStickerIndex = -1;
+function rerollVaultSticker() {
+  let next;
+  do { next = Math.floor(Math.random() * vaultStickerPalette.length); }
+  while (next === lastVaultStickerIndex && vaultStickerPalette.length > 1);
+  lastVaultStickerIndex = next;
+  vaultStickerFrame.style.setProperty('--sticker-color', vaultStickerPalette[next]);
+  const angle = (Math.random() * 10 - 5).toFixed(2);
+  vaultStickerFrame.style.setProperty('--tilt', `${angle}deg`);
+}
+
+function openVaultPopup() {
+  rerollVaultSticker();
+  vaultStickerFrame.classList.add('active');
+  // Beim Öffnen immer den aktuellen Sperrzustand zeigen, nie mittendrin
+  // stehen bleiben (z.B. wenn zuvor über ein anderes Popup geschlossen).
+  if (vManageView.style.display === 'none' || !unlockedPassphrase) {
+    renderVaultLockView();
+  }
+}
+function closeVaultPopup() {
+  vaultStickerFrame.classList.remove('active');
+}
+vaultFabBtn.addEventListener('click', openVaultPopup);
+vaultSubmenuCloseBtn.addEventListener('click', closeVaultPopup);
+vaultSubmenu.addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', (e) => {
+  if (vaultStickerFrame.classList.contains('active') && !vaultStickerFrame.contains(e.target) && !vaultFabBtn.contains(e.target)) {
+    closeVaultPopup();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && vaultStickerFrame.classList.contains('active')) closeVaultPopup();
+});
+
+/* ---- Start: Sperrbildschirm initial anzeigen ---- */
+renderVaultLockView();
+
+let tabWarningTimer = null;
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function itemFromId(id) {
+  if (id === DEFAULT_TAB_ID) {
+    const color = (typeof settings !== 'undefined' && settings.tabColors && settings.tabColors[id]) || defaultTabColors[id] || '#1c1c1e';
+    return {
+      page: { label: 'Startseite', color },
+      sub: { name: 'ÜBERSICHT' },
+      link: { icon: DEFAULT_TAB_ICON, pageSrc: DEFAULT_TAB_PAGE }
+    };
+  }
+  const fixedIdx = FIXED_SHORTCUTS.findIndex(f => f.id === id);
+  if (fixedIdx !== -1) {
+    const fixed = FIXED_SHORTCUTS[fixedIdx];
+    const merged = getFixedWithOverride(fixed);
+    const color = (typeof settings !== 'undefined' && settings.tabColors && settings.tabColors[id]) || defaultTabColors[id] || '#1c1c1e';
+    return { page: { label: 'Verknüpfungen', color }, sub: { name: merged.name }, link: merged };
+  }
+  const link = userLinks.find(l => l.id === id);
+  if (!link) return null;
+  const color = link.color || '#1c1c1e';
+  return { page: { label: 'Verknüpfungen', color }, sub: { name: link.name }, link };
+}
+
+function loadTabState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TABS_KEY) || 'null');
+    if (raw && Array.isArray(raw.tabs) && raw.tabs.length) {
+      const validIds = raw.tabs.filter(id => itemFromId(id));
+      if (validIds.length) {
+        if (validIds[0] !== DEFAULT_TAB_ID) validIds.unshift(DEFAULT_TAB_ID);
+        const uniqueIds = [...new Set(validIds)].slice(0, MAX_TABS);
+        const active = validIds.includes(raw.active) ? raw.active : uniqueIds[0];
+        return { tabs: uniqueIds, active };
+      }
+    }
+  } catch (e) { /* fehlerhafter Zustand fällt unten auf den Standard zurück */ }
+  return { tabs: [DEFAULT_TAB_ID], active: DEFAULT_TAB_ID };
+}
+
+function saveTabState() {
+  try {
+    localStorage.setItem(TABS_KEY, JSON.stringify({ tabs: openTabs, active: activeTabId }));
+  } catch (e) { /* Speicher nicht verfügbar — Zustand übersteht den Neuladevorgang dann einfach nicht */ }
+}
+
+/* Entfernt Tab-IDs, die nicht mehr aufgelöst werden können (z. B. weil sich
+   die zugrunde liegenden Seiten/Unterseiten geändert haben), damit die
+   Anzahl sichtbarer Tabs nie von der für MAX_TABS gezählten Anzahl abweicht
+   (verhindert eine verfrühte "Maximal X Tabs"-Warnung bei weniger sichtbaren Tabs). */
+function pruneOpenTabs() {
+  const before = openTabs.length;
+  openTabs = openTabs.filter(id => itemFromId(id));
+  if (!openTabs.includes(DEFAULT_TAB_ID)) openTabs.unshift(DEFAULT_TAB_ID);
+  if (!openTabs.includes(activeTabId)) activeTabId = openTabs[0];
+  if (openTabs.length !== before) saveTabState();
+}
+
+const initialTabState = loadTabState();
+let openTabs = initialTabState.tabs;
+let activeTabId = initialTabState.active;
+
+function showTabWarning() {
+  clearTimeout(tabWarningTimer);
+  tabWarning.classList.add('show');
+  tabWarningTimer = setTimeout(() => tabWarning.classList.remove('show'), 2600);
+}
+
+function openTabById(id) {
+  if (!itemFromId(id)) return;
+  pruneOpenTabs();
+  if (openTabs.includes(id)) {
+    activeTabId = id;
+    saveTabState();
+    render();
+    return;
+  }
+  if (openTabs.length >= MAX_TABS) {
+    showTabWarning();
+    return;
+  }
+  openTabs.push(id);
+  activeTabId = id;
+  saveTabState();
+  render();
+}
+
+function closeTabById(id) {
+  if (id === DEFAULT_TAB_ID) return;
+  const idx = openTabs.indexOf(id);
+  if (idx === -1) return;
+  openTabs.splice(idx, 1);
+  if (activeTabId === id) {
+    activeTabId = openTabs[Math.max(0, idx - 1)] || DEFAULT_TAB_ID;
+  }
+  saveTabState();
+  render();
+}
+
+function renderTabs() {
+  tabGroup.innerHTML = '';
+  openTabs.forEach(id => {
+    const item = itemFromId(id);
+    if (!item) return;
+    const btn = document.createElement('button');
+    btn.className = 'page-tab' + (id === activeTabId ? ' active' : '');
+    btn.dataset.tabId = id;
+    btn.setAttribute('draggable', 'true');
+    btn.style.background = item.page.color;
+    btn.style.setProperty('--tab-accent', item.page.color);
+    btn.title = item.sub.name;
+    const iconHtml = item.link
+      ? `<span class="tab-icon">${item.link.icon
+          ? `<img src="${item.link.icon}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:4px;">`
+          : linkGlyph}</span>`
+      : '';
+    btn.innerHTML = iconHtml +
+      `<span class="tab-label">${escapeHtml(item.sub.name)}</span>` +
+      (id === DEFAULT_TAB_ID ? '' : `<span class="tab-close" data-tab-id="${id}" title="Schließen">&times;</span>`);
+    tabGroup.appendChild(btn);
+  });
+  applyTabColors();
+
+  // Aktiven/neuen Tab automatisch in den sichtbaren Bereich scrollen,
+  // damit sein Schließen-Button (×) nie außerhalb des Viewports landet.
+  const activeEl = tabGroup.querySelector('.page-tab.active');
+  if (activeEl) {
+    activeEl.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }
+  updateTabScrollCue();
+}
+
+/* Zeigt ein dezentes Verlaufs-Fade an der linken/rechten Kante der
+   Tableiste, sobald dort weitere (verdeckte) Tabs liegen — so verlieren
+   Nutzer keine Tabs mehr "unsichtbar" außerhalb des Scrollbereichs. */
+function updateTabScrollCue() {
+  if (!tabGroupWrap) return;
+  const overflows = tabGroup.scrollWidth > tabGroup.clientWidth + 1;
+  const atStart = tabGroup.scrollLeft <= 1;
+  const atEnd = tabGroup.scrollLeft + tabGroup.clientWidth >= tabGroup.scrollWidth - 1;
+  tabGroupWrap.classList.toggle('scroll-left', overflows && !atStart);
+  tabGroupWrap.classList.toggle('scroll-right', overflows && !atEnd);
+}
+tabGroup.addEventListener('scroll', updateTabScrollCue, { passive: true });
+window.addEventListener('resize', updateTabScrollCue);
+
+function renderRail() {
+  subpageList.innerHTML = '';
+  FIXED_SHORTCUTS.forEach(fixed => {
+    const merged = getFixedWithOverride(fixed);
+    const btn = document.createElement('button');
+    btn.className = 'subpage-item' + (merged.id === activeTabId ? ' active' : '');
+    btn.style.color = merged.id === activeTabId ? '#1c1c1e' : 'var(--text-color)';
+    btn.dataset.itemId = merged.id;
+    const glyphHtml = merged.icon
+      ? `<img src="${merged.icon}" alt="" style="width:20px;height:20px;object-fit:contain;border-radius:4px;">`
+      : linkGlyph;
+    btn.innerHTML = `<span class="glyph">${glyphHtml}</span><span class="label">${escapeHtml(merged.name)}</span><span class="rail-item-edit" data-edit-id="${merged.id}" title="Bearbeiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>`;
+    subpageList.appendChild(btn);
+  });
+  if (FIXED_SHORTCUTS.length && userLinks.length) {
+    subpageList.appendChild(document.createElement('div')).className = 'rail-sep';
+  }
+  userLinks.forEach(link => {
+    const btn = document.createElement('button');
+    btn.className = 'subpage-item' + (link.id === activeTabId ? ' active' : '');
+    btn.style.color = link.id === activeTabId ? '#1c1c1e' : 'var(--text-color)';
+    btn.dataset.itemId = link.id;
+    btn.setAttribute('draggable', 'true');
+    const glyphHtml = link.icon
+      ? `<img src="${link.icon}" alt="" style="width:20px;height:20px;object-fit:contain;border-radius:4px;">`
+      : linkGlyph;
+    btn.innerHTML = `<span class="glyph">${glyphHtml}</span><span class="label">${escapeHtml(link.name)}</span><span class="rail-item-edit" data-edit-id="${link.id}" title="Bearbeiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="rail-item-remove" data-remove-id="${link.id}" title="Entfernen">&times;</span>`;
+    subpageList.appendChild(btn);
+  });
+}
+
+function renderContent() {
+  const item = itemFromId(activeTabId);
+  if (!item) return;
+  // Farb-Akzent (oberer Rand) nur im Portfolio-Stil zeigen — spiegelt die
+  // farbige Panel-Kontur aus portefolio_sample_fixed.html
+  content.style.borderTopColor = settings.navStyle === 'portefolio'
+    ? (item.page.color || 'transparent')
+    : 'transparent';
+  if (item.link && (item.link.pageContent || item.link.pageSrc)) {
+    content.classList.add('has-frame');
+    const frameAttr = item.link.pageContent
+      ? `srcdoc="${escapeHtml(item.link.pageContent)}"`
+      : `src="${escapeHtml(item.link.pageSrc)}"`;
+    content.innerHTML = `<iframe class="page-frame" title="${escapeHtml(item.sub.name)}" ${frameAttr}></iframe>`;
+    updateVaultFab();
+    return;
+  }
+  content.classList.remove('has-frame');
+  content.innerHTML = `
+    <p class="eyebrow" style="color:${item.page.color}">${escapeHtml(item.page.label)}</p>
+    <h1>${escapeHtml(item.sub.name)}</h1>
+    <p>Dies ist der Bereich „${escapeHtml(item.sub.name)}“ unter ${escapeHtml(item.page.label)}. Fügen Sie hier den eigentlichen Inhalt für diese Unterseite ein.</p>
+  `;
+  updateVaultFab();
+}
+
+/* ===== Vault-FAB: schwebendes Symbol, das das eingebaute API-VAULT-
+   Popup öffnet (siehe weiter oben — kein iframe-Modal mehr).
+   Sichtbar nur wenn settings.safeEnabled true ist UND die aktuell aktive
+   Verknüpfung im Bearbeiten-Popup als "API-Seite" markiert wurde. ===== */
+function updateVaultFab() {
+  const item = itemFromId(activeTabId);
+  const show = !!(typeof settings !== 'undefined' && settings.safeEnabled && item && item.link && item.link.apiPowered);
+  vaultFabBtn.classList.toggle('show', show);
+}
+
+function removeUserLink(id) {
+  userLinks = userLinks.filter(l => l.id !== id);
+  saveUserLinks();
+  if (openTabs.includes(id)) {
+    closeTabById(id); // löst bereits einen vollständigen render() aus
+  } else {
+    renderRail();
+  }
+}
+
+function render() {
+  pruneOpenTabs();
+  renderTabs();
+  renderRail();
+  renderContent();
+}
+
+tabGroup.addEventListener('click', (e) => {
+  const closeBtn = e.target.closest('.tab-close');
+  if (closeBtn) {
+    e.stopPropagation();
+    closeTabById(closeBtn.dataset.tabId);
+    return;
+  }
+  const tabBtn = e.target.closest('.page-tab');
+  if (!tabBtn) return;
+  activeTabId = tabBtn.dataset.tabId;
+  saveTabState();
+  render();
+});
+
+let draggedTabId = null;
+tabGroup.addEventListener('dragstart', (e) => {
+  const tab = e.target.closest('.page-tab');
+  if (!tab) return;
+  draggedTabId = tab.dataset.tabId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', draggedTabId);
+  tab.style.opacity = '0.5';
+});
+tabGroup.addEventListener('dragover', (e) => {
+  if (!draggedTabId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const tab = e.target.closest('.page-tab');
+  if (!tab) return;
+  
+  const bounding = tab.getBoundingClientRect();
+  const offset = bounding.x + (bounding.width / 2);
+  if (e.clientX - offset > 0) {
+    tab.style.borderRight = "2px solid var(--accent-color)";
+    tab.style.borderLeft = "";
+  } else {
+    tab.style.borderLeft = "2px solid var(--accent-color)";
+    tab.style.borderRight = "";
+  }
+});
+tabGroup.addEventListener('dragleave', (e) => {
+  const tab = e.target.closest('.page-tab');
+  if (tab) { tab.style.borderLeft = ""; tab.style.borderRight = ""; }
+});
+tabGroup.addEventListener('dragend', (e) => {
+  draggedTabId = null;
+  document.querySelectorAll('.page-tab').forEach(el => {
+    el.style.opacity = '';
+    el.style.borderLeft = "";
+    el.style.borderRight = "";
+  });
+});
+tabGroup.addEventListener('drop', (e) => {
+  if (!draggedTabId) return;
+  e.preventDefault();
+  const tab = e.target.closest('.page-tab');
+  if (!tab) return;
+  const targetId = tab.dataset.tabId;
+  if (draggedTabId === targetId) return;
+  
+  const bounding = tab.getBoundingClientRect();
+  const offset = bounding.x + (bounding.width / 2);
+  const insertAfter = (e.clientX - offset > 0);
+
+  const fromIdx = openTabs.indexOf(draggedTabId);
+  let toIdx = openTabs.indexOf(targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+
+  openTabs.splice(fromIdx, 1);
+  toIdx = openTabs.indexOf(targetId);
+  
+  if (insertAfter) {
+    openTabs.splice(toIdx + 1, 0, draggedTabId);
+  } else {
+    openTabs.splice(toIdx, 0, draggedTabId);
+  }
+  
+  saveTabState();
+  renderTabs();
+});
+
+subpageList.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.rail-item-edit');
+  if (editBtn) {
+    e.stopPropagation();
+    const editId = editBtn.dataset.editId;
+    const fixed = FIXED_SHORTCUTS.find(f => f.id === editId);
+    if (fixed) {
+      openEditLinkForm(getFixedWithOverride(fixed), true);
+    } else {
+      const link = userLinks.find(l => l.id === editId);
+      if (link) openEditLinkForm(link, false);
+    }
+    return;
+  }
+  const removeBtn = e.target.closest('.rail-item-remove');
+  if (removeBtn) {
+    e.stopPropagation();
+    removeUserLink(removeBtn.dataset.removeId);
+    return;
+  }
+  const item = e.target.closest('.subpage-item');
+  if (!item) return;
+  const id = item.dataset.itemId;
+  openTabById(id);
+});
+
+let draggedRailId = null;
+subpageList.addEventListener('dragstart', (e) => {
+  if (!editUnlocked) { e.preventDefault(); return; }
+  const item = e.target.closest('.subpage-item');
+  if (!item) return;
+  const id = item.dataset.itemId;
+  if (FIXED_SHORTCUTS.find(f => f.id === id)) { e.preventDefault(); return; }
+  draggedRailId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  item.style.opacity = '0.5';
+});
+subpageList.addEventListener('dragover', (e) => {
+  if (!draggedRailId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const item = e.target.closest('.subpage-item');
+  if (!item) return;
+  const id = item.dataset.itemId;
+  if (FIXED_SHORTCUTS.find(f => f.id === id)) return;
+  
+  const bounding = item.getBoundingClientRect();
+  const offset = bounding.y + (bounding.height / 2);
+  if (e.clientY - offset > 0) {
+    item.style.borderBottom = "2px solid var(--accent-color)";
+    item.style.borderTop = "";
+  } else {
+    item.style.borderTop = "2px solid var(--accent-color)";
+    item.style.borderBottom = "";
+  }
+});
+subpageList.addEventListener('dragleave', (e) => {
+  const item = e.target.closest('.subpage-item');
+  if (item) { item.style.borderBottom = ""; item.style.borderTop = ""; }
+});
+subpageList.addEventListener('dragend', (e) => {
+  draggedRailId = null;
+  document.querySelectorAll('.subpage-item').forEach(el => {
+    el.style.opacity = '';
+    el.style.borderTop = "";
+    el.style.borderBottom = "";
+  });
+});
+subpageList.addEventListener('drop', (e) => {
+  if (!draggedRailId) return;
+  e.preventDefault();
+  const item = e.target.closest('.subpage-item');
+  if (!item) return;
+  const targetId = item.dataset.itemId;
+  if (FIXED_SHORTCUTS.find(f => f.id === targetId)) return;
+  if (draggedRailId === targetId) return;
+  
+  const bounding = item.getBoundingClientRect();
+  const offset = bounding.y + (bounding.height / 2);
+  const insertAfter = (e.clientY - offset > 0);
+
+  const fromIdx = userLinks.findIndex(l => l.id === draggedRailId);
+  let toIdx = userLinks.findIndex(l => l.id === targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+
+  const [movedItem] = userLinks.splice(fromIdx, 1);
+  toIdx = userLinks.findIndex(l => l.id === targetId);
+  if (insertAfter) {
+    userLinks.splice(toIdx + 1, 0, movedItem);
+  } else {
+    userLinks.splice(toIdx, 0, movedItem);
+  }
+  
+  saveUserLinks();
+  renderRail();
+});
+
+railToggle.addEventListener('click', () => {
+  rail.classList.toggle('expanded');
+  const isExpanded = rail.classList.contains('expanded');
+  settings.railExpanded = isExpanded;
+  saveSettings(settings);
+  
+  if (!isExpanded) {
+    // Randleiste eingeklappt -> Bearbeiten-Modus zur Sicherheit wieder sperren
+    editUnlocked = false;
+    rail.classList.remove('edit-unlocked');
+    editToggleBtn.classList.remove('on');
+    editToggleBtn.setAttribute('aria-checked', 'false');
+  }
+});
+
+/* --- Bearbeiten-Freischalter --- */
+const editToggleBtn = document.getElementById('editToggleBtn');
+let editUnlocked = false;
+
+editToggleBtn.addEventListener('click', () => {
+  editUnlocked = !editUnlocked;
+  rail.classList.toggle('edit-unlocked', editUnlocked);
+  editToggleBtn.classList.toggle('on', editUnlocked);
+  editToggleBtn.setAttribute('aria-checked', String(editUnlocked));
+});
+
+/* ===== Sticker-Popup "Verknüpfung hinzufügen" — vom schwebenden Button
+   unten in der Randleiste ausgelöst ===== */
+const stickerFrame = document.getElementById('sticker-frame');
+const editSubmenu = document.getElementById('edit-icon-submenu');
+const submenuCloseBtn = document.getElementById('submenu-close-btn');
+const submenuTitle = document.getElementById('submenu-title');
+
+const iconUploader = document.getElementById('icon-uploader');
+const iconPreview = document.getElementById('icon-preview');
+const iconSlider = document.getElementById('icon-size-slider');
+const removeIconBtn = document.getElementById('remove-shortcut-icon-btn');
+const browseIconLibBtn = document.getElementById('browse-icon-lib-btn');
+const iconLibGrid = document.getElementById('icon-lib-grid');
+const MAX_ICON_SIZE = 2 * 1024 * 1024; // 2 Mo
+
+const htmlUploader = document.getElementById('html-uploader');
+const htmlPageStatus = document.getElementById('html-page-status');
+const removeHtmlBtn = document.getElementById('remove-shortcut-html-btn');
+const MAX_HTML_SIZE = 5 * 1024 * 1024; // 5 Mo
+
+const linkApiPoweredToggle = document.getElementById('link-api-powered-toggle');
+
+// ---- Sticker look: farbiger Rahmen, rollt bei jedem Öffnen Farbe +
+// schiefe Neigung neu, camoufliert sich in gedeckten, dunklen Tönen ----
+const stickerPalette = [
+  '#1a1b1f', '#1e2126', '#20211c', '#1c1e24',
+  '#191d1c', '#221f1a', '#1a1e22'
+];
+let lastStickerIndex = -1;
+
+// ---- Menükartenfarbe: die sichtbare weiße Karte selbst würfelt bei
+// jedem Öffnen eine neue helle Farbe ----
+const menuColorPalette = [
+  '#ffffff', '#fdf2e9', '#eaf4fb', '#f2fbea',
+  '#fdeaf6', '#fef9e7', '#efeafb', '#e9fbf6'
+];
+let lastMenuColorIndex = -1;
+
+// ---- Papierfarbe der abgezogenen Ecken + der Kanten oben-links /
+// unten-rechts — bleibt in warmen Papiertönen ----
+const paperColorPalette = [
+  '#fdfdf9', '#faf6ef', '#f7f1e3', '#fbf3e7',
+  '#f5f0e8', '#fef8f0', '#f8f4ec'
+];
+let lastPaperColorIndex = -1;
+
+function rerollMenuColor() {
+  let next;
+  do {
+    next = Math.floor(Math.random() * menuColorPalette.length);
+  } while (next === lastMenuColorIndex && menuColorPalette.length > 1);
+  lastMenuColorIndex = next;
+  editSubmenu.style.setProperty('--submenu-color', menuColorPalette[next]);
+}
+
+function rerollPaperColor() {
+  let next;
+  do {
+    next = Math.floor(Math.random() * paperColorPalette.length);
+  } while (next === lastPaperColorIndex && paperColorPalette.length > 1);
+  lastPaperColorIndex = next;
+  stickerFrame.style.setProperty('--paper-color', paperColorPalette[next]);
+}
+
+function rerollSticker() {
+  let next;
+  do {
+    next = Math.floor(Math.random() * stickerPalette.length);
+  } while (next === lastStickerIndex && stickerPalette.length > 1);
+  lastStickerIndex = next;
+  stickerFrame.style.setProperty('--sticker-color', stickerPalette[next]);
+
+  const angle = (Math.random() * 10 - 5).toFixed(2); // -5deg to 5deg
+  stickerFrame.style.setProperty('--tilt', `${angle}deg`);
+
+  rerollMenuColor();
+  rerollPaperColor();
+}
+
+railAddBtn.addEventListener('click', () => {
+  rerollSticker();
+  resetLinkForm();
+  stickerFrame.classList.add('active');
+});
+submenuCloseBtn.addEventListener('click', () => {
+  stickerFrame.classList.remove('active');
+  resetLinkForm();
+});
+editSubmenu.addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', (e) => {
+  if (stickerFrame.classList.contains('active') && !stickerFrame.contains(e.target) && !railAddBtn.contains(e.target)) {
+    stickerFrame.classList.remove('active');
+    resetLinkForm();
+  }
+});
+
+iconUploader.addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_ICON_SIZE) {
+    alert("Cette icône dépasse la taille maximale de 2 Mo. Choisissez un fichier plus léger.");
+    iconUploader.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const dataUrl = e.target.result;
+    const size = parseInt(iconSlider.value, 10) || 48;
+    iconPreview.setAttribute('src', dataUrl);
+    iconPreview.style.display = 'block';
+    iconPreview.style.width = size + 'px';
+    iconPreview.style.height = size + 'px';
+    removeIconBtn.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  iconUploader.value = '';
+});
+
+browseIconLibBtn.addEventListener('click', async () => {
+  if (iconLibGrid.style.display === 'flex') {
+    iconLibGrid.style.display = 'none';
+    return;
+  }
+  try {
+    const res = await fetch('../icons/manifest.json');
+    if (!res.ok) throw new Error('Manifest not found');
+    const files = await res.json();
+    iconLibGrid.innerHTML = '';
+    files.forEach(file => {
+      const img = document.createElement('img');
+      img.src = '../icons/' + file;
+      img.style.width = '32px';
+      img.style.height = '32px';
+      img.style.objectFit = 'contain';
+      img.style.cursor = 'pointer';
+      img.title = file;
+      img.addEventListener('click', () => {
+        const size = parseInt(iconSlider.value, 10) || 48;
+        iconPreview.setAttribute('src', '../icons/' + file);
+        iconPreview.style.display = 'block';
+        iconPreview.style.width = size + 'px';
+        iconPreview.style.height = size + 'px';
+        removeIconBtn.style.display = 'block';
+        iconLibGrid.style.display = 'none';
+      });
+      iconLibGrid.appendChild(img);
+    });
+    iconLibGrid.style.display = 'flex';
+  } catch (err) {
+    console.error(err);
+    alert("Die Bibliothek konnte nicht geladen werden (../icons/manifest.json nicht gefunden oder blockiert). Bitte laden Sie das Icon stattdessen hoch.");
+  }
+});
+
+iconSlider.addEventListener('input', function (e) {
+  const size = e.target.value;
+  if (iconPreview.src) {
+    iconPreview.style.width = size + 'px';
+    iconPreview.style.height = size + 'px';
+  }
+});
+
+removeIconBtn.addEventListener('click', function () {
+  iconPreview.src = '';
+  iconPreview.style.display = 'none';
+  removeIconBtn.style.display = 'none';
+});
+
+function updateHtmlPageStatus(pageData) {
+  if (pageData && pageData.name) {
+    htmlPageStatus.textContent = 'Page actuelle : ' + pageData.name;
+    htmlPageStatus.style.display = 'block';
+    removeHtmlBtn.style.display = 'block';
+  } else {
+    htmlPageStatus.textContent = '';
+    htmlPageStatus.style.display = 'none';
+    removeHtmlBtn.style.display = 'none';
+  }
+}
+
+let pendingLinkPage = null;
+
+htmlUploader.addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_HTML_SIZE) {
+    alert("Cette page HTML dépasse la taille maximale de 5 Mo. Choisissez un fichier plus léger.");
+    htmlUploader.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    pendingLinkPage = { name: file.name, content: e.target.result };
+    updateHtmlPageStatus(pendingLinkPage);
+  };
+  reader.readAsText(file);
+  htmlUploader.value = '';
+});
+
+removeHtmlBtn.addEventListener('click', function () {
+  pendingLinkPage = null;
+  updateHtmlPageStatus(null);
+});
+
+// Leitet einen sauberen Verknüpfungsnamen aus dem Dateinamen einer
+// hochgeladenen HTML-Seite ab, z. B. "mon-super-outil.html" -> "mon super outil"
+function deriveLabelFromFileName(fileName) {
+  const base = fileName.replace(/\.html?$/i, '');
+  const cleaned = base.replace(/[_-]+/g, ' ').trim();
+  return cleaned || fileName;
+}
+
+const linkNameInput = document.getElementById('link-name-input');
+const linkSaveBtn = document.getElementById('link-save-btn');
+const linkColorInput = document.getElementById('link-color-input');
+const linkColorSection = document.getElementById('link-color-section');
+
+let editingLinkId = null;
+
+function resetLinkForm() {
+  linkNameInput.value = '';
+  linkNameInput.readOnly = false;
+  linkNameInput.style.opacity = '';
+  const htmlSection = document.getElementById('html-uploader').closest('.submenu-section');
+  if (htmlSection) htmlSection.style.display = '';
+  if (linkColorSection) linkColorSection.style.display = 'flex';
+  if (linkColorInput) linkColorInput.value = '#1c1c1e';
+  iconPreview.setAttribute('src', '');
+  iconPreview.style.display = 'none';
+  removeIconBtn.style.display = 'none';
+  if (iconLibGrid) iconLibGrid.style.display = 'none';
+  iconSlider.value = 48;
+  pendingLinkPage = null;
+  updateHtmlPageStatus(null);
+  editingLinkId = null;
+  linkApiPoweredToggle.checked = false;
+  submenuTitle.textContent = 'Verknüpfung hinzufügen';
+  linkSaveBtn.textContent = 'Ajouter au menu';
+}
+
+/* Öffnet das bereits vorhandene Verknüpfungs-Popup im Bearbeiten-Modus,
+   vorausgefüllt mit den Daten der ausgewählten Verknüpfung. Beim
+   Speichern wird die bestehende Verknüpfung aktualisiert statt eine
+   neue anzulegen. */
+function openEditLinkForm(link, isFixed = false) {
+  rerollSticker();
+  resetLinkForm();
+  editingLinkId = link.id;
+  submenuTitle.textContent = 'Verknüpfung bearbeiten';
+  linkSaveBtn.textContent = 'Änderungen speichern';
+
+  linkNameInput.value = link.name || '';
+  
+  // Fixed shortcuts: name is locked, HTML upload hidden, custom tab color hidden
+  linkNameInput.readOnly = isFixed;
+  linkNameInput.style.opacity = isFixed ? '0.5' : '';
+  const htmlSection = document.getElementById('html-uploader').closest('.submenu-section');
+  if (htmlSection) htmlSection.style.display = isFixed ? 'none' : '';
+  if (linkColorSection) linkColorSection.style.display = isFixed ? 'none' : 'flex';
+  if (!isFixed && linkColorInput) {
+    linkColorInput.value = link.color || '#1c1c1e';
+  }
+
+  if (link.icon) {
+    iconPreview.setAttribute('src', link.icon);
+    iconPreview.style.display = 'block';
+    iconPreview.style.width = '48px';
+    iconPreview.style.height = '48px';
+    iconSlider.value = 48;
+    removeIconBtn.style.display = 'block';
+  }
+
+  if (link.pageContent) {
+    pendingLinkPage = { name: link.pageFileName || 'page.html', content: link.pageContent };
+    updateHtmlPageStatus(pendingLinkPage);
+  }
+
+  linkApiPoweredToggle.checked = !!link.apiPowered;
+
+  stickerFrame.classList.add('active');
+}
+
+linkSaveBtn.addEventListener('click', function () {
+  const name = linkNameInput.value.trim() || (pendingLinkPage ? deriveLabelFromFileName(pendingLinkPage.name) : '');
+  if (!name) {
+    alert('Bitte einen Namen für die Verknüpfung angeben.');
+    linkNameInput.focus();
+    return;
+  }
+  const hasIcon = iconPreview.style.display === 'block' && iconPreview.getAttribute('src');
+  const iconValue = hasIcon ? iconPreview.getAttribute('src') : null;
+
+  const apiPowered = linkApiPoweredToggle.checked;
+  const linkColor = linkColorInput ? linkColorInput.value : '#1c1c1e';
+
+  if (editingLinkId) {
+    const isFixedEdit = FIXED_SHORTCUTS.some(f => f.id === editingLinkId);
+    if (isFixedEdit) {
+      if (!settings.fixedShortcutOverrides) settings.fixedShortcutOverrides = {};
+      settings.fixedShortcutOverrides[editingLinkId] = {
+        icon: iconValue,
+        apiPowered
+      };
+      saveSettings(settings);
+    } else {
+      // Bestehende Verknüpfung aktualisieren statt eine neue anzulegen
+      const existing = userLinks.find(l => l.id === editingLinkId);
+      if (existing) {
+        existing.name = name;
+        existing.icon = iconValue;
+        existing.pageContent = pendingLinkPage ? pendingLinkPage.content : null;
+        existing.pageFileName = pendingLinkPage ? pendingLinkPage.name : null;
+        existing.apiPowered = apiPowered;
+        existing.color = linkColor;
+      }
+    }
+  } else {
+    const newLink = {
+      id: 'link:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name,
+      icon: iconValue,
+      pageContent: pendingLinkPage ? pendingLinkPage.content : null,
+      pageFileName: pendingLinkPage ? pendingLinkPage.name : null,
+      apiPowered,
+      color: linkColor
+    };
+    userLinks.push(newLink);
+  }
+
+  saveUserLinks();
+  render();
+  resetLinkForm();
+  stickerFrame.classList.remove('active');
+});
+
+/* --- Anpassungs-Popup (Klebezettel) --- */
+const stickyMenu = document.getElementById('stickyMenu');
+const avatarBtn = document.getElementById('avatarBtn');
+const stickyClose = document.getElementById('stickyClose');
+const themeRow = document.getElementById('themeRow');
+const customThemeColor = document.getElementById('customThemeColor');
+const bgImageSwatch = document.getElementById('bgImageSwatch');
+const bgImageUploader = document.getElementById('bgImageUploader');
+const customAvatarColor = document.getElementById('customAvatarColor');
+const avatarColorTrigger = document.getElementById('avatarColorTrigger');
+const fontToggleBtn = document.getElementById('fontToggleBtn');
+const fontUploader = document.getElementById('fontUploader');
+const browseFontLibBtn = document.getElementById('browse-font-lib-btn');
+const fontLibList = document.getElementById('font-lib-list');
+const appNameInput = document.getElementById('appNameInput');
+const avatarInitials = document.getElementById('avatarInitials');
+const avatarLogo = document.getElementById('avatarLogo');
+const logoUploader = document.getElementById('logoUploader');
+const logoRemoveBtn = document.getElementById('logoRemoveBtn');
+const tabColorGrid = document.getElementById('tabColorGrid');
+const tabColorResetAll = document.getElementById('tabColorResetAll');
+const menuColorToggle = document.getElementById('menuColorToggle');
+const customStickyMenuColor = document.getElementById('customStickyMenuColor');
+const navStyleGrid = document.getElementById('navStyleGrid');
+const safeEnabledToggle = document.getElementById('safeEnabledToggle');
+const exportNotice = document.getElementById('exportNotice');
+const exportDataBtn = document.getElementById('exportDataBtn');
+const importDataBtn = document.getElementById('importDataBtn');
+const importDataInput = document.getElementById('importDataInput');
+const stickyReset = document.getElementById('stickyReset');
+
+const PERSONALIZE_KEY = 'portfolioPersonalize';
+const defaultTabColors = {
+  'home': '#1c1c1e',
+  'fixed-bibliothek': '#2f6feb',
+  'fixed-eduhub': '#e0393f',
+  'fixed-woerterbuch': '#3aa65a',
+  'fixed-spezwoerterbuch': '#3aa65a'
+};
+const fontOptions = [
+  { label: 'Inter', value: "'Inter', 'Segoe UI', system-ui, sans-serif" },
+  { label: 'Georgia', value: "Georgia, 'Times New Roman', serif" },
+  { label: 'Courier New', value: "'Courier New', Courier, monospace" },
+  { label: 'Trebuchet MS', value: "'Trebuchet MS', Tahoma, sans-serif" }
+];
+const menuColorPresets = ['#5a78e0', '#e26a6a', '#e0c23a'];
+const defaults = {
+  theme: 'light',
+  customThemeColor: '#cdeee9',
+  customBgImage: '',
+  avatarColor: '#e63946',
+  font: fontOptions[0].value,
+  customFontName: '',
+  customFontData: '',
+  appName: '',
+  logoData: '',
+  tabColors: {},
+  stickyMenuColor: '',
+  navStyle: 'portefolio',
+  safeEnabled: false,
+  railExpanded: false,
+  fixedShortcutOverrides: {}
+};
+
+function cloneDefaults() {
+  return { ...defaults, tabColors: { ...defaults.tabColors } };
+}
+
+function normalizeTabColors(raw) {
+  // Already an ID-keyed object ? clone it
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return { ...raw };
+  }
+  // Legacy: positional 5-slot array ? migrate to ID-keyed object
+  const legacyIds = ['home', 'fixed-bibliothek', 'fixed-eduhub', 'fixed-woerterbuch', 'fixed-spezwoerterbuch'];
+  const out = {};
+  if (Array.isArray(raw)) {
+    for (let i = 0; i < Math.min(raw.length, legacyIds.length); i++) {
+      if (raw[i]) out[legacyIds[i]] = raw[i];
+    }
+  }
+  return out;
+}
+
+function applyTabColors() {
+  tabGroup.querySelectorAll('.page-tab').forEach(el => {
+    const id = el.dataset.tabId;
+    const item = itemFromId(id);
+    if (item && item.page && item.page.color) {
+      el.style.background = item.page.color;
+      el.style.setProperty('--tab-accent', item.page.color);
+    }
+  });
+}
+
+function getInitials(name) {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return '';
+  const words = trimmed.split(/\s+/);
+  if (words.length === 1) {
+    return words[0].charAt(0).toUpperCase();
+  }
+  const first = words[0].charAt(0);
+  const last = words[words.length - 1].charAt(0);
+  return (first + last).toUpperCase();
+}
+
+function hexToRgb(hex) {
+  let h = (hex || '').replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const num = parseInt(h, 16) || 0;
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function shade(hex, percent) {
+  const { r, g, b } = hexToRgb(hex);
+  const t = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent);
+  const nr = Math.round((t - r) * p) + r;
+  const ng = Math.round((t - g) * p) + g;
+  const nb = Math.round((t - b) * p) + b;
+  return `rgb(${nr}, ${ng}, ${nb})`;
+}
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PERSONALIZE_KEY) || '{}');
+    const merged = { ...cloneDefaults(), ...saved };
+    merged.tabColors = normalizeTabColors(saved.tabColors);
+    return merged;
+  } catch (e) {
+    return cloneDefaults();
+  }
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(PERSONALIZE_KEY, JSON.stringify(settings));
+}
+
+function applySettings(settings) {
+  document.documentElement.setAttribute('data-theme', settings.theme);
+  if (settings.theme === 'custom') {
+    document.documentElement.style.setProperty('--page-bg', settings.customThemeColor);
+    document.body.style.backgroundImage = '';
+  } else if (settings.theme === 'bgimage' && settings.customBgImage) {
+    document.documentElement.style.removeProperty('--page-bg');
+    document.body.style.backgroundImage = `url(${settings.customBgImage})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+  } else {
+    document.documentElement.style.removeProperty('--page-bg');
+    document.body.style.backgroundImage = '';
+  }
+  document.documentElement.style.setProperty('--avatar-color', settings.avatarColor);
+
+  const activeFontFamily = settings.customFontData ? "'CustomUserFont', " + settings.font : settings.font;
+  document.documentElement.style.setProperty('--font-family', activeFontFamily);
+
+  themeRow.querySelectorAll('.theme-swatch[data-theme]').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.theme === settings.theme);
+  });
+  themeRow.querySelector('.theme-swatch-custom').classList.toggle('active', settings.theme === 'custom');
+  customThemeColor.value = settings.customThemeColor;
+
+  bgImageSwatch.classList.toggle('active', settings.theme === 'bgimage');
+  bgImageSwatch.classList.toggle('has-image', !!settings.customBgImage);
+  bgImageSwatch.style.backgroundImage = settings.customBgImage ? `url(${settings.customBgImage})` : '';
+
+  avatarColorTrigger.style.background = settings.avatarColor;
+  customAvatarColor.value = settings.avatarColor;
+
+  const currentFont = fontOptions.find(f => f.value === settings.font) || fontOptions[0];
+  fontToggleBtn.style.fontFamily = activeFontFamily;
+  fontToggleBtn.title = settings.customFontData
+    ? `Schriftart: ${settings.customFontName} (zum Wechseln klicken)`
+    : `Schriftart: ${currentFont.label} (zum Wechseln klicken)`;
+
+  document.title = settings.appName ? settings.appName : 'Portfolio';
+
+  const initials = getInitials(settings.appName);
+  avatarInitials.textContent = initials || '?';
+  if (settings.logoData) {
+    avatarLogo.src = settings.logoData;
+    avatarLogo.style.display = 'block';
+    avatarInitials.style.display = 'none';
+  } else {
+    avatarLogo.removeAttribute('src');
+    avatarLogo.style.display = 'none';
+    avatarInitials.style.display = 'flex';
+  }
+
+  applyTabColors();
+  tabColorGrid.querySelectorAll('.tab-color-input').forEach(input => {
+    const tabId = input.dataset.tabId;
+    input.value = (settings.tabColors && settings.tabColors[tabId]) || defaultTabColors[tabId] || '#1c1c1e';
+  });
+
+  if (settings.stickyMenuColor) {
+    const c = settings.stickyMenuColor;
+    stickyMenu.style.background = `linear-gradient(160deg, ${shade(c, 0.35)} 0%, ${c} 55%, ${shade(c, -0.15)} 100%)`;
+  } else {
+    stickyMenu.style.background = '';
+  }
+  const presetIdx = menuColorPresets.indexOf(settings.stickyMenuColor);
+  menuColorPresetIndex = presetIdx;
+  menuColorToggle.style.background = presetIdx !== -1 ? settings.stickyMenuColor : '#5fd1c8';
+  customStickyMenuColor.value = settings.stickyMenuColor || '#5fd1c8';
+
+  navStyleGrid.querySelectorAll('.navstyle-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.style === settings.navStyle);
+  });
+  tabGroup.classList.remove('nav-portefolio', 'nav-pills', 'nav-tabs', 'nav-accordion');
+  if (settings.navStyle === 'portefolio') tabGroup.classList.add('nav-portefolio');
+  if (settings.navStyle === 'pills') tabGroup.classList.add('nav-pills');
+  if (settings.navStyle === 'tabs') tabGroup.classList.add('nav-tabs');
+  if (settings.navStyle === 'accordion') tabGroup.classList.add('nav-accordion');
+
+  appNameInput.value = settings.appName;
+  safeEnabledToggle.checked = !!settings.safeEnabled;
+
+  rail.classList.toggle('expanded', !!settings.railExpanded);
+  if (!settings.railExpanded) {
+    editUnlocked = false;
+    rail.classList.remove('edit-unlocked');
+    editToggleBtn.classList.remove('on');
+    editToggleBtn.setAttribute('aria-checked', 'false');
+  }
+}
+
+let menuColorPresetIndex = -1;
+let settings = loadSettings();
+(async () => {
+  if (settings.customFontData) {
+    try {
+      const fontFace = new FontFace('CustomUserFont', `url("${settings.customFontData}")`);
+      const loaded = await fontFace.load();
+      document.fonts.add(loaded);
+    } catch (e) {
+      console.warn('Gespeicherte Schriftart konnte nicht wiederhergestellt werden:', e);
+    }
+  }
+  applySettings(settings);
+})();
+
+avatarBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  stickyMenu.classList.toggle('open');
+});
+
+stickyClose.addEventListener('click', () => stickyMenu.classList.remove('open'));
+
+document.addEventListener('click', (e) => {
+  if (stickyMenu.classList.contains('open') && !stickyMenu.contains(e.target) && e.target !== avatarBtn) {
+    stickyMenu.classList.remove('open');
+  }
+});
+
+themeRow.addEventListener('click', (e) => {
+  const sw = e.target.closest('.theme-swatch[data-theme]');
+  if (!sw) return;
+  settings.theme = sw.dataset.theme;
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+customThemeColor.addEventListener('input', () => {
+  settings.theme = 'custom';
+  settings.customThemeColor = customThemeColor.value;
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+bgImageUploader.addEventListener('change', () => {
+  const file = bgImageUploader.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) {
+    alert('Das Hintergrundbild muss kleiner als 4 MB sein.');
+    bgImageUploader.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    settings.customBgImage = reader.result;
+    settings.theme = 'bgimage';
+    applySettings(settings);
+    saveSettings(settings);
+  };
+  reader.readAsDataURL(file);
+});
+
+customAvatarColor.addEventListener('input', () => {
+  settings.avatarColor = customAvatarColor.value;
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+fontToggleBtn.addEventListener('click', () => {
+  const idx = fontOptions.findIndex(f => f.value === settings.font);
+  const next = fontOptions[(idx + 1) % fontOptions.length];
+  settings.font = next.value;
+  settings.customFontName = '';
+  settings.customFontData = '';
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+fontUploader.addEventListener('change', () => {
+  const file = fontUploader.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Die Schriftart muss kleiner als 2 MB sein.');
+    fontUploader.value = '';
+    return;
+  }
+  const prevFontData = settings.customFontData;
+  const prevFontName = settings.customFontName;
+  const reader = new FileReader();
+  reader.onload = () => {
+    settings.customFontData = reader.result;
+    settings.customFontName = file.name.replace(/\.ttf$/i, '');
+    const fontFace = new FontFace('CustomUserFont', `url("${settings.customFontData}")`);
+    fontFace.load().then(loaded => {
+      document.fonts.add(loaded);
+      applySettings(settings);
+      saveSettings(settings);
+      fontUploader.value = '';
+    }).catch(() => {
+      settings.customFontData = prevFontData;
+      settings.customFontName = prevFontName;
+      alert('Diese Schriftart konnte nicht geladen werden.');
+      fontUploader.value = '';
+    });
+  };
+  reader.onerror = () => {
+    alert('Die Schriftart konnte nicht gelesen werden.');
+    fontUploader.value = '';
+  };
+  reader.readAsDataURL(file);
+});
+
+browseFontLibBtn.addEventListener('click', async () => {
+  if (fontLibList.style.display === 'flex') {
+    fontLibList.style.display = 'none';
+    return;
+  }
+  try {
+    const res = await fetch('/fonts/manifest.json');
+    if (!res.ok) throw new Error('Manifest not found');
+    const files = await res.json();
+    fontLibList.innerHTML = '';
+    files.forEach(file => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'theme-btn';
+      btn.style.width = '100%';
+      btn.style.textAlign = 'left';
+      btn.style.padding = '4px 8px';
+      btn.style.fontSize = '12px';
+      btn.textContent = file;
+      btn.title = file;
+      btn.addEventListener('click', () => {
+        const fontUrl = '/fonts/' + file;
+        const fontName = file.replace(/\.ttf$/i, '');
+        const prevFontData = settings.customFontData;
+        const prevFontName = settings.customFontName;
+        
+        settings.customFontData = fontUrl;
+        settings.customFontName = fontName;
+        
+        const fontFace = new FontFace('CustomUserFont', `url("${fontUrl}")`);
+        fontFace.load().then(loaded => {
+          document.fonts.add(loaded);
+          applySettings(settings);
+          saveSettings(settings);
+          fontLibList.style.display = 'none';
+        }).catch(() => {
+          settings.customFontData = prevFontData;
+          settings.customFontName = prevFontName;
+          alert('Diese Schriftart konnte nicht geladen werden.');
+        });
+      });
+      fontLibList.appendChild(btn);
+    });
+    fontLibList.style.display = 'flex';
+  } catch (err) {
+    alert("Die Bibliothek konnte nicht geladen werden (/fonts/manifest.json nicht gefunden oder blockiert).");
+  }
+});
+
+appNameInput.addEventListener('input', () => {
+  settings.appName = appNameInput.value;
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+safeEnabledToggle.addEventListener('change', () => {
+  settings.safeEnabled = safeEnabledToggle.checked;
+  saveSettings(settings);
+  updateVaultFab();
+  if (!settings.safeEnabled) closeVaultModal();
+});
+
+logoUploader.addEventListener('change', () => {
+  const file = logoUploader.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Das Logo muss kleiner als 2 MB sein.');
+    logoUploader.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    settings.logoData = reader.result;
+    applySettings(settings);
+    saveSettings(settings);
+  };
+  reader.readAsDataURL(file);
+});
+
+logoRemoveBtn.addEventListener('click', () => {
+  settings.logoData = '';
+  logoUploader.value = '';
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+tabColorGrid.addEventListener('input', (e) => {
+  const input = e.target.closest('.tab-color-input');
+  if (!input) return;
+  const tabId = input.dataset.tabId;
+  if (!tabId) return;
+  settings.tabColors[tabId] = input.value;
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+tabColorResetAll.addEventListener('click', () => {
+  settings.tabColors = {};
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+menuColorToggle.addEventListener('click', () => {
+  menuColorPresetIndex = (menuColorPresetIndex + 1) % menuColorPresets.length;
+  settings.stickyMenuColor = menuColorPresets[menuColorPresetIndex];
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+customStickyMenuColor.addEventListener('input', () => {
+  settings.stickyMenuColor = customStickyMenuColor.value;
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+navStyleGrid.addEventListener('click', (e) => {
+  const b = e.target.closest('.navstyle-btn');
+  if (!b) return;
+  settings.navStyle = b.dataset.style;
+  applySettings(settings);
+  saveSettings(settings);
+  renderContent(); // Panel-Akzentrand (nur Portfolio-Stil) sofort aktualisieren
+});
+
+/* ===== Unified backup (.bak = ein JSON-Objekt): settings + assets + Safe keys =====
+   The Vault now lives in this same document (see the inlined API-VAULT
+   engine above), so the encrypted blob is read/written directly via
+   localStorage — no iframe or postMessage round-trip needed anymore.
+   Schriftart/Logo/Hintergrund liegen in settings bereits als Base64-
+   Daten-URLs vor, daher werden sie unverändert mitkopiert — keine
+   Zip-Bibliothek und keine Uint8Array-Konvertierung mehr nötig. */
+
+function requestVaultBlob() {
+  // Der Vault ist jetzt Teil dieses Dokuments — kein iframe/postMessage
+  // mehr nötig, nur noch derselbe verschlüsselte Blob aus localStorage.
+  return Promise.resolve(loadVaultStoreBlob());
+}
+
+function sendVaultRestore(blob) {
+  try { localStorage.setItem(VAULT_STORE_KEY, JSON.stringify(blob)); } catch (e) { /* Speicher nicht verfügbar */ }
+  // Falls der Vault-Popup gerade entsperrt offen ist, den sichtbaren
+  // Zustand nicht mit dem wiederhergestellten Blob verwechseln lassen —
+  // einfach zurück zum Sperrbildschirm, wie nach jedem Neuladen.
+  if (vaultStickerFrame.classList.contains('active')) {
+    backToVaultLockView();
+  }
+  return Promise.resolve();
+}
+
+exportDataBtn.addEventListener('click', async () => {
+  const vaultBlob = await requestVaultBlob();
+  if (vaultBlob) {
+    exportNotice.classList.add('hidden');
+    exportNotice.textContent = '';
+  } else {
+    exportNotice.textContent = 'Sicherung ohne Safe-Schlüssel exportiert (Safe nicht erreichbar).';
+    exportNotice.classList.remove('hidden');
+  }
+
+  // Ein einzelnes JSON-Objekt statt Zip-Archiv — Schriftart/Logo/
+  // Hintergrund bleiben als Base64-Daten-URLs direkt in settings.
+  const exportData = {
+    app: 'portfolio-seite',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    settings,
+    vaultBlob: vaultBlob || null
+  };
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'portfolio-backup-' + new Date().toISOString().slice(0, 10) + '.bak';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+importDataBtn.addEventListener('click', () => importDataInput.click());
+
+importDataInput.addEventListener('change', () => {
+  const file = importDataInput.files[0];
+  if (!file) return;
+  (async () => {
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || !data.settings) {
+        throw new Error('settings fehlen in der Sicherungsdatei');
+      }
+      const imported = data.settings;
+      settings = { ...cloneDefaults(), ...imported };
+      settings.tabColors = normalizeTabColors(imported.tabColors);
+
+      if (settings.customFontData) {
+        try {
+          const fontFace = new FontFace('CustomUserFont', `url("${settings.customFontData}")`);
+          const loaded = await fontFace.load();
+          document.fonts.add(loaded);
+        } catch (e) {
+          console.warn('Importierte Schriftart konnte nicht geladen werden:', e);
+        }
+      }
+
+      applySettings(settings);
+      saveSettings(settings);
+
+      if (data.vaultBlob) {
+        const importKeys = confirm('Auch die Safe-Schlüssel aus dieser Sicherung importieren?');
+        if (importKeys) {
+          await sendVaultRestore(data.vaultBlob);
+        }
+      }
+    } catch (e) {
+      alert('Ungültige Sicherungsdatei.');
+    }
+    importDataInput.value = '';
+  })();
+});
+
+stickyReset.addEventListener('click', () => {
+  settings = cloneDefaults();
+  fontUploader.value = '';
+  logoUploader.value = '';
+  bgImageUploader.value = '';
+  applySettings(settings);
+  saveSettings(settings);
+});
+
+render();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered with scope:', reg.scope))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    });
+  }
+</script>
+<script>
+// PWA Onboarding: Pulse the Bibliothek tab until clicked
+(function() {
+    if (!localStorage.getItem('library_opened_once')) {
+        const style = document.createElement('style');
+        style.innerHTML = 
+            @keyframes pulse-attention {
+                0% { box-shadow: 0 0 0 0 rgba(47, 111, 235, 0.7); }
+                70% { box-shadow: 0 0 0 10px rgba(47, 111, 235, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(47, 111, 235, 0); }
+            }
+            .page-tab[data-tab-id="fixed-bibliothek"] {
+                animation: pulse-attention 2s infinite;
+                position: relative;
+                z-index: 10;
+            }
+        ;
+        document.head.appendChild(style);
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.page-tab[data-tab-id="fixed-bibliothek"]')) {
+                localStorage.setItem('library_opened_once', 'true');
+                style.remove();
+            }
+        });
+    }
+})();
+</script>
+</body>
+</html>

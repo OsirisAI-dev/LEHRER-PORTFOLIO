@@ -1,0 +1,22 @@
+﻿[
+  {
+    "id": "tb_default_1",
+    "name": "Beispieltest: KI in der Bildung",
+    "createdAt": 1700000000000,
+    "questions": [
+      {
+        "id": "q1",
+        "type": "mc",
+        "text": "Wofür steht die Abkürzung KI?",
+        "options": [
+          "Künstliche Intelligenz",
+          "Komplexe Informatik",
+          "Kreative Innovation"
+        ],
+        "correctIndex": 0,
+        "explanation": "KI steht für Künstliche Intelligenz (Artificial Intelligence)."
+      }
+    ],
+    "fileData": null
+  }
+]

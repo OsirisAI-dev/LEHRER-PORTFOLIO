@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Dark Shelf — Curated Reads</title>
+<meta name="description" content="An interactive 3D book shelf with hover reveal animations, generated covers, and real cover import from your own files." />
+<link rel="stylesheet" href="/fonts/fonts.css" />
+<style>
+  /* --- Reset & Base ----------------------------------------------- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:             #07070f;
+    --surface:        #111120;
+    --surface-2:      #17172a;
+    --border:         rgba(255,255,255,.12);
+    --text-dim:       #9090b0;
+    --text-hi:        #e8e8f8;
+    --accent-c1:      #4af0ff;
+    --accent-c2:      #48ff91;
+    --accent-c3:      #c97bff;
+    --overlay:        linear-gradient(180deg, rgba(7,7,15,.55), rgba(7,7,15,.88));
+    --spring:         cubic-bezier(0.34, 1.2, 0.64, 1);
+    --smooth:         cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html[data-theme="light"] {
+    --bg:             #f2ede2;
+    --surface:        #ffffff;
+    --surface-2:      #faf7f0;
+    --border:         rgba(20,20,30,.12);
+    --text-dim:       #6b6b7d;
+    --text-hi:        #17171f;
+    --overlay:        linear-gradient(180deg, rgba(255,252,244,.6), rgba(242,237,226,.9));
+  }
+
+  html, body {
+    width: 100%; min-height: 100%;
+    background: var(--bg);
+    font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+    color: var(--text-hi);
+    transition: background .5s var(--smooth), color .5s var(--smooth);
+  }
+
+  /* --- Background layers ------------------------------------------- */
+  #bg-layer {
+    position: fixed; inset: 0; z-index: -2;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity .5s var(--smooth);
+  }
+  #bg-layer.active { opacity: 1; }
+
+  #bg-overlay {
+    position: fixed; inset: 0; z-index: -1;
+    background: var(--overlay);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s var(--smooth);
+  }
+  #bg-overlay.active { opacity: 1; }
+
+  /* --- Star-field canvas ------------------------------------------- */
+  #starfield {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity .6s var(--smooth);
+  }
+  html[data-theme="light"] #starfield { opacity: 0; }
+
+  /* --- Page Layout ------------------------------------------------- */
+  .page-wrapper {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2.75rem;
+    padding: 4rem 1.5rem;
+  }
+
+  /* --- Header ------------------------------------------------------ */
+  .page-header { text-align: center; }
+
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    letter-spacing: .04em;
+    background: linear-gradient(135deg, var(--text-hi) 30%, var(--text-dim));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  .page-header .sub {
+    margin-top: .5rem;
+    font-size: .9rem; font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: .14em; text-transform: uppercase;
+  }
+
+  /* --- Toolbar ----------------------------------------------------- */
+  .toolbar { display: flex; gap: .65rem; flex-wrap: wrap; justify-content: center; }
+
+  .tbtn {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .6rem 1.15rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-hi);
+    font: inherit;
+    font-size: .76rem; font-weight: 500;
+    letter-spacing: .07em; text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .25s var(--smooth), border-color .25s var(--smooth), background .25s var(--smooth);
+  }
+  .tbtn:hover { transform: translateY(-2px); border-color: var(--accent-c1); }
+  .tbtn:active { transform: translateY(0); }
+  .tbtn.icon-only { padding: .6rem; font-size: 1rem; line-height: 1; }
+
+
+  /* --- Shelf Row --------------------------------------------------- */
+  .shelf {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 3.5rem; flex-wrap: wrap;
+    padding: 0 1rem 2.75rem;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  .shelf-empty {
+    color: var(--text-dim);
+    font-size: .85rem;
+    letter-spacing: .05em;
+    padding: 2rem 0;
+    display: none;
+  }
+  .shelf-empty.show { display: block; }
+
+  /* --- Volume ------------------------------------------------------ */
+  .volume {
+    position: relative;
+    width: 200px; height: 310px;
+    cursor: default;
+    animation: rise .5s var(--spring) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Deep-link highlight (OsirisCore.MSG.OPEN_BOOK) */
+  @keyframes osirisOpenPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 60, 0); }
+    25%, 75% { box-shadow: 0 0 0 6px rgba(255, 200, 60, 0.55); }
+    50% { box-shadow: 0 0 0 10px rgba(255, 200, 60, 0.25); }
+  }
+  .osiris-open-highlight { animation: osirisOpenPulse 2.2s ease; }
+
+  /* soft grounding glow — replaces the old full-width shelf bar */
+  .volume::before {
+    content: '';
+    position: absolute;
+    bottom: -22px; left: 50%;
+    transform: translateX(-50%) scaleX(.55);
+    width: 170px; height: 24px;
+    border-radius: 50%;
+    background: var(--glow-color);
+    filter: blur(16px);
+    opacity: .12;
+    transition: opacity .5s var(--smooth), transform .5s var(--smooth);
+    z-index: -1;
+  }
+  .volume:hover::before { opacity: .4; transform: translateX(-50%) scaleX(1); }
+
+  /* --- Jacket (front cover) ---------------------------------------- */
+  .jacket {
+    position: absolute; inset: 0; z-index: 2;
+    transform-origin: left center;
+    border-radius: 3px 6px 6px 3px;
+    overflow: hidden;
+    background-size: cover; background-position: center;
+    background-color: var(--surface-2);
+    box-shadow:
+      inset 3px 0 6px rgba(0,0,0,.65),
+      inset -1px 0 2px rgba(255,255,255,.07),
+      6px 0 22px rgba(0,0,0,.45);
+    transition: transform .55s var(--spring), translate .55s var(--spring), box-shadow .55s var(--smooth);
+    will-change: transform;
+    cursor: pointer;
+  }
+
+  .volume:hover .jacket {
+    transform: perspective(1800px) rotateY(-28deg);
+    translate: -5px 0;
+    box-shadow:
+      inset 3px 0 6px rgba(0,0,0,.65),
+      inset -1px 0 2px rgba(255,255,255,.07),
+      22px 12px 44px rgba(0,0,0,.6);
+  }
+
+  .jacket-crease {
+    position: absolute; left: 12px; top: 0; bottom: 0; width: 16px;
+    background: linear-gradient(90deg, rgba(0,0,0,.3) 0%, rgba(255,255,255,.11) 55%, rgba(0,0,0,0) 100%);
+    border-left: 1px solid rgba(0,0,0,.22);
+    transition: width .5s var(--smooth);
+  }
+  .volume:hover .jacket-crease { width: 28px; }
+
+  .jacket-sheen {
+    position: absolute; inset: 0;
+    background: linear-gradient(108deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.13) 42%, rgba(255,255,255,0) 54%, rgba(255,255,255,0) 100%);
+    opacity: 0;
+    transition: opacity .5s var(--smooth);
+  }
+  .volume:hover .jacket-sheen { opacity: 1; }
+
+  /* import / replace-cover button on each jacket */
+  .cover-edit {
+    position: absolute; top: 8px; right: 8px; z-index: 3;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.35);
+    background: rgba(7,7,15,.55);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0; transform: translateY(-6px);
+    transition: opacity .3s var(--smooth), transform .3s var(--smooth), background .2s;
+    backdrop-filter: blur(4px);
+  }
+  .cover-edit:hover { background: rgba(7,7,15,.85); }
+  .volume:hover .cover-edit { opacity: 1; transform: translateY(0); }
+  .cover-edit svg { width: 15px; height: 15px; }
+
+  .del-btn {
+    position: absolute; top: 8px; left: 8px; z-index: 3;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.35);
+    background: rgba(7,7,15,.55);
+    color: #fff;
+    font-size: .95rem; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0; transform: translateY(-6px);
+    transition: opacity .3s var(--smooth), transform .3s var(--smooth), background .2s;
+  }
+  .del-btn:hover { background: #ff4d4d; border-color: #ff4d4d; }
+  .volume:hover .del-btn { opacity: 1; transform: translateY(0); }
+
+  /* "get to the file" affordance — centered over the jacket so it reads
+     clearly as an action rather than being guessed at from an icon
+     tucked in a corner. Shown only when the book has a fileHandle or a
+     manual link (§5, §9.6). */
+  .open-link {
+    position: absolute; top: 50%; left: 50%; z-index: 3;
+    transform: translate(-50%, -50%);
+    display: flex; align-items: center; gap: .4rem;
+    padding: .5rem 1rem; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.35);
+    background: rgba(7,7,15,.65);
+    color: #fff;
+    font-size: .68rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .3s var(--smooth), background .2s;
+    backdrop-filter: blur(4px);
+  }
+  .open-link svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+  .open-link:hover { background: rgba(7,7,15,.9); }
+  .volume:hover .open-link { opacity: 1; }
+
+  /* --- Pages block ------------------------------------------------- */
+  .pages {
+    position: absolute; inset: 2px 0 2px 2px; z-index: 1;
+    border: 1px solid #28283a;
+    border-radius: 2px 4px 4px 2px;
+    background: #e9e9e1;
+    box-shadow:
+      10px 35px 55px -8px rgba(0,0,0,.75),
+      inset -2px 0 0 #ccc, inset -3px 0 0 #e5e5dd, inset -4px 0 0 #c9c9c1,
+      inset -5px 0 0 #e5e5dd, inset -6px 0 0 #c9c9c1, inset -7px 0 0 #e5e5dd,
+      inset -8px 0 0 #c9c9c1, inset -9px 0 0 #e5e5dd;
+  }
+
+  /* --- Volume label ------------------------------------------------ */
+  .volume-label {
+    position: absolute; top: -68px; left: 0; right: 0;
+    text-align: center; pointer-events: none;
+    transform: translateY(10px); opacity: 0;
+    transition: opacity .42s var(--smooth) .06s, transform .42s var(--smooth) .06s;
+  }
+
+  .label-title {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem; font-style: italic; line-height: 1.35;
+    color: var(--text-hi);
+    text-shadow: 0 2px 14px rgba(0,0,0,.55);
+    text-decoration: none;
+  }
+
+  .label-author {
+    display: block;
+    font-size: .7rem; font-weight: 400;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: .3rem;
+  }
+
+  .volume:hover .volume-label { opacity: 1; transform: translateY(0); }
+
+  /* --- Toast ------------------------------------------------------- */
+  #toast {
+    position: fixed; left: 50%; bottom: 28px;
+    transform: translate(-50%, 20px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-hi);
+    padding: .8rem 1.3rem;
+    border-radius: 8px;
+    font-size: .85rem;
+    box-shadow: 0 12px 34px rgba(0,0,0,.35);
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s var(--smooth), transform .35s var(--smooth);
+    z-index: 50;
+    max-width: min(90vw, 380px);
+    text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* --- Footer ------------------------------------------------------ */
+  .page-footer { font-size: .72rem; color: var(--text-dim); letter-spacing: .09em; text-align: center; }
+
+  /* --- Modal ------------------------------------------------------- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s var(--smooth);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    width: 100%; max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    color: var(--text-hi);
+    transform: translateY(14px) scale(.98);
+    opacity: 0;
+    transition: transform .35s var(--spring), opacity .3s var(--smooth);
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); opacity: 1; }
+
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-style: italic; font-size: 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .field { margin-bottom: 1rem; }
+  .field-checkbox { display: flex; flex-direction: column; }
+  .checkbox-label { display: flex; align-items: center; gap: .5rem; cursor: pointer; font-size: .88rem; }
+  .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .field label {
+    display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: .4rem;
+  }
+  .field input[type="text"] {
+    width: 100%; padding: .65rem .8rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text-hi);
+    font: inherit; font-size: .9rem;
+  }
+  .field input:focus { outline: 2px solid var(--accent-c1); outline-offset: 1px; }
+
+  .swatches { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform .2s var(--smooth), border-color .2s;
+  }
+  .swatch:hover { transform: scale(1.1); }
+  .swatch.selected { border-color: var(--text-hi); }
+  .swatch-custom {
+    width: 30px; height: 30px; padding: 0; border: 2px solid var(--border);
+    border-radius: 50%; overflow: hidden; cursor: pointer; background: none;
+  }
+  .swatch-custom::-webkit-color-swatch-wrapper { padding: 0; }
+  .swatch-custom::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+  .cover-upload {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: .7rem .9rem;
+    display: flex; flex-direction: column; gap: .55rem;
+  }
+  .cover-upload .txt { font-size: .78rem; color: var(--text-dim); line-height: 1.4; }
+  .cover-upload input[type="file"] { display: none; }
+  .cover-upload .pick {
+    align-self: flex-start;
+    font-size: .74rem; letter-spacing: .05em; text-transform: uppercase;
+    padding: .4rem .8rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-hi);
+    cursor: pointer;
+  }
+
+  .cat-submenu {
+    margin-top: .6rem; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface-2); overflow: hidden;
+  }
+  .cat-submenu summary {
+    list-style: none; cursor: pointer; padding: .55rem .8rem;
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text-dim); display: flex; align-items: center; gap: .4rem; user-select: none;
+  }
+  .cat-submenu summary::-webkit-details-marker { display: none; }
+  .cat-submenu summary::before { content: '?'; font-size: .65rem; color: var(--accent-c1); transition: transform .2s var(--smooth); }
+  .cat-submenu[open] summary::before { transform: rotate(90deg); }
+  .cat-submenu summary:hover { color: var(--text-hi); }
+  .cat-submenu-body { padding: 0 .8rem .8rem; }
+  .cat-submenu-body input {
+    width: 100%; padding: .65rem .8rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--text-hi); font: inherit; font-size: .9rem;
+  }
+  .cat-submenu-body input:focus { outline: 2px solid var(--accent-c1); outline-offset: 1px; }
+  .label-category {
+    font-size: .64rem; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--accent-c1); opacity: .85;
+  }
+  .label-ai-tag {
+    font-size: .64rem; letter-spacing: .03em;
+    color: var(--text-dim); opacity: .85;
+  }
+
+  .modal-actions { display: flex; gap: .7rem; justify-content: flex-end; margin-top: 1.4rem; }
+  .btn-secondary, .btn-primary {
+    padding: .65rem 1.3rem; border-radius: 8px; font: inherit; font-size: .82rem;
+    font-weight: 600; letter-spacing: .04em; cursor: pointer; border: 1px solid transparent;
+  }
+  .btn-secondary { background: transparent; border-color: var(--border); color: var(--text-hi); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent-c1), var(--accent-c2)); color: #07070f; }
+  .btn-primary:disabled { opacity: .6; cursor: default; }
+  .btn-secondary:hover { border-color: var(--text-dim); }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+
+  /* background panel specific */
+  .bg-mode-row { display: flex; gap: .6rem; margin-bottom: 1.2rem; }
+  .bg-mode-row button {
+    flex: 1; padding: .55rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text-hi); font: inherit; font-size: .78rem; cursor: pointer;
+  }
+  .bg-mode-row button.active { border-color: var(--accent-c1); background: rgba(74,240,255,.1); }
+  .bg-preview {
+    width: 100%; height: 90px; border-radius: 8px;
+    background: var(--surface-2) center/cover no-repeat;
+    border: 1px solid var(--border);
+    margin-bottom: .8rem;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); font-size: .75rem;
+  }
+
+  /* --- Responsive --------------------------------------------------- */
+  @media (max-width: 680px) {
+    .shelf { gap: 2rem; }
+    .volume { width: 155px; height: 240px; }
+    .volume-label { top: -60px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="bg-layer"></div>
+<div id="bg-overlay"></div>
+<canvas id="starfield"></canvas>
+
+<div class="page-wrapper">
+
+  <header class="page-header">
+    <h1>The Dark Shelf</h1>
+    <p class="sub" data-i18n="tagline">Curated reads for the curious mind</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="tbtn" id="addBookBtn" data-i18n="addBookBtn">+ Add Book</button>
+    <button class="tbtn" id="bgBtn" data-i18n="bgBtn">Background</button>
+    <button class="tbtn icon-only" id="themeToggle" data-i18n-aria="themeToggleAria" aria-label="Toggle light/dark theme">🌙</button>
+  </div>
+
+  <section class="shelf" id="shelf" data-i18n-aria="shelfAria" aria-label="Book collection"></section>
+  <p class="shelf-empty" id="shelfEmpty" data-i18n="shelfEmpty">The shelf is empty — add your first book.</p>
+
+  <footer class="page-footer">
+    <p data-i18n="footerHint">Hover a book to reveal its title &middot; Use the camera icon to import a real cover from your own file</p>
+  </footer>
+
+</div>
+
+<div id="toast"></div>
+
+
+<div class="modal-overlay" id="modalOverlay">
+
+  <form class="modal" id="addBookModal" novalidate>
+    <h2 data-i18n="addModalTitle">Add a Book</h2>
+
+    <div class="field">
+      <label for="fTitle" data-i18n="fieldTitleLabel">Title</label>
+      <input type="text" id="fTitle" maxlength="60" data-i18n-placeholder="fieldTitlePlaceholder" placeholder="e.g. Neon Dystopia" />
+    </div>
+
+    <div class="field">
+      <label for="fAuthor" data-i18n="fieldAuthorLabel">Author</label>
+      <input type="text" id="fAuthor" maxlength="40" data-i18n-placeholder="fieldAuthorPlaceholder" placeholder="e.g. V. Karev (optional)" />
+    </div>
+
+    <div class="field">
+      <label data-i18n="fieldAccentLabel">Accent color</label>
+      <div class="swatches" id="swatches">
+        <input type="color" class="swatch-custom" id="customColor" value="#4af0ff" data-i18n-title="customColorTitle" title="Custom color" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label data-i18n="fieldImportLabel">Import book (optional)</label>
+      <div class="cover-upload">
+        <div class="txt" id="coverTxt" data-i18n="coverTxtDefault">No file selected — a cover will be generated automatically from the title, author and color.</div>
+        <div class="txt" id="fileFieldHint" style="font-size:.7rem;"></div>
+        <button type="button" class="pick" id="fChooseBtn" data-i18n="chooseFileBtn">Choose file</button>
+        <input type="file" id="fCover" accept="image/*,application/pdf,.epub,application/epub+zip" hidden />
+      </div>
+      <details class="cat-submenu">
+        <summary data-i18n="categorySummary">Category (optional)</summary>
+        <div class="cat-submenu-body">
+          <input type="text" id="fCategory" list="fCategoryOptions" data-i18n-placeholder="categoryPlaceholder" placeholder="e.g. Sci-Fi, Horror, Philosophy…" />
+          <datalist id="fCategoryOptions">
+            <option value="Sci-Fi" data-i18n-value="catSciFi"></option>
+            <option value="Fantasy" data-i18n-value="catFantasy"></option>
+            <option value="Horror" data-i18n-value="catHorror"></option>
+            <option value="Mystery / Thriller" data-i18n-value="catMystery"></option>
+            <option value="Literary" data-i18n-value="catLiterary"></option>
+            <option value="Philosophy" data-i18n-value="catPhilosophy"></option>
+            <option value="Non-fiction" data-i18n-value="catNonfiction"></option>
+            <option value="Poetry" data-i18n-value="catPoetry"></option>
+          </datalist>
+        </div>
+      </details>
+    </div>
+
+    <details class="cat-submenu">
+      <summary data-i18n="linkSummary">Link to the book (optional)</summary>
+      <div class="cat-submenu-body">
+        <input type="text" id="fLink" data-i18n-placeholder="linkPlaceholder" placeholder="https://… or /path/to/file" />
+      </div>
+    </details>
+
+    <div class="field field-checkbox">
+      <label class="checkbox-label">
+        <input type="checkbox" id="fExcludeAi" />
+        <span data-i18n="excludeAiLabel">Exclude from AI Sorting</span>
+      </label>
+      <p class="txt" data-i18n="excludeAiHint" style="font-size:.7rem;">This book will never be sent to an external AI service — useful for a sensitive document (e.g. a class list) added to the library by mistake or on purpose.</p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="cancelAdd" data-i18n="cancelBtn">Cancel</button>
+      <button type="submit" class="btn-primary" id="submitAdd" data-i18n="submitAddBtn">Add to Shelf</button>
+    </div>
+  </form>
+
+  
+  <div class="modal" id="bgModal" hidden>
+    <h2 data-i18n="bgModalTitle">Background &amp; Theme</h2>
+
+    <div class="bg-mode-row">
+      <button type="button" id="modeDark" data-i18n="modeDarkBtn">Dark theme</button>
+      <button type="button" id="modeLight" data-i18n="modeLightBtn">Light theme</button>
+    </div>
+
+    <div class="bg-preview" id="bgPreview" data-i18n="bgPreviewEmpty">No custom image</div>
+
+    <div class="field" style="display:flex; gap:.6rem;">
+      <label class="pick" for="fBg" style="cursor:pointer;" data-i18n="uploadBgLabel">Upload background image</label>
+      <input type="file" id="fBg" accept="image/*" style="display:none;" />
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="clearBg" data-i18n="removeBgBtn">Remove image</button>
+      <button type="button" class="btn-primary" id="closeBg" data-i18n="doneBtn">Done</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="../lib/pdf/v1/pdf.min.js"></script>
+<script src="../js/core/osiris-core.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+  }
+
+  /* -- i18n ----------------------------------------------------------
+     Hub broadcasts a raw 'SET_LANG' message (payload { lang: 'FR'|'DE' }),
+     same literal-string pattern already used for SET_SORT via
+     OsirisCore.listen below (see BIBLIOTHEK_HUB.html's pushLang()).
+     FR carries this shelf's original copy unchanged; DE is the new
+     translation. Any book text the person typed themselves (custom
+     titles/authors/categories/links) is left exactly as typed — only this
+     shelf's own UI chrome, seed/demo content, and generated-cover author
+     fallback are translated. */
+  var STRINGS = {
+    FR: {
+      tagline: 'Curated reads for the curious mind',
+      addBookBtn: '+ Ajouter un livre',
+      bgBtn: 'Arrière-plan',
+      themeToggleAria: 'Basculer le thème clair/sombre',
+      shelfAria: 'Collection de livres',
+      shelfEmpty: 'L\'étagère est vide — ajoutez votre premier livre.',
+      footerHint: 'Survolez un livre pour révéler son titre · Utilisez l\'icône de l\'appareil photo pour importer une vraie couverture depuis votre propre fichier',
+      addModalTitle: 'Ajouter un livre',
+      fieldTitleLabel: 'Titre',
+      fieldTitlePlaceholder: 'ex. Neon Dystopia',
+      fieldAuthorLabel: 'Auteur',
+      fieldAuthorPlaceholder: 'ex. V. Karev (facultatif)',
+      fieldAccentLabel: 'Couleur d\'accentuation',
+      customColorTitle: 'Couleur personnalisée',
+      fieldImportLabel: 'Importer un livre (facultatif)',
+      coverTxtDefault: 'Aucun fichier sélectionné — une couverture sera générée automatiquement à partir du titre, de l\'auteur et de la couleur.',
+      chooseFileBtn: 'Choisir un fichier',
+      fileFieldHint: 'Le fichier choisi est également conservé en lien pour que vous puissiez l\'ouvrir directement depuis l\'étagère plus tard.',
+      categorySummary: 'Catégorie (facultatif)',
+      categoryPlaceholder: 'ex. Science-Fiction, Horreur, Philosophie…',
+      catSciFi: 'Science-Fiction', catFantasy: 'Fantasy', catHorror: 'Horreur',
+      catMystery: 'Mystère / Thriller', catLiterary: 'Littérature',
+      catPhilosophy: 'Philosophie', catNonfiction: 'Non-fiction', catPoetry: 'Poésie',
+      linkSummary: 'Lien vers le livre (facultatif)',
+      linkPlaceholder: 'https://… ou /chemin/vers/fichier',
+      excludeAiLabel: 'Exclure du Tri IA',
+      excludeAiHint: 'Ce livre ne sera jamais envoyé à un service IA externe — utile pour un document sensible (ex. liste de classe) ajouté par erreur ou volontairement à la bibliothèque.',
+      cancelBtn: 'Annuler',
+      submitAddBtn: 'Ajouter à l\'étagère',
+      submitAdding: 'Ajout en cours…',
+      bgModalTitle: 'Arrière-plan et thème',
+      modeDarkBtn: 'Thème sombre',
+      modeLightBtn: 'Thème clair',
+      bgPreviewEmpty: 'Aucune image personnalisée',
+      bgPreviewEmptyForTheme: 'Aucune image personnalisée pour ce thème',
+      uploadBgLabel: 'Importer une image d\'arrière-plan',
+      removeBgBtn: 'Supprimer l\'image',
+      doneBtn: 'Terminé',
+      unknownAuthor: 'Inconnu',
+      untitled: 'Sans titre',
+      openTheBookTitle: 'Ouvrir le livre',
+      openLabel: 'Ouvrir',
+      clickToOpen: 'Cliquer pour ouvrir',
+      importCoverTitle: 'Importer une vraie couverture (image, PDF ou EPUB)',
+      importCoverForLabel: 'Importer une couverture pour',
+      removeLabel: 'Supprimer',
+      coverAlt: 'couverture',
+      aiEstimateTooltip: 'Estimation IA — à titre indicatif seulement',
+      accentColorAria: 'Couleur d\'accentuation',
+      couldNotReadFile: 'Impossible de lire ce fichier.',
+      readingFile: function (name) { return 'Lecture de ' + name + '…'; },
+      noCoverFoundUseGenerated: function (name) { return 'Aucune couverture trouvée dans ' + name + ' — une couverture générée sera utilisée à la place.'; },
+      realCoverExtracted: function (name) { return name + ' — vraie couverture extraite et sera utilisée.'; },
+      couldNotReadUseGenerated: function (name) { return "Impossible de lire " + name + ' — une couverture générée sera utilisée à la place.'; },
+      couldNotExtractUseGenerated: function (name) { return "Impossible d'extraire une couverture de " + name + ' — une couverture générée sera utilisée à la place.'; },
+      pdfUnavailableUseGenerated: function (name) { return 'Extraction PDF indisponible (hors ligne ?) pour ' + name + ' — une couverture générée sera utilisée à la place.'; },
+      couldNotExtractCover: function (name) { return "Impossible d'extraire une couverture de " + name; },
+      couldNotReadName: function (name) { return "Impossible de lire " + name; },
+      updatedCoverFor: function (title) { return 'Couverture mise à jour pour "' + title + '"'; },
+      removedBook: function (title) { return 'Supprimé "' + title + '"'; },
+      addedToShelf: function (title) { return '"' + title + '" ajouté à l\'étagère'; },
+      fileNotFoundNoLink: 'Fichier introuvable et aucun lien de secours n\'est défini.',
+      storageFull: 'Espace de stockage plein — essayez de supprimer une image d\'arrière-plan ou un fichier volumineux, puis réessayez.'
+    },
+    DE: {
+      tagline: 'Curated reads for the curious mind',
+      addBookBtn: '+ Buch hinzufügen',
+      bgBtn: 'Hintergrund',
+      themeToggleAria: 'Hell-/Dunkelmodus umschalten',
+      shelfAria: 'Büchersammlung',
+      shelfEmpty: 'Das Regal ist leer — füge dein erstes Buch hinzu.',
+      footerHint: 'Fahre über ein Buch, um den Titel zu sehen · Nutze das Kamera-Symbol, um ein echtes Cover aus deiner eigenen Datei zu importieren',
+      addModalTitle: 'Buch hinzufügen',
+      fieldTitleLabel: 'Titel',
+      fieldTitlePlaceholder: 'z. B. Neon Dystopia',
+      fieldAuthorLabel: 'Autor:in',
+      fieldAuthorPlaceholder: 'z. B. V. Karev (optional)',
+      fieldAccentLabel: 'Akzentfarbe',
+      customColorTitle: 'Eigene Farbe',
+      fieldImportLabel: 'Buch importieren (optional)',
+      coverTxtDefault: 'Keine Datei ausgewählt — es wird automatisch ein Cover aus Titel, Autor:in und Farbe erzeugt.',
+      chooseFileBtn: 'Datei auswählen',
+      fileFieldHint: 'Die gewählte Datei bleibt außerdem verknüpft, sodass du sie später direkt vom Regal aus öffnen kannst.',
+      categorySummary: 'Kategorie (optional)',
+      categoryPlaceholder: 'z. B. Sci-Fi, Horror, Philosophie…',
+      catSciFi: 'Sci-Fi', catFantasy: 'Fantasy', catHorror: 'Horror',
+      catMystery: 'Krimi / Thriller', catLiterary: 'Literarisch',
+      catPhilosophy: 'Philosophie', catNonfiction: 'Sachbuch', catPoetry: 'Lyrik',
+      linkSummary: 'Link zum Buch (optional)',
+      linkPlaceholder: 'https://… oder /pfad/zur/datei',
+      excludeAiLabel: 'Von KI-Sortierung ausschließen',
+      excludeAiHint: 'Dieses Buch wird nie an einen externen KI-Dienst gesendet — nützlich für ein sensibles Dokument (z. B. eine Klassenliste), das versehentlich oder absichtlich zur Bibliothek hinzugefügt wurde.',
+      cancelBtn: 'Abbrechen',
+      submitAddBtn: 'Zum Regal hinzufügen',
+      submitAdding: 'Wird hinzugefügt…',
+      bgModalTitle: 'Hintergrund & Thema',
+      modeDarkBtn: 'Dunkles Thema',
+      modeLightBtn: 'Helles Thema',
+      bgPreviewEmpty: 'Kein eigenes Bild',
+      bgPreviewEmptyForTheme: 'Kein eigenes Bild für dieses Thema',
+      uploadBgLabel: 'Hintergrundbild hochladen',
+      removeBgBtn: 'Bild entfernen',
+      doneBtn: 'Fertig',
+      unknownAuthor: 'Unbekannt',
+      untitled: 'Ohne Titel',
+      openTheBookTitle: 'Das Buch öffnen',
+      openLabel: 'Öffnen',
+      clickToOpen: 'Zum Öffnen klicken',
+      importCoverTitle: 'Echtes Cover importieren (Bild, PDF oder EPUB)',
+      importCoverForLabel: 'Cover importieren für',
+      removeLabel: 'Entfernen',
+      coverAlt: 'Cover',
+      aiEstimateTooltip: 'KI-Schätzung — nur als Anhaltspunkt',
+      accentColorAria: 'Akzentfarbe',
+      couldNotReadFile: 'Diese Datei konnte nicht gelesen werden.',
+      readingFile: function (name) { return name + ' wird gelesen…'; },
+      noCoverFoundUseGenerated: function (name) { return 'In ' + name + ' wurde kein Cover gefunden — es wird ein generiertes Cover verwendet.'; },
+      realCoverExtracted: function (name) { return name + ' — echtes Cover extrahiert und wird verwendet.'; },
+      couldNotReadUseGenerated: function (name) { return name + ' konnte nicht gelesen werden — es wird ein generiertes Cover verwendet.'; },
+      couldNotExtractUseGenerated: function (name) { return 'Aus ' + name + ' konnte kein Cover extrahiert werden — es wird ein generiertes Cover verwendet.'; },
+      pdfUnavailableUseGenerated: function (name) { return 'PDF-Extraktion nicht verfügbar (offline?) für ' + name + ' — es wird ein generiertes Cover verwendet.'; },
+      couldNotExtractCover: function (name) { return 'Aus ' + name + ' konnte kein Cover extrahiert werden'; },
+      couldNotReadName: function (name) { return name + ' konnte nicht gelesen werden'; },
+      updatedCoverFor: function (title) { return 'Cover für „' + title + '“ aktualisiert'; },
+      removedBook: function (title) { return '„' + title + '“ entfernt'; },
+      addedToShelf: function (title) { return '„' + title + '“ zum Regal hinzugefügt'; },
+      fileNotFoundNoLink: 'Datei nicht gefunden und kein Ersatzlink hinterlegt.',
+      storageFull: 'Speicher voll — entferne ein Hintergrundbild oder ein großes Buch und versuche es erneut.'
+    }
+  };
+  var LS_LANG = 'osiris_darkshelf_lang';
+  function t(key) {
+    var bundle = STRINGS[currentLang] || STRINGS.FR;
+    return bundle.hasOwnProperty(key) ? bundle[key] : STRINGS.FR[key];
+  }
+  function loadLang() {
+
+
+    try {
+      var hubPrefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+      if (hubPrefs.lang === 'FR' || hubPrefs.lang === 'DE') return hubPrefs.lang;
+    } catch (e) {}
+    try { return localStorage.getItem(LS_LANG) || 'FR'; } catch (e) { return 'FR'; }
+  }
+  function saveLang() {
+    try { localStorage.setItem(LS_LANG, currentLang); } catch (e) {}
+  }
+  var currentLang = loadLang();
+
+  function applyLang() {
+    document.documentElement.setAttribute('lang', currentLang.toLowerCase());
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+    });
+    document.querySelectorAll('[data-i18n-value]').forEach(function (el) {
+      el.setAttribute('value', t(el.getAttribute('data-i18n-value')));
+    });
+
+
+    if (typeof coverTxtIsDefault !== 'undefined' && coverTxtIsDefault && typeof coverTxt !== 'undefined') {
+      coverTxt.textContent = t('coverTxtDefault');
+    }
+    if (typeof fileFieldHint !== 'undefined' && typeof fileHandlesSupported !== 'undefined' && fileHandlesSupported) {
+      fileFieldHint.textContent = t('fileFieldHint');
+    }
+    if (typeof syncBgPanel === 'function' && typeof bgModal !== 'undefined' && !bgModal.hidden) {
+      syncBgPanel();
+    }
+    if (typeof swatchesEl !== 'undefined') {
+      swatchesEl.querySelectorAll('.swatch[data-hex]').forEach(function (sw) {
+        sw.setAttribute('aria-label', t('accentColorAria') + ' ' + sw.dataset.hex);
+      });
+    }
+  }
+
+  /* -- Storage: shared library (Step 4 — Dark Shelf parity) --------
+     Dark Shelf never persisted before, so there's no legacy key to
+     migrate — it adopts osiris_library_books_v2 directly via
+     osiris-core.js. Falls back to a local-only key if osiris-core.js
+     failed to load, same defensive pattern as the other 3 shelves. */
+  var FALLBACK_KEY = 'osiris_darkshelf_fallback_v1';
+  var DECOY_CLEANUP_FLAG = 'osiris_darkshelf_decoys_removed';
+  function loadBooks() {
+    if (window.OsirisCore) return OsirisCore.loadLibrary();
+    try { return JSON.parse(localStorage.getItem(FALLBACK_KEY)) || []; }
+    catch (e) { return []; }
+  }
+  function saveBooks() {
+    if (window.OsirisCore) {
+      if (!OsirisCore.saveLibrary(books)) {
+        showToast(t('storageFull'));
+      }
+      return;
+    }
+    try { localStorage.setItem(FALLBACK_KEY, JSON.stringify(books)); }
+    catch (e) { /* storage full — book stays visible this session only */ }
+  }
+
+  /* -- Utilities -------------------------------------------------- */
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+  function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const int = parseInt(n, 16);
+    return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+  }
+
+  function shade(hex, percent) {
+    const { r, g, b } = hexToRgb(hex);
+    const t = percent < 0 ? 0 : 255;
+    const p = Math.abs(percent) / 100;
+    const nr = clamp(Math.round((t - r) * p + r), 0, 255);
+    const ng = clamp(Math.round((t - g) * p + g), 0, 255);
+    const nb = clamp(Math.round((t - b) * p + b), 0, 255);
+    return `rgb(${nr},${ng},${nb})`;
+  }
+
+  function hexToRgba(hex, a) {
+    const { r, g, b } = hexToRgb(hex);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function uid() { return 'b' + Math.random().toString(36).slice(2, 9); }
+
+  /* -- Compress a data URL before it ever lands in the shared library —
+     same discipline as the §3 Codex fix, applied here from the start
+     instead of retrofitted after a storage-full bug. ---------------- */
+  function compressDataUrl(dataUrl, maxWidth, quality) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxWidth / img.width);
+        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality || 0.85));
+      };
+      img.onerror = function () { resolve(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
+  /* -- Font readiness (canvas text needs fonts loaded first) -------- */
+  const fontsReady = Promise.all([
+    document.fonts.load('italic 600 34px "Playfair Display"'),
+    document.fonts.load('300 16px Outfit'),
+    document.fonts.load('600 16px Outfit')
+  ]).catch(() => {});
+
+  /* -- Procedural cover generator (fallback — no external images) -- */
+  function wrapLines(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    words.forEach(word => {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  async function generateCover(title, author, hex) {
+    await fontsReady;
+    const W = 400, H = 620;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, shade(hex, -55));
+    grad.addColorStop(1, shade(hex, -82));
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for (let x = -H; x < W; x += 26) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + H, H);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = hexToRgba(hex, 0.35);
+    ctx.lineWidth = 2;
+    [70, 100, 130].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(W / 2, H * 0.24, r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.fillStyle = hexToRgba(hex, 0.85);
+    ctx.beginPath();
+    ctx.arc(W / 2, H * 0.24, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f4f4fb';
+    ctx.font = 'italic 600 34px "Playfair Display", serif';
+    const lines = wrapLines(ctx, title, W - 90);
+    let ty = H * 0.56 - (lines.length - 1) * 20;
+    lines.slice(0, 4).forEach(l => { ctx.fillText(l, W / 2, ty); ty += 40; });
+
+    ctx.fillStyle = hex;
+    ctx.fillRect(W / 2 - 26, ty + 6, 52, 3);
+
+    ctx.font = '300 15px Outfit, sans-serif';
+    ctx.fillStyle = 'rgba(240,240,250,0.78)';
+    ctx.fillText((author || t('unknownAuthor')).toUpperCase(), W / 2, ty + 34);
+
+    return canvas.toDataURL('image/png');
+  }
+
+  /* -- Real cover extraction: crop/fit an image blob to jacket ratio */
+  function extractCoverFromImageBlob(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const W = 400, H = 620;
+          const canvas = document.createElement('canvas');
+          canvas.width = W; canvas.height = H;
+          const ctx = canvas.getContext('2d');
+          const scale = Math.max(W / img.width, H / img.height);
+          const sw = W / scale, sh = H / scale;
+          const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+          resolve(canvas.toDataURL('image/jpeg', 0.92));
+        };
+        img.onerror = () => reject(new Error('Could not read image'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  /* -- Import pipeline: detect file kind & extract the REAL cover --
+     - image/*            -> the file itself is the cover (cropped to fit)
+     - application/pdf    -> real first page shown live in the jacket
+     - .epub               -> cover image parsed straight out of the
+                              EPUB's own zip archive / OPF manifest
+     No external sources are ever used — everything comes from bytes
+     the person uploaded themselves. ------------------------------- */
+  function detectCoverKind(file) {
+    if (!file) return 'none';
+    const name = (file.name || '').toLowerCase();
+    if (file.type.indexOf('image/') === 0) return 'image';
+    if (file.type === 'application/pdf' || /\.pdf$/.test(name)) return 'pdf';
+    if (file.type === 'application/epub+zip' || /\.epub$/.test(name)) return 'epub';
+    return 'none';
+  }
+
+  /* Minimal ZIP central-directory reader (an EPUB is a zip archive) */
+  function readZipEntries(buf) {
+    const view = new DataView(buf);
+    const len = buf.byteLength;
+    let eocdOffset = -1;
+    for (let i = len - 22; i >= 0 && i >= len - 22 - 65557; i--) {
+      if (view.getUint32(i, true) === 0x06054b50) { eocdOffset = i; break; }
+    }
+    if (eocdOffset < 0) throw new Error('EOCD not found');
+    const cdOffset = view.getUint32(eocdOffset + 16, true);
+    const cdEntries = view.getUint16(eocdOffset + 10, true);
+    const entries = [];
+    let p = cdOffset;
+    for (let e = 0; e < cdEntries; e++) {
+      if (view.getUint32(p, true) !== 0x02014b50) break;
+      const method = view.getUint16(p + 10, true);
+      const compSize = view.getUint32(p + 20, true);
+      const nameLen = view.getUint16(p + 28, true);
+      const extraLen = view.getUint16(p + 30, true);
+      const commentLen = view.getUint16(p + 32, true);
+      const localOffset = view.getUint32(p + 42, true);
+      const nameBytes = new Uint8Array(buf, p + 46, nameLen);
+      const fname = new TextDecoder('utf-8').decode(nameBytes);
+      entries.push({ name: fname, method, compSize, localOffset });
+      p += 46 + nameLen + extraLen + commentLen;
+    }
+    return entries;
+  }
+
+  function extractZipEntry(buf, entry) {
+    const view = new DataView(buf);
+    const lp = entry.localOffset;
+    if (view.getUint32(lp, true) !== 0x04034b50) throw new Error('Local header mismatch');
+    const nameLen = view.getUint16(lp + 26, true);
+    const extraLen = view.getUint16(lp + 28, true);
+    const dataStart = lp + 30 + nameLen + extraLen;
+    const raw = buf.slice(dataStart, dataStart + entry.compSize);
+    if (entry.method === 0) return Promise.resolve(raw);
+    if (entry.method === 8) {
+      if (typeof DecompressionStream === 'undefined') return Promise.reject(new Error('Compression unsupported'));
+      const ds = new DecompressionStream('deflate-raw');
+      const stream = new Blob([raw]).stream().pipeThrough(ds);
+      return new Response(stream).arrayBuffer();
+    }
+    return Promise.reject(new Error('Unsupported zip method ' + entry.method));
+  }
+
+  function findEntry(entries, path) {
+    const norm = path.replace(/^\.?\//, '');
+    for (let i = 0; i < entries.length; i++) if (entries[i].name === norm) return entries[i];
+    return null;
+  }
+
+
+  function normalizeZipPath(path) {
+    const parts = path.split('/');
+    const out = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i] === '.' || parts[i] === '') continue;
+      if (parts[i] === '..') { out.pop(); continue; }
+      out.push(parts[i]);
+    }
+    return out.join('/');
+  }
+
+  function extEpubMime(href) {
+    const ext = (href.split('.').pop() || '').toLowerCase();
+    if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+    if (ext === 'png') return 'image/png';
+    if (ext === 'gif') return 'image/gif';
+    if (ext === 'svg') return 'image/svg+xml';
+    return 'image/jpeg';
+  }
+
+
+  const MAX_EXCERPT_CHARS = 700;
+
+
+  const MIN_EXCERPT_CHARS_BEFORE_FALLBACK = 40;
+
+  function cleanExcerptText(raw) {
+    return String(raw || '').replace(/\s+/g, ' ').trim();
+  }
+
+  async function extractEpubCover(file) {
+    const buf = await file.arrayBuffer();
+    const entries = readZipEntries(buf);
+    const containerEntry = findEntry(entries, 'META-INF/container.xml');
+    if (!containerEntry) throw new Error('container.xml missing');
+    const cbuf = await extractZipEntry(buf, containerEntry);
+    const xml = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(cbuf), 'application/xml');
+    const rootfile = xml.querySelector('rootfile');
+    const opfPath = rootfile ? rootfile.getAttribute('full-path') : null;
+    if (!opfPath) throw new Error('opf path missing');
+    const opfEntry = findEntry(entries, normalizeZipPath(opfPath));
+    if (!opfEntry) throw new Error('opf entry missing');
+    const baseDir = opfPath.indexOf('/') >= 0 ? opfPath.slice(0, opfPath.lastIndexOf('/') + 1) : '';
+    const obuf = await extractZipEntry(buf, opfEntry);
+    const opfXml = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(obuf), 'application/xml');
+    const titleEl = opfXml.querySelector('metadata > title, metadata > dc\\:title');
+    const creatorEl = opfXml.querySelector('metadata > creator, metadata > dc\\:creator');
+    const meta = {
+      title: titleEl ? titleEl.textContent.trim() : '',
+      author: creatorEl ? creatorEl.textContent.trim() : ''
+    };
+    let href = null;
+    const coverMeta = opfXml.querySelector('metadata > meta[name="cover"]');
+    if (coverMeta) {
+      const coverId = coverMeta.getAttribute('content');
+      const item = opfXml.querySelector('manifest > item[id="' + CSS.escape(coverId) + '"]');
+      if (item) href = item.getAttribute('href');
+    }
+    if (!href) {
+      const propItem = opfXml.querySelector('manifest > item[properties~="cover-image"]');
+      if (propItem) href = propItem.getAttribute('href');
+    }
+    if (!href) return { blob: null, meta, excerpt: await readSpineExcerpt(entries, buf, opfXml, baseDir) };
+    const coverEntry = findEntry(entries, normalizeZipPath(baseDir + href));
+    if (!coverEntry) return { blob: null, meta, excerpt: await readSpineExcerpt(entries, buf, opfXml, baseDir) };
+    const imgBuf = await extractZipEntry(buf, coverEntry);
+    const excerpt = await readSpineExcerpt(entries, buf, opfXml, baseDir);
+    return { blob: new Blob([imgBuf], { type: extEpubMime(href) }), meta, excerpt };
+  }
+
+
+  async function readSpineExcerpt(entries, buf, opfXml, baseDir) {
+    const spineIds = Array.prototype.slice.call(opfXml.querySelectorAll('spine > itemref'))
+      .map(el => el.getAttribute('idref'))
+      .filter(Boolean);
+    const manifestById = {};
+    Array.prototype.slice.call(opfXml.querySelectorAll('manifest > item')).forEach(item => {
+      manifestById[item.getAttribute('id')] = item;
+    });
+    let acc = '';
+    for (let i = 0; i < spineIds.length && i < 3; i++) {
+      const manifestItem = manifestById[spineIds[i]];
+      const href = manifestItem && manifestItem.getAttribute('href');
+      if (!href) continue;
+      const docEntry = findEntry(entries, normalizeZipPath(baseDir + href));
+      if (!docEntry) continue;
+      try {
+        const dbuf = await extractZipEntry(buf, docEntry);
+        const html = new TextDecoder('utf-8').decode(dbuf);
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const text = cleanExcerptText((doc.body && doc.body.textContent) || '');
+        acc = (acc + ' ' + text).trim();
+        if (acc.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || i >= 2) break;
+      } catch (err) {
+        continue; // try the next spine entry
+      }
+    }
+    return acc ? cleanExcerptText(acc).slice(0, MAX_EXCERPT_CHARS) : null;
+  }
+
+  /* Real first-page render for PDFs — Step 4 replaces the old "keep the
+     live File and <embed> it" approach: a live blob can't be persisted
+     (localStorage can't hold a File, and the bytes would blow quota the
+     same way the §3 Codex bug did). Codex/Lit Circle's proven pattern —
+     render page 1 to canvas, extract a static compressed cover, discard
+     the file — is what Dark Shelf adopts here too. */
+  function extractPdfCoverDataUrl(file) {
+    return file.arrayBuffer().then(function (buf) {
+      return pdfjsLib.getDocument({ data: buf }).promise;
+    }).then(function (pdf) {
+      return pdf.getPage(1).then(function (page) {
+        const viewport = page.getViewport({ scale: 1.4 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        return page.render({ canvasContext: ctx, viewport }).promise.then(function () {
+          const cover = canvas.toDataURL('image/jpeg', 0.85);
+          return pdf.getMetadata().then(function (m) {
+            const info = (m && m.info) || {};
+            return { cover, meta: { title: info.Title || '', author: info.Author || '' } };
+          }).catch(function () {
+            return { cover, meta: {} };
+          }).then(function (result) {
+
+
+            return page.getTextContent().then(function (textContent) {
+              const text = cleanExcerptText(textContent.items.map(it => it.str).join(' '));
+              if (text.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || pdf.numPages < 2) {
+                if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+                return result;
+              }
+              return pdf.getPage(2).then(function (page2) {
+                return page2.getTextContent();
+              }).then(function (textContent2) {
+                const text2 = cleanExcerptText(textContent2.items.map(it => it.str).join(' '));
+                const combined = (text + ' ' + text2).trim();
+                if (combined) result.excerpt = combined.slice(0, MAX_EXCERPT_CHARS);
+                return result;
+              }).catch(function () {
+                if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+                return result;
+              });
+            }).catch(function () {
+              return result; // cover/meta still stand even if text extraction itself fails
+            });
+          });
+        });
+      });
+    });
+  }
+
+  function fileMetaOf(file) {
+    return { name: file.name, size: file.size, type: file.type || '' };
+  }
+
+  /* Resolve any supported uploaded file into a cover the shelf can show.
+     Every path now returns a static, pre-compressed cover + fileMeta —
+     the file itself is discarded, never stored (§2's "don't store the
+     real file" pattern, applied to the cover thumbnail too per §3). */
+  async function resolveCoverFromFile(file) {
+    const kind = detectCoverKind(file);
+    if (kind === 'image') {
+      const raw = await extractCoverFromImageBlob(file);
+      const cover = await compressDataUrl(raw, 500, 0.85);
+      return { cover, fileMeta: fileMetaOf(file), meta: {} };
+    }
+    if (kind === 'pdf') {
+      if (!window.pdfjsLib) return { pdfUnavailable: true };
+      const res = await extractPdfCoverDataUrl(file);
+      const cover = await compressDataUrl(res.cover, 500, 0.85);
+      return { cover, fileMeta: fileMetaOf(file), meta: res.meta || {}, excerpt: res.excerpt || null };
+    }
+    if (kind === 'epub') {
+      const res = await extractEpubCover(file);
+      const meta = res.meta || {};
+      if (!res.blob) return { cover: null, fileMeta: fileMetaOf(file), meta, excerpt: res.excerpt || null };
+      const raw = await extractCoverFromImageBlob(res.blob);
+      const cover = await compressDataUrl(raw, 500, 0.85);
+      return { cover, fileMeta: fileMetaOf(file), meta, excerpt: res.excerpt || null };
+    }
+    return null;
+  }
+
+  /* -- App state -------------------------------------------------- */
+  const ACCENTS = ['#4af0ff', '#48ff91', '#c97bff', '#ff6b6b', '#ffd166', '#6ba4ff'];
+  let books = [];
+  let currentOpenMode = 'popup'; // see the SET_OPEN_MODE handler below
+
+
+  let sessionFiles = {};
+  let selectedAccent = ACCENTS[0];
+  let pendingCoverResult = null;
+  let bgTargetTheme = document.documentElement.getAttribute('data-theme');
+  const bgImages = { dark: null, light: null };
+
+  /* -- Cross-theme sort row (Hub SET_SORT) --------------------------- */
+  let sortOrder = null;
+  function applySortOrder(list) {
+    if (!sortOrder || !sortOrder.length) return list;
+    const pos = {};
+    sortOrder.forEach((id, i) => { pos[id] = i; });
+    return list.slice().sort((a, b) => {
+      const pa = pos.hasOwnProperty(a.id) ? pos[a.id] : Infinity;
+      const pb = pos.hasOwnProperty(b.id) ? pos[b.id] : Infinity;
+      return pa - pb;
+    });
+  }
+  if (window.OsirisCore && window.parent !== window) {
+    OsirisCore.listen(window.parent, (function () {
+      const handlers = {};
+      handlers[OsirisCore.MSG.SET_SORT] = (payload) => {
+        sortOrder = (payload && payload.orderedIds) || null;
+        renderShelf();
+      };
+
+
+      handlers[OsirisCore.MSG.LIBRARY_UPDATED] = () => {
+        books = loadBooks();
+        renderShelf();
+      };
+
+
+      handlers[OsirisCore.MSG.OPEN_BOOK] = (payload) => {
+        if (payload && payload.id) focusBookHighlight(payload.id);
+      };
+
+
+      handlers[OsirisCore.MSG.SET_OPEN_MODE] = (payload) => {
+        if (payload && payload.mode) currentOpenMode = payload.mode;
+      };
+
+
+      handlers['SET_LANG'] = (payload) => {
+        const lang = payload && payload.lang;
+        if (lang !== 'FR' && lang !== 'DE') return;
+        if (lang === currentLang) return;
+        currentLang = lang;
+        saveLang();
+        applyLang();
+        renderShelf();
+      };
+      return handlers;
+    })());
+  }
+
+  const shelfEl = document.getElementById('shelf');
+  const shelfEmptyEl = document.getElementById('shelfEmpty');
+
+  /* -- Cross-shelf field normalization ------------------------------
+     The shared library (osiris_library_books_v2) holds books added
+     from ALL 4 themes in one array, unfiltered — that's the point of
+     §2's shared schema. But each shelf still writes its own internal
+     field names for color/cover (Classique: color, Codex: spine+cover,
+     Lit Circle: accent+coverSrc, Dark Shelf: hex+cover) — full
+     cross-shelf field-name unification wasn't in scope for this pass
+     (see workplan note under §2), so Dark Shelf resolves whichever
+     field a given book actually has instead of assuming its own names. */
+  function resolveAccent(book) {
+    if (book.hex || book.color || book.spine || book.accent) {
+      return book.hex || book.color || book.spine || book.accent;
+    }
+    let h = 0;
+    for (let i = 0; i < book.id.length; i++) h = (h * 31 + book.id.charCodeAt(i)) | 0;
+    return ACCENTS[Math.abs(h) % ACCENTS.length];
+  }
+  function resolveCoverSrc(book) {
+    return book.cover || book.coverSrc || null;
+  }
+
+
+  const generatedCoverCache = new Map();
+
+
+  function canOpenFile(book) {
+    return !!(sessionFiles[book.id] || (book.fileHandle && window.OsirisCore && OsirisCore.fileHandlesSupported()) || book.fileBlob || book.link);
+  }
+
+
+  function focusBookHighlight(id) {
+    const el = shelfEl.querySelector(`.volume[data-id="${CSS.escape(id)}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('osiris-open-highlight');
+    setTimeout(() => el.classList.remove('osiris-open-highlight'), 2200);
+  }
+
+  function openLinkButton(book) {
+    if (!canOpenFile(book)) return '';
+    return `<button type="button" class="open-link" data-action="open-book" title="${escapeHtml(t('openTheBookTitle'))}" aria-label="${escapeHtml(t('openLabel'))} ${escapeHtml(book.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>${escapeHtml(t('clickToOpen'))}</span></button>`;
+  }
+
+  function bookTemplate(book) {
+    const coverSrc = resolveCoverSrc(book) || generatedCoverCache.get(book.id) || null;
+    const jacketStyle = coverSrc ? `background-image:url('${coverSrc}');` : '';
+    return `
+      <article class="volume" data-id="${book.id}" style="--glow-color:${resolveAccent(book)}" aria-label="${escapeHtml(book.title)}">
+        <button type="button" class="cover-edit" data-action="edit-cover" title="${escapeHtml(t('importCoverTitle'))}" aria-label="${escapeHtml(t('importCoverForLabel'))} ${escapeHtml(book.title)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </button>
+        <button type="button" class="del-btn" data-action="delete" aria-label="${escapeHtml(t('removeLabel'))} ${escapeHtml(book.title)}">×</button>
+        ${openLinkButton(book)}
+        <div class="volume-label">
+          <span class="label-title">${escapeHtml(book.title)}</span>
+          <span class="label-author">${escapeHtml(book.author || t('unknownAuthor'))}</span>
+          ${book.category ? `<span class="label-category">${escapeHtml(book.category)}</span>` : ''}
+          ${book.aiTags && book.aiTags.theme ? `<span class="label-ai-tag" title="${escapeHtml(t('aiEstimateTooltip'))}">${escapeHtml(book.aiTags.theme)}${book.aiTags.cecr ? ' · ' + escapeHtml(book.aiTags.cecr) : ''}</span>` : ''}
+        </div>
+        <div class="pages" aria-hidden="true"></div>
+        <div class="jacket" style="${jacketStyle}" role="img" aria-label="${escapeHtml(book.title)} ${escapeHtml(t('coverAlt'))}">
+          <div class="jacket-crease" aria-hidden="true"></div>
+          <div class="jacket-sheen" aria-hidden="true"></div>
+        </div>
+      </article>`;
+  }
+
+  function renderShelf() {
+    const ordered = applySortOrder(books);
+    shelfEl.innerHTML = ordered.map(bookTemplate).join('');
+    shelfEmptyEl.classList.toggle('show', books.length === 0);
+
+
+    ordered.forEach(book => {
+      if (resolveCoverSrc(book) || generatedCoverCache.has(book.id)) return;
+      generatedCoverCache.set(book.id, null); // mark in-flight so we don't kick off duplicates
+      generateCover(book.title, book.author, resolveAccent(book)).then(dataUrl => {
+        generatedCoverCache.set(book.id, dataUrl);
+        const jacket = shelfEl.querySelector(`.volume[data-id="${CSS.escape(book.id)}"] .jacket`);
+        if (jacket) jacket.style.backgroundImage = `url('${dataUrl}')`;
+      });
+    });
+  }
+
+  function addBookToState(book) {
+    books.push(book);
+    saveBooks();
+    renderShelf();
+  }
+
+  /* -- One-time cleanup: earlier versions of this shelf auto-seeded three
+     generated demo books directly into the shared library on first run.
+     That seeding is gone now (removed, not fixed forward — it served no
+     purpose beyond a first-run demo) — but anyone who already opened this
+     shelf before this change still has those 3 decoys sitting in their
+     real shared library data, visible on every shelf, not just this one.
+     Sweeps them out by exact (title, author) match against the known
+     decoy pairs — deliberately not matching on title alone, so a real
+     book that happens to share just one field is never at risk. Guarded
+     by DECOY_CLEANUP_FLAG so this only ever runs once. */
+  function cleanupLegacyDecoysIfNeeded() {
+    if (localStorage.getItem(DECOY_CLEANUP_FLAG)) return;
+    const knownDecoys = [
+      { title: 'Neon Dystopia', author: 'V. Karev' },
+      { title: 'Quantum Minds', author: 'Dr. A. Voss' },
+      { title: 'Void Atlas', author: 'I. Marchetti' }
+    ];
+    const before = books.length;
+    books = books.filter(b => !knownDecoys.some(d => b.title === d.title && b.author === d.author));
+    if (books.length !== before) saveBooks();
+    localStorage.setItem(DECOY_CLEANUP_FLAG, '1');
+  }
+
+  /* -- Shelf interaction: delete, import/replace cover -------------*/
+  const toast = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  const IMPORT_ACCEPT = 'image/*,application/pdf,.epub,application/epub+zip';
+
+  const hiddenCoverInput = document.createElement('input');
+  hiddenCoverInput.type = 'file';
+  hiddenCoverInput.accept = IMPORT_ACCEPT;
+  hiddenCoverInput.style.display = 'none';
+  document.body.appendChild(hiddenCoverInput);
+  let editTargetId = null;
+
+  shelfEl.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const article = btn.closest('.volume');
+    const id = article.dataset.id;
+    const action = btn.dataset.action;
+
+    if (action === 'delete') {
+      const book = books.find(b => b.id === id);
+      if (window.OsirisCore) { OsirisCore.deleteFileHandle(id); OsirisCore.deleteFileBlob(id); } // no-op if none was ever saved
+      delete sessionFiles[id];
+      books = books.filter(b => b.id !== id);
+      saveBooks();
+      renderShelf();
+      if (book) showToast(t('removedBook')(book.title));
+    }
+
+    if (action === 'edit-cover') {
+      editTargetId = id;
+      hiddenCoverInput.value = '';
+      hiddenCoverInput.click();
+    }
+
+    if (action === 'open-book') {
+      openBook(id, btn);
+    }
+  });
+
+
+  function openUrlWithMode(url) {
+    if (currentOpenMode === 'popup') {
+      window.open(url, 'osirisReader', 'width=820,height=1040');
+    } else {
+      window.open(url, '_blank');
+    }
+  }
+
+  function resolveAndOpenFile(id) {
+
+
+    if (currentOpenMode === 'reader') {
+      if (window.OsirisCore && window.parent !== window) {
+        const readerBook = books.find(b => b.id === id);
+        OsirisCore.send(window.parent, OsirisCore.MSG.REQUEST_READER_OPEN, {
+          id, title: readerBook ? readerBook.title : '', author: readerBook ? readerBook.author : ''
+        });
+        return Promise.resolve('opened');
+      }
+
+
+    }
+    const cached = sessionFiles[id];
+    if (cached) {
+      const url = URL.createObjectURL(cached);
+      openUrlWithMode(url);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return Promise.resolve('opened');
+    }
+    if (!window.OsirisCore) return Promise.resolve('unavailable');
+    return OsirisCore.getFileHandle(id).then(handle => {
+      if (!handle) return 'unavailable';
+      return OsirisCore.openFileHandle(handle, currentOpenMode);
+    }).then(status => {
+      if (status === 'opened') return 'opened';
+      return OsirisCore.openFileBlob(id, currentOpenMode);
+    });
+  }
+
+  function openBook(id, btn) {
+    const book = books.find(b => b.id === id);
+    if (!book) return;
+    btn.disabled = true;
+    resolveAndOpenFile(id).then(status => {
+      btn.disabled = false;
+      if (status === 'opened') return;
+      if (book.link) {
+        window.open(book.link, '_blank', 'noopener,noreferrer');
+      } else {
+        showToast(t('fileNotFoundNoLink'));
+      }
+    });
+  }
+
+  hiddenCoverInput.addEventListener('change', async () => {
+    const file = hiddenCoverInput.files[0];
+    const targetId = editTargetId;
+    editTargetId = null;
+    if (!file || !targetId) return;
+    const book = books.find(b => b.id === targetId);
+    if (!book) return;
+    showToast(t('readingFile')(file.name));
+    try {
+      const result = await resolveCoverFromFile(file);
+      if (result && result.pdfUnavailable) {
+        showToast(t('pdfUnavailableUseGenerated')(file.name));
+        return;
+      }
+      if (!result) {
+        showToast(t('couldNotExtractCover')(file.name));
+        return;
+      }
+      book.cover = result.cover || null;
+      book.fileMeta = result.fileMeta || null;
+      saveBooks();
+      renderShelf();
+      showToast(t('updatedCoverFor')(book.title));
+    } catch (err) {
+      showToast(t('couldNotReadName')(file.name));
+    }
+  });
+
+  /* -- Add Book modal ----------------------------------------------*/
+  const overlay = document.getElementById('modalOverlay');
+  const addModal = document.getElementById('addBookModal');
+  const bgModal = document.getElementById('bgModal');
+  const swatchesEl = document.getElementById('swatches');
+  const customColorEl = document.getElementById('customColor');
+  const linkInput = document.getElementById('fLink');
+  let pendingFileHandle = null; // FileSystemFileHandle chosen this modal session, not yet saved to IndexedDB
+  let pendingFile = null; // raw File for this modal session, used for the reboot-proof blob save regardless of whether a handle was also obtained
+  const fileHandlesSupported = !!(window.OsirisCore && OsirisCore.fileHandlesSupported());
+  const fileFieldHint = document.getElementById('fileFieldHint');
+  if (fileHandlesSupported) {
+    fileFieldHint.textContent = t('fileFieldHint');
+  }
+  const coverTxt = document.getElementById('coverTxt');
+  let coverTxtIsDefault = true; // tracks whether coverTxt shows *a* default (any language) vs. a file-status message, so applyLang() knows when it's safe to swap its text
+  const titleInput = document.getElementById('fTitle');
+
+  ACCENTS.forEach((hex, i) => {
+    const sw = document.createElement('button');
+    sw.type = 'button';
+    sw.className = 'swatch' + (i === 0 ? ' selected' : '');
+    sw.style.background = hex;
+    sw.dataset.hex = hex;
+    sw.setAttribute('aria-label', t('accentColorAria') + ' ' + hex);
+    swatchesEl.insertBefore(sw, customColorEl);
+  });
+
+  swatchesEl.addEventListener('click', e => {
+    const sw = e.target.closest('.swatch');
+    if (!sw) return;
+    selectedAccent = sw.dataset.hex;
+    swatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+    sw.classList.add('selected');
+  });
+
+  customColorEl.addEventListener('input', () => {
+    selectedAccent = customColorEl.value;
+    swatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+  });
+
+  function openModal(which) {
+    overlay.classList.add('open');
+    addModal.hidden = which !== 'add';
+    bgModal.hidden = which !== 'bg';
+  }
+  function closeModal() { overlay.classList.remove('open'); }
+
+  document.getElementById('addBookBtn').addEventListener('click', () => openModal('add'));
+  document.getElementById('bgBtn').addEventListener('click', () => { syncBgPanel(); openModal('bg'); });
+  document.getElementById('cancelAdd').addEventListener('click', closeModal);
+  document.getElementById('closeBg').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  const FILE_PICKER_TYPES = [{
+    description: 'Book',
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'], 'application/pdf': ['.pdf'], 'application/epub+zip': ['.epub'] }
+  }];
+
+
+  function applyExtractedMeta(meta) {
+    if (meta && meta.title && !titleInput.value.trim()) titleInput.value = meta.title;
+    if (meta && meta.author && !document.getElementById('fAuthor').value.trim()) document.getElementById('fAuthor').value = meta.author;
+  }
+
+  async function processFile(file) {
+    pendingFile = file;
+    coverTxtIsDefault = false;
+    coverTxt.textContent = t('readingFile')(file.name);
+    try {
+      const result = await resolveCoverFromFile(file);
+      if (result && result.pdfUnavailable) {
+        pendingCoverResult = null;
+        coverTxt.textContent = t('pdfUnavailableUseGenerated')(file.name);
+        return;
+      }
+      if (!result) {
+        pendingCoverResult = null;
+        coverTxt.textContent = t('couldNotExtractUseGenerated')(file.name);
+        return;
+      }
+      applyExtractedMeta(result.meta);
+      if (!result.cover) {
+        pendingCoverResult = { fileMeta: result.fileMeta, excerpt: result.excerpt || null };
+        coverTxt.textContent = t('noCoverFoundUseGenerated')(file.name);
+      } else {
+        pendingCoverResult = result;
+        coverTxt.textContent = t('realCoverExtracted')(file.name);
+      }
+    } catch (err) {
+      pendingCoverResult = null;
+      coverTxt.textContent = t('couldNotReadUseGenerated')(file.name);
+    }
+  }
+
+
+  function pickFile() {
+    if (!fileHandlesSupported) { document.getElementById('fCover').click(); return; }
+    OsirisCore.pickFileHandle({ types: FILE_PICKER_TYPES }).then(handle => {
+      if (!handle) return null;
+      return handle.getFile().then(file => {
+        pendingFileHandle = handle;
+        return processFile(file);
+      });
+    }).catch(() => {
+
+
+      pendingFileHandle = null;
+      document.getElementById('fCover').click();
+    });
+  }
+
+  document.getElementById('fChooseBtn').addEventListener('click', pickFile);
+  document.getElementById('fCover').addEventListener('change', e => {
+    const file = e.target.files[0];
+    pendingFileHandle = null;
+    if (!file) {
+      pendingCoverResult = null;
+      pendingFile = null;
+      coverTxtIsDefault = true;
+      coverTxt.textContent = t('coverTxtDefault');
+      return;
+    }
+    processFile(file);
+  });
+
+  function resetAddForm() {
+    addModal.reset();
+    pendingCoverResult = null;
+    coverTxtIsDefault = true;
+    coverTxt.textContent = t('coverTxtDefault');
+    swatchesEl.querySelectorAll('.swatch').forEach((s, i) => s.classList.toggle('selected', i === 0));
+    selectedAccent = ACCENTS[0];
+    pendingFileHandle = null;
+    pendingFile = null;
+  }
+
+
+  function deriveTitleFromFilename(name) {
+    return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+  }
+  function fallbackTitle() {
+    const name = pendingCoverResult && pendingCoverResult.fileMeta && pendingCoverResult.fileMeta.name;
+    if (name) {
+      const derived = deriveTitleFromFilename(name);
+      if (derived) return derived;
+    }
+    return t('untitled');
+  }
+
+  addModal.addEventListener('submit', async e => {
+    e.preventDefault();
+    const title = titleInput.value.trim() || fallbackTitle();
+    const author = document.getElementById('fAuthor').value.trim();
+    const category = document.getElementById('fCategory').value.trim() || null;
+
+    const submitBtn = document.getElementById('submitAdd');
+    submitBtn.disabled = true;
+    submitBtn.textContent = t('submitAdding');
+
+    let cover = null, fileMeta = null;
+    if (pendingCoverResult) {
+      cover = pendingCoverResult.cover || null;
+      fileMeta = pendingCoverResult.fileMeta || null;
+    } else {
+      cover = await generateCover(title, author, selectedAccent);
+    }
+
+    const link = linkInput.value.trim();
+    const newId = uid();
+    const excerpt = (pendingCoverResult && pendingCoverResult.excerpt) || null; // step 9 — feeds OsirisCore.aiClassifyBatch() via the Hub
+    const aiExcluded = document.getElementById('fExcludeAi').checked;
+    addBookToState({
+      id: newId, title, author, category, hex: selectedAccent, cover,
+      link, fileHandle: !!pendingFileHandle, fileBlob: !!(pendingFile && !pendingFileHandle), fileMeta, excerpt, aiExcluded, addedAt: Date.now(), openCount: 0, shelf: 'dark_shelf'
+    });
+    if (pendingFileHandle && window.OsirisCore) {
+      OsirisCore.saveFileHandle(newId, pendingFileHandle); // fire-and-forget; "Open" falls back to link if this never lands
+    } else if (pendingFile) {
+
+
+      sessionFiles[newId] = pendingFile;
+      if (window.OsirisCore) OsirisCore.saveFileBlob(newId, pendingFile);
+    }
+    showToast(t('addedToShelf')(title));
+
+    resetAddForm();
+    submitBtn.disabled = false;
+    submitBtn.textContent = t('submitAddBtn');
+    closeModal();
+  });
+
+  /* -- Background / theme modal ------------------------------------*/
+  const bgLayer = document.getElementById('bg-layer');
+  const bgOverlay = document.getElementById('bg-overlay');
+  const bgPreview = document.getElementById('bgPreview');
+  const modeDarkBtn = document.getElementById('modeDark');
+  const modeLightBtn = document.getElementById('modeLight');
+
+  function applyBg() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    const url = bgImages[theme];
+    if (url) {
+      bgLayer.style.backgroundImage = `url('${url}')`;
+      bgLayer.classList.add('active');
+      bgOverlay.classList.add('active');
+    } else {
+      bgLayer.classList.remove('active');
+      bgOverlay.classList.remove('active');
+    }
+  }
+
+  function syncBgPanel() {
+    bgTargetTheme = document.documentElement.getAttribute('data-theme');
+    modeDarkBtn.classList.toggle('active', bgTargetTheme === 'dark');
+    modeLightBtn.classList.toggle('active', bgTargetTheme === 'light');
+    const img = bgImages[bgTargetTheme];
+    bgPreview.style.backgroundImage = img ? `url('${img}')` : '';
+    bgPreview.textContent = img ? '' : t('bgPreviewEmptyForTheme');
+  }
+
+  modeDarkBtn.addEventListener('click', () => { bgTargetTheme = 'dark'; syncBgPanel(); });
+  modeLightBtn.addEventListener('click', () => { bgTargetTheme = 'light'; syncBgPanel(); });
+
+  document.getElementById('fBg').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      bgImages[bgTargetTheme] = ev.target.result;
+      syncBgPanel();
+      if (bgTargetTheme === document.documentElement.getAttribute('data-theme')) applyBg();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('clearBg').addEventListener('click', () => {
+    bgImages[bgTargetTheme] = null;
+    syncBgPanel();
+    if (bgTargetTheme === document.documentElement.getAttribute('data-theme')) applyBg();
+  });
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '🏢';
+    applyBg();
+  });
+
+  /* -- Animated star-field ---------------------------------------- */
+  (function () {
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    const COUNT = 200;
+    let stars = [];
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    function seed() {
+      stars = Array.from({ length: COUNT }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.3 + 0.2,
+        speed: Math.random() * 0.005 + 0.001,
+        phase: Math.random() * Math.PI * 2
+      }));
+    }
+    function draw(ts) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        const a = 0.25 + 0.55 * Math.sin(ts * s.speed + s.phase);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(195,195,255,${a.toFixed(3)})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', () => { resize(); seed(); });
+    resize(); seed(); requestAnimationFrame(draw);
+  })();
+
+  /* -- Mouse-parallax shelf tilt ---------------------------------- */
+  (function () {
+    let tx = 0, ty = 0, cx = 0, cy = 0;
+    document.addEventListener('mousemove', e => {
+      const ox = window.innerWidth / 2, oy = window.innerHeight / 2;
+      tx = (e.clientX - ox) / ox * 3;
+      ty = (e.clientY - oy) / oy * -2;
+    });
+    (function animate() {
+      cx += (tx - cx) * 0.07;
+      cy += (ty - cy) * 0.07;
+      shelfEl.style.transform = `perspective(1000px) rotateY(${cx.toFixed(3)}deg) rotateX(${cy.toFixed(3)}deg)`;
+      requestAnimationFrame(animate);
+    })();
+  })();
+
+  /* -- Boot ------------------------------------------------------- */
+  applyLang();
+  books = loadBooks();
+  cleanupLegacyDecoysIfNeeded();
+  renderShelf();
+
+  if (window.OsirisCore && window.parent !== window) {
+    OsirisCore.send(window.parent, OsirisCore.MSG.SHELF_READY, {});
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Das Lehrer Portofolio — OSIRIS Inc.</title>
+<style>
+  :root {
+    --felt: #7cb43e;
+    --felt-light: #8ec24f;
+    --felt-shadow: #4f7a26;
+    --felt-inner: #d9e8bd;
+    --ink: #141414;
+    --card: #fffdf6;
+    --card-line: #e8e0cd;
+    --red: #c1440e;
+    --hue-shift: 0deg;
+    --felt-sat: 1;
+    --felt-bright: 1;
+    --buckle-fill: var(--ink);
+    --serif: ui-serif, Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--felt);
+    font-family: var(--sans);
+  }
+
+  /* ---------- Full-bleed envelope ---------- */
+
+  .envelope {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    perspective: 1800px;
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+
+  .felt-texture {
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+  }
+
+  .body {
+    position: absolute;
+    inset: 0;
+    background-color: var(--felt);
+    filter: hue-rotate(var(--hue-shift)) saturate(var(--felt-sat)) brightness(var(--felt-bright));
+  }
+
+  .flap {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform-origin: top center;
+    transform: rotateX(0deg);
+    transition: transform 0.9s cubic-bezier(.6, -0.28, .35, 1.35);
+    z-index: 3;
+  }
+
+  .flap-face {
+    position: absolute;
+    top: 0;
+    left: -22%;
+    width: 144%;
+    height: 46%;
+    backface-visibility: hidden;
+    /* Rounded "cap" shape: flat top, single continuous elliptical curve
+       along the bottom edge (the two bottom corners are wide enough to
+       meet in the middle). Overshooting the width and re-centering keeps
+       the curve shallow and cap-like on any viewport ratio. */
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    filter: hue-rotate(var(--hue-shift)) saturate(var(--felt-sat)) brightness(var(--felt-bright));
+  }
+  .flap-face.front { background-color: var(--felt-light); }
+  .flap-face.back  { background-color: var(--felt-inner); transform: rotateX(180deg); }
+
+  /* ---------- Buckle, with "Hier klicken" embedded on its plaque ---------- */
+  /* Note: the buckle deliberately sits outside .body/.flap-face, so it never
+     receives the --hue-shift filter used by the color nuancier below. */
+
+  .buckle {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(64px, 8.6vw, 104px);
+    height: clamp(84px, 11.4vw, 138px);
+    z-index: 4;
+    animation: bob 2.4s ease-in-out infinite;
+    transition: opacity 0.35s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  }
+  .buckle:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 3px;
+    border-radius: 50%;
+  }
+
+  .buckle-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+
+  .buckle-shape {
+    fill: var(--buckle-fill);
+    transition: fill 0.3s ease;
+  }
+
+  .buckle-plaque {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 62%;
+    height: 40%;
+    border-radius: 22%;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6%;
+  }
+
+  .buckle-text {
+    font-family: var(--serif);
+    font-weight: 700;
+    color: var(--buckle-text, var(--ink));
+    text-shadow: var(--buckle-text-shadow, 0 -1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08));
+    font-size: clamp(8px, 0.85vw, 11px);
+    letter-spacing: 0.03em;
+    line-height: 1.3;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+    50%      { transform: translate(-50%, -50%) translateY(6px); }
+  }
+
+  .envelope.open .buckle { opacity: 0; pointer-events: none; }
+
+  /* ---------- Brand footer bar ---------- */
+
+  .brand-bar {
+    position: fixed;
+    left: 50%;
+    bottom: clamp(18px, 4vh, 40px);
+    transform: translateX(-50%);
+    z-index: 6;
+    background: var(--ink);
+    color: #f4f0e6;
+    font-family: var(--serif);
+    font-size: clamp(11px, 1.3vw, 15px);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 0.6em 1.4em;
+    border-radius: 2px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    white-space: nowrap;
+    transition: background 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+  }
+  .brand-bar .accent { color: var(--red); }
+
+  /* ---------- Owner-name control ---------- */
+
+  .owner-control {
+    position: fixed;
+    top: clamp(14px, 2.4vh, 24px);
+    right: clamp(14px, 2.4vw, 24px);
+    z-index: 8;
+  }
+
+  .owner-btn {
+    background: rgba(20, 20, 20, 0.35);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 20px;
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 7px 14px;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+  }
+  .owner-btn:hover { background: rgba(20, 20, 20, 0.5); }
+
+  .owner-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--card-line);
+    border-radius: 6px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    width: 220px;
+  }
+  .owner-popover.visible { display: flex; }
+
+  .owner-popover label {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: #7a7364;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .owner-popover input {
+    font-family: var(--serif);
+    font-size: 14px;
+    padding: 6px 8px;
+    border: 1px solid var(--card-line);
+    border-radius: 4px;
+    outline: none;
+  }
+  .owner-popover input:focus { border-color: var(--felt-shadow); }
+
+  .owner-popover button.save {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 0;
+    cursor: pointer;
+  }
+  .owner-popover button.save:hover { background: #2a2a2a; }
+
+  .owner-popover .divider {
+    height: 1px;
+    background: var(--card-line);
+    margin: 2px 0;
+    border: none;
+  }
+
+    .hue-nuancier {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 14px;
+    border-radius: 7px;
+    outline: none;
+    cursor: pointer;
+    background: linear-gradient(to right,
+      #000000 0%, #000000 14%,
+      #808080 14%, #808080 29%,
+      #ff0000 29%, #ffff00 41%, #00ff00 53%, #00ffff 65%, #0000ff 76%, #ff00ff 88%, #ff0000 100%);
+  }
+  .hue-nuancier::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  .hue-nuancier::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  .hue-nuancier::-moz-range-track {
+    height: 14px;
+    border-radius: 7px;
+    background: linear-gradient(to right,
+      #000000 0%, #000000 14%,
+      #808080 14%, #808080 29%,
+      #ff0000 29%, #ffff00 41%, #00ff00 53%, #00ffff 65%, #0000ff 76%, #ff00ff 88%, #ff0000 100%);
+  }
+
+  .swatch-row {
+    display: flex;
+    gap: 8px;
+  }
+  .swatch-btn {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    padding: 7px 4px;
+    border: 1px solid var(--card-line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .swatch-btn.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .metal-row {
+    display: flex;
+    gap: 6px;
+  }
+  .metal-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    padding: 6px 2px;
+    border: 1px solid var(--card-line);
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .metal-btn.active {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  .metal-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  }
+  .metal-swatch.dark   { background: #141414; }
+  .metal-swatch.gold   { background: linear-gradient(135deg, #f8e39c, #caa23b 55%, #8a6a1d); }
+  .metal-swatch.silver { background: linear-gradient(135deg, #f5f6f7, #c3c7cc 55%, #83878c); }
+
+  /* ---------- Letter / dashboard entry modal ---------- */
+
+  .letter {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: min(560px, 82vw);
+    max-height: 76vh;
+    overflow: auto;
+    background: var(--card);
+    border: 1px solid var(--card-line);
+    border-radius: 4px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    padding: clamp(22px, 3.6vw, 40px);
+    transform: translate(-50%, -58%) scale(0.92);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    transition: transform 0.6s cubic-bezier(.2, .8, .2, 1) 0.1s, opacity 0.5s ease 0.1s, z-index 0s linear 0.5s;
+  }
+
+  .letter-eyebrow {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--felt-shadow);
+    margin: 0 0 0.7em;
+  }
+
+  .letter h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(21px, 3vw, 30px);
+    line-height: 1.2;
+    margin: 0 0 0.5em;
+    color: var(--ink);
+  }
+
+  .letter p {
+    font-family: var(--serif);
+    font-size: clamp(14px, 1.4vw, 16px);
+    line-height: 1.55;
+    color: #3a3a3a;
+    margin: 0 0 1.2em;
+    max-width: 46ch;
+  }
+
+  .letter .cta {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    background: var(--felt-shadow);
+    color: #fff;
+    padding: 0.75em 1.4em;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  .letter .cta:hover { background: #3d5f1e; }
+
+  .close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--card-line);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .close:hover { background: #f4f0e6; }
+
+  /* ---------- Open state ---------- */
+
+  .envelope.open .flap { transform: rotateX(-160deg); }
+
+  .letter.visible {
+    transform: translate(-50%, -58%) scale(1) rotate(-1deg);
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 9;
+    transition: transform 0.6s cubic-bezier(.2, .8, .2, 1) 0.32s, opacity 0.4s ease 0.32s, z-index 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flap, .letter, .buckle { transition-duration: 0.01ms !important; animation: none !important; }
+  }
+
+  /* ---------- Dashboard overlay (shell loaded inline) ---------- */
+
+  .dashboard-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: var(--card);
+    opacity: 0;
+    transform: scale(0.96);
+    pointer-events: none;
+    transition: transform 0.45s cubic-bezier(.2, .8, .2, 1), opacity 0.35s ease;
+  }
+
+  .dashboard-overlay.visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  .dashboard-overlay iframe {
+    display: block;
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-overlay { transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="envelope" id="envelope">
+    <div class="body felt-texture"></div>
+
+    <div class="flap felt-texture">
+      <div class="flap-face front felt-texture"></div>
+      <div class="flap-face back"></div>
+    </div>
+
+    <div class="buckle" id="buckle" role="button" tabindex="0" aria-expanded="false" aria-label="Portofolio öffnen">
+      <svg class="buckle-svg" viewBox="0 0 200 230" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="buckleGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f8e39c"/>
+            <stop offset="45%" stop-color="#caa23b"/>
+            <stop offset="100%" stop-color="#8a6a1d"/>
+          </linearGradient>
+          <linearGradient id="buckleSilver" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f5f6f7"/>
+            <stop offset="45%" stop-color="#c3c7cc"/>
+            <stop offset="100%" stop-color="#83878c"/>
+          </linearGradient>
+        </defs>
+        <path class="buckle-shape" d="M 20 0 
+           L 180 0 
+           L 180 160 
+           A 80 80 0 0 1 20 160 
+           Z" />
+      </svg>
+      <div class="buckle-plaque">
+        <span class="buckle-text">HIER<br>KLICKEN</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="brand-bar">DAS LEHRER PORTOFOLIO &nbsp;–&nbsp; OSIRIS Inc<span class="accent">.</span></div>
+
+  <div class="owner-control">
+    <button class="owner-btn" id="ownerBtn" type="button">✎ Name</button>
+    <div class="owner-popover" id="ownerPopover">
+      <label for="ownerInput">Ihr Name</label>
+      <input type="text" id="ownerInput" placeholder="z. B. Frau Weber" maxlength="40" autocomplete="off">
+      <button type="button" class="save" id="ownerSave">Speichern</button>
+
+      <hr class="divider">
+
+      <label for="hueSlider">Farbe der Hülle</label>
+      <input type="range" id="hueSlider" class="hue-nuancier" min="0" max="420" step="1" value="120">
+      <div class="swatch-row">
+        <button type="button" class="swatch-btn" id="darkToggle">Dunkel</button>
+      </div>
+
+      <hr class="divider">
+
+      <label>Schnalle</label>
+      <div class="metal-row">
+        <button type="button" class="metal-btn active" id="metalDark" data-metal="dark">
+          <span class="metal-swatch dark"></span>Dunkel
+        </button>
+        <button type="button" class="metal-btn" id="metalGold" data-metal="gold">
+          <span class="metal-swatch gold"></span>Gold
+        </button>
+        <button type="button" class="metal-btn" id="metalSilver" data-metal="silver">
+          <span class="metal-swatch silver"></span>Silber
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="letter" id="letter">
+    <button class="close" id="closeBtn" aria-label="Schließen">✕</button>
+    <p class="letter-eyebrow">Enclosed</p>
+    <h1 id="letterMessage">Willkommen zurück!</h1>
+    <p>Ihr Lehrer-Dashboard mit Klassen, Fächern und Bewertungen wartet auf Sie.</p>
+    <a class="cta" id="dashboardLink" href="portfolio-subpage.html">Zum Dashboard →</a>
+  </div>
+
+  <div class="dashboard-overlay" id="dashboardOverlay">
+    <iframe id="dashboardFrame" title="Lehrer Dashboard" data-src="portfolio-subpage.html"></iframe>
+  </div>
+
+<script>
+  const NAME_KEY = 'osirisPortfolioOwnerName';
+  const HUE_KEY = 'osirisPortfolioHue';
+  const DARK_KEY = 'osirisPortfolioDark';
+  const METAL_KEY = 'osirisPortfolioMetal';
+  const DEFAULT_NAME = 'Lehrer/in';
+
+  // Personalized, randomized welcome messages. {name} is replaced with the
+  // stored owner name (or DEFAULT_NAME if none has been set yet).
+  const MESSAGES = [
+    'Willkommen zurück, {name}!',
+    'Schön, Sie wiederzusehen, {name}.',
+    'Ihr Klassenzimmer wartet, {name}.',
+    'Bereit für den Unterricht, {name}?',
+    'Ein neuer Tag, {name} — viel Erfolg!',
+    'Die Bewertungen warten schon, {name}.',
+    'Guten Tag, {name}. Alles ist bereit.',
+    '{name}, Ihr Dashboard ist startklar.'
+  ];
+
+  const envelope = document.getElementById('envelope');
+  const buckle = document.getElementById('buckle');
+  const letter = document.getElementById('letter');
+  const letterMessage = document.getElementById('letterMessage');
+  const closeBtn = document.getElementById('closeBtn');
+  const ownerBtn = document.getElementById('ownerBtn');
+  const ownerPopover = document.getElementById('ownerPopover');
+  const ownerInput = document.getElementById('ownerInput');
+  const ownerSave = document.getElementById('ownerSave');
+  const hueSlider = document.getElementById('hueSlider');
+  const darkToggle = document.getElementById('darkToggle');
+  const metalBtns = document.querySelectorAll('.metal-btn');
+  const brandBar = document.querySelector('.brand-bar');
+
+  let lastMessageIndex = -1;
+
+  function getOwnerName() {
+    return localStorage.getItem(NAME_KEY) || DEFAULT_NAME;
+  }
+
+  function pickMessage() {
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * MESSAGES.length);
+    } while (idx === lastMessageIndex && MESSAGES.length > 1);
+    lastMessageIndex = idx;
+    return MESSAGES[idx].replace('{name}', getOwnerName());
+  }
+
+  function isOpen() {
+    return envelope.classList.contains('open');
+  }
+
+  function setOpen(open) {
+    if (open) {
+      letterMessage.textContent = pickMessage();
+    }
+    envelope.classList.toggle('open', open);
+    buckle.setAttribute('aria-expanded', String(open));
+    buckle.setAttribute('aria-label', open ? 'Portofolio schließen' : 'Portofolio öffnen');
+    buckle.setAttribute('tabindex', open ? '-1' : '0');
+    letter.classList.toggle('visible', open);
+  }
+
+  // Safeguard: the envelope only opens when the buckle itself is hit —
+  // clicking the felt body/flap elsewhere does nothing.
+  buckle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(!isOpen());
+  });
+
+  buckle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setOpen(!isOpen());
+    }
+  });
+
+  closeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(false);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (isOpen()) setOpen(false);
+      ownerPopover.classList.remove('visible');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (isOpen() && !letter.contains(e.target) && !envelope.contains(e.target)) {
+      setOpen(false);
+    }
+  });
+
+  // --- Owner name editor ---
+  ownerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    ownerInput.value = localStorage.getItem(NAME_KEY) || '';
+    ownerPopover.classList.toggle('visible');
+    if (ownerPopover.classList.contains('visible')) ownerInput.focus();
+  });
+
+  ownerPopover.addEventListener('click', (e) => e.stopPropagation());
+
+  ownerSave.addEventListener('click', () => {
+    const val = ownerInput.value.trim();
+    if (val) {
+      localStorage.setItem(NAME_KEY, val);
+    } else {
+      localStorage.removeItem(NAME_KEY);
+    }
+    ownerPopover.classList.remove('visible');
+  });
+
+  ownerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') ownerSave.click();
+  });
+
+  // --- Color nuancier (Hülle only — the buckle never reads --hue-shift) ---
+  // The slider itself is the single source of color: 0–60 is black, 60–120
+  // is grey, 120–420 sweeps the full 360° hue wheel. "Dunkel" is a plain
+  // darkening multiplier that stacks on top of whichever of those is picked,
+  // so it works the same way whether the current color is black, grey, or
+  // any hue — no separate grey-only code path needed.
+  let darkOn = false;
+
+  function colorFromSlider(value) {
+    const v = Number(value);
+    if (v <= 60)  return { hue: 0, sat: 1, bright: 0.15 }; // black
+    if (v <= 120) return { hue: 0, sat: 0, bright: 1 };    // grey
+    return { hue: (v - 120) / 300 * 360, sat: 1, bright: 1 }; // hue wheel
+  }
+
+  function applyColor() {
+    const { hue, sat, bright } = colorFromSlider(hueSlider.value);
+    document.documentElement.style.setProperty('--hue-shift', hue + 'deg');
+    document.documentElement.style.setProperty('--felt-sat', sat);
+    document.documentElement.style.setProperty('--felt-bright', bright * (darkOn ? 0.55 : 1));
+  }
+
+  const savedHue = localStorage.getItem(HUE_KEY);
+  if (savedHue !== null) hueSlider.value = savedHue;
+  darkOn = localStorage.getItem(DARK_KEY) === '1';
+  darkToggle.classList.toggle('active', darkOn);
+  applyColor();
+
+  hueSlider.addEventListener('input', () => {
+    localStorage.setItem(HUE_KEY, hueSlider.value);
+    applyColor();
+  });
+
+  darkToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    darkOn = !darkOn;
+    localStorage.setItem(DARK_KEY, darkOn ? '1' : '0');
+    darkToggle.classList.toggle('active', darkOn);
+    applyColor();
+  });
+
+  // --- Buckle metal toggle: dark / gold / silver ---
+  // The brand bar and the buckle's own "HIER KLICKEN" plaque are restyled
+  // to match, as if both were stamped from the same metal as the buckle:
+  // a matching surface plus an engraved (debossed) text-shadow — dark
+  // shadow above the glyphs, light rim below — rather than flat plates
+  // with printed-on text.
+  const BUCKLE_FILLS = {
+    dark: 'var(--ink)',
+    gold: 'url(#buckleGold)',
+    silver: 'url(#buckleSilver)'
+  };
+
+  const BRAND_BAR_METAL = {
+    dark: {
+      bg: 'var(--ink)',
+      text: '#f4f0e6',
+      shadow: '0 -1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08)'
+    },
+    gold: {
+      bg: 'linear-gradient(135deg, #f8e39c, #caa23b 55%, #8a6a1d)',
+      text: '#3d2c08',
+      shadow: '0 -1px 0 rgba(74, 51, 10, 0.75), 0 1px 0 rgba(255, 244, 210, 0.65)'
+    },
+    silver: {
+      bg: 'linear-gradient(135deg, #f5f6f7, #c3c7cc 55%, #83878c)',
+      text: '#33363a',
+      shadow: '0 -1px 0 rgba(35, 37, 39, 0.7), 0 1px 0 rgba(255, 255, 255, 0.75)'
+    }
+  };
+
+  function applyMetal(metal) {
+    document.documentElement.style.setProperty('--buckle-fill', BUCKLE_FILLS[metal] || BUCKLE_FILLS.dark);
+    metalBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.metal === metal));
+
+    const bar = BRAND_BAR_METAL[metal] || BRAND_BAR_METAL.dark;
+    brandBar.style.background = bar.bg;
+    brandBar.style.color = bar.text;
+    brandBar.style.textShadow = bar.shadow;
+
+    document.documentElement.style.setProperty('--buckle-text', bar.text);
+    document.documentElement.style.setProperty('--buckle-text-shadow', bar.shadow);
+  }
+
+  applyMetal(localStorage.getItem(METAL_KEY) || 'dark');
+
+  metalBtns.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const metal = btn.dataset.metal;
+      localStorage.setItem(METAL_KEY, metal);
+      applyMetal(metal);
+    });
+  });
+  // ---------- Dashboard overlay ----------
+
+  const dashboardOverlay = document.getElementById('dashboardOverlay');
+  const dashboardFrame = document.getElementById('dashboardFrame');
+  const dashboardLinkEl = document.getElementById('dashboardLink');
+
+  function openDashboard(instant = false) {
+    if (instant) {
+      dashboardOverlay.style.transition = 'none';
+      dashboardOverlay.style.transform = 'scale(1)';
+    }
+    if (!dashboardFrame.src) {
+      dashboardFrame.src = dashboardFrame.dataset.src;
+    }
+    dashboardOverlay.classList.add('visible');
+    localStorage.setItem('osirisDashboardOpen', 'true');
+    
+    if (instant) {
+      // Force reflow and restore transition
+      void dashboardOverlay.offsetWidth;
+      dashboardOverlay.style.transition = '';
+      dashboardOverlay.style.transform = '';
+    }
+  }
+
+  function closeDashboard() {
+    dashboardOverlay.classList.remove('visible');
+    setOpen(false);
+    localStorage.setItem('osirisDashboardOpen', 'false');
+  }
+
+  dashboardLinkEl.addEventListener('click', function (e) {
+    e.preventDefault();
+    openDashboard();
+  });
+
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'exitToGate') {
+      closeDashboard();
+    }
+  });
+
+  // Check if dashboard was open before reload/reboot
+  if (localStorage.getItem('osirisDashboardOpen') === 'true') {
+    openDashboard(true);
+  }
+</script>
+
+</body>
+</html>

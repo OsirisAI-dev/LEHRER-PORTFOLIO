@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Offline Wiki</title>
+    <script src="/lib/htmldocx/v1/html-docx.js"></script>
+    <script>
+
+
+        (function () {
+            try {
+                var prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+                if (prefs.font) {
+                    document.documentElement.style.setProperty('--wiki-font-family', prefs.font);
+                }
+            } catch (e) {}
+        })();
+        window.addEventListener('message', function (e) {
+            if (e.data && e.data.type === 'SET_FONT') {
+                var font = (e.data.payload && e.data.payload.font) || '';
+                if (font) document.documentElement.style.setProperty('--wiki-font-family', font);
+            }
+            if (e.data && e.data.type === 'SET_LANG') {
+                var lang = (e.data.payload && e.data.payload.lang) || '';
+                if (lang && typeof window.setWikiLang === 'function') {
+                    window.setWikiLang(lang);
+                }
+            }
+        });
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --primary: #2c3e50;
+            --accent: #007bff;
+            --text: #333333;
+            --border: #dee2e6;
+            --highlight: #ffeeba;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1a1a; 
+            --surface: #2d2d2d; 
+            --text: #f0f0f0;
+            --border: #444444; 
+            --primary: #81c784; 
+            --accent: #66bb6a;
+            --highlight: #444444;
+        }
+
+        html, body {
+            overflow-x: hidden; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0 20px 116px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg);
+            border-bottom: 2px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            padding: 8px 20px;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .title-group { display: flex; flex-direction: column; }
+        .app-title-main { font-family: var(--wiki-font-family, 'Brush Script MT', cursive); font-size: 1.15em; line-height: 1; margin: 0; color: var(--accent); transition: color 0.3s ease, font-size 0.2s ease; }
+        .app-title-sub { font-family: var(--wiki-font-family, 'Brush Script MT', cursive); font-size: 0.62em; margin: -1px 0 0 22px; color: var(--text); opacity: 0.7; font-style: italic; }
+
+        .toolbar { display: flex; align-items: center; gap: 8px; position: relative; flex-wrap: wrap; }
+
+        /* Hub-style toolbar buttons */
+        .hub-btn {
+            padding: 6px 12px; font-size: 0.8rem; font-weight: bold;
+            font-family: inherit; cursor: pointer; border-radius: 5px;
+            border: 1px solid var(--border); background: var(--surface); color: var(--text);
+            transition: 0.2s; display: flex; align-items: center; gap: 6px;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .hub-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .hub-btn.accent { background: var(--accent); color: white; border-color: var(--accent); }
+        .hub-btn.accent:hover { opacity: 0.88; color: white; }
+
+        /* Hidden rather than deleted: wiki-app.js (external, not available
+           to verify) may still reference #fontBtnLabel/#langBtnLabel by id
+           to update their text — removing the elements outright risks a
+           null-reference crash there, the same class of bug already found
+           and fixed in AI_TEXT_GEN_1_6.html's #lang-toggle. Hiding achieves
+           the same "remove the option, the Hub already has it" outcome
+           without that risk. */
+        #fontBtn, #langBtn { display: none; }
+
+        #links-pop {
+            display: none; position: absolute; top: 45px; right: 0; background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; width: 250px; max-width: calc(100vw - 40px);
+        }
+        /* Anchored to a small position:relative wrapper around just
+           #links-toggle-btn (see markup below) rather than to .toolbar
+           itself. It used to be a direct sibling of the button inside
+           .toolbar, so "top: 45px; right: 0" was really measured from
+           the whole toolbar's top-right corner — correct only as long as
+           the toolbar stayed a single row. Now that .toolbar wraps
+           (flex-wrap, added when the toolbar-overflow issue was fixed),
+           the links button can end up on a second row while that offset
+           stayed fixed to the first row, so the popup could open
+           misaligned from the button that opened it, or overlap the
+           second row's buttons. Anchoring to the button's own wrapper
+           keeps it correctly positioned regardless of which row the
+           button ends up wrapped onto. */
+        #links-pop.open { display: block; }
+        #links-pop input { padding: 6px; font-size: 0.85rem; margin-top: 5px; }
+
+        #pop-btn {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease;
+        }
+        #pop-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        #pop-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        #import-submenu { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; max-width: 800px; background: var(--surface); padding: 0; max-height: 0; 
+            overflow: hidden; transition: all 0.3s ease-out; border-radius: 10px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 2000; opacity: 0; visibility: hidden;
+        }
+        #import-submenu.open { 
+            padding: 20px; max-height: 90vh; overflow-y: auto; opacity: 1; visibility: visible; 
+            border: 1px solid var(--border);
+        }
+
+        .container { 
+            margin-top: 20px;
+            width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 20px; 
+        }
+        
+        .panel { background: var(--surface); padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+
+        #results-container {
+            margin-top: 25px;
+            max-height: 500px; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            resize: vertical; 
+            padding: 5px 15px 5px 5px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+        }
+        
+        #results-container::-webkit-scrollbar { width: 8px; }
+        #results-container::-webkit-scrollbar-track { background: transparent; }
+        #results-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        label { font-weight: bold; font-size: 0.9rem; margin-top: 10px; display: block; color: var(--primary); }
+        input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border); border-radius: 5px; box-sizing: border-box; font-family: inherit; background: var(--surface); color: var(--text); }
+        textarea { min-height: 150px; }
+
+        .suggested-kws { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 0.85rem; }
+        .kw-sugg { background: #e9ecef; padding: 4px 10px; border-radius: 15px; cursor: pointer; color: var(--primary); border: 1px solid transparent; }
+        .kw-sugg:hover { border-color: var(--accent); }
+
+        .result-card { position: relative; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: 0.2s; background: var(--surface); }
+        .result-card:hover { border-color: var(--accent); }
+        .result-meta { font-size: 0.85rem; color: #6c757d; margin-bottom: 10px; }
+        
+        .expanded-content { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); line-height: 1.6; }
+        .result-card.expanded .expanded-content { display: block; }
+        .result-card.expanded .result-preview { display: none; }
+
+        .floating-options { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .action-btn { background: var(--surface); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        
+        .word-btn { background: #007bff; color: #ffffff; border: 1px solid #007bff; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .word-btn:hover { background: #0056b3; border-color: #0056b3; }
+        
+        .export-menu {
+            display: none; position: absolute; bottom: 100%; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 80px; text-align: left; overflow: hidden; margin-bottom: 5px;
+        }
+        .export-menu div {
+            padding: 8px 12px; cursor: pointer; color: var(--text); font-size: 0.85rem;
+        }
+        .export-menu div:hover {
+            background: var(--bg); color: var(--accent);
+        }
+
+        .pill-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .pill { background: #e9ecef; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+        mark { background-color: var(--highlight); color: #000; }
+
+        /* ADDED: IDB Progress bar styles */
+        #idb-progress-container {
+            display: none;
+            width: 100%;
+            background-color: var(--border);
+            border-radius: 5px;
+            margin-top: 15px;
+            overflow: hidden;
+            height: 8px;
+        }
+        #idb-progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent);
+            transition: width 0.1s ease;
+        }
+        #idb-status-text {
+            display: none;
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-top: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        @media (max-width: 768px) {
+            .top-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .toolbar {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .toolbar button {
+                flex: 1 1 auto;
+            }
+            .app-title-main { font-size: 1.05em; }
+            #links-pop {
+                position: fixed;
+                top: auto;
+                bottom: 10%;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+                max-width: 350px;
+                z-index: 2000;
+            }
+            .container {
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="top-header">
+    <div class="title-group">
+        <h2 class="app-title-main">MEIN OFFLINE WIKI</h2>
+        <h3 class="app-title-sub">By Osiris Inc.</h3>
+    </div>
+    <div class="toolbar">
+        <button class="hub-btn" id="fontBtn" onclick="randomFont()">🔤 <span id="fontBtnLabel">Aa</span></button>
+        <button class="hub-btn accent" id="import-toggle-btn" onclick="toggleImport(event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            <span id="importBtnLabel">IMPORTER TEXTE</span>
+        </button>
+        <button class="hub-btn" id="theme-toggle"><span id="themeBtnLabel">🎨 Thème</span></button>
+        <span style="position: relative; display: inline-flex;">
+        <button class="hub-btn" id="links-toggle-btn" onclick="toggleLinksPop(event)"><span id="linksBtnLabel">🔗 Liens</span></button>
+        <div id="links-pop">
+            <h4 id="pop-title" style="margin:0 0 10px 0; color:var(--accent);">Ajouter lien</h4>
+            <input type="text" id="link-name" placeholder="Nom">
+            <input type="url" id="link-url" placeholder="https://..." style="margin-top:5px;">
+            <button class="hub-btn accent" id="pop-btn" onclick="addLink()">Ajouter</button>
+            <div id="pop-links-list" style="margin-top:10px; font-size:0.8rem; max-height:100px; overflow-y:auto; border-top:1px solid var(--border); padding-top:5px;"></div>
+        </div>
+        </span>
+        <button class="hub-btn" id="langBtn" onclick="toggleLang()">🌍 <span id="langBtnLabel">FR</span></button>
+    </div>
+</header>
+
+<div id="import-submenu">
+    <h2 style="margin-top:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+        Importer & Indexer
+    </h2>
+    <label>Contenu du texte</label>
+    <textarea id="import-text" placeholder="Collez votre texte ici..."></textarea>
+    
+    <label>Lien source</label>
+    <input type="text" id="import-url" placeholder="https://... ou Titre - Auteur (p. X)">
+    
+    <button id="save-btn" onclick="saveEntry()" style="margin-top:20px; background: var(--accent); color:white; border:none; padding:12px; width:100%; border-radius:5px; font-weight:bold; cursor:pointer;">Enregistrer</button>
+
+    <div id="idb-progress-container">
+        <div id="idb-progress-bar"></div>
+    </div>
+    <div id="idb-status-text">Exporting to database.db...</div>
+
+    <div style="margin-top:15px; display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="delete-mode-cb" style="width:auto; margin:0; cursor:pointer;" onchange="renderResults()">
+        <label for="delete-mode-cb" style="margin:0; cursor:pointer;" id="delete-mode-label">Activer le mode suppression</label>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:15px; border-top: 1px solid var(--border); padding-top: 15px;">
+        <button id="btn-export-json" onclick="exportDB()" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border); padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 19H5V8h4V6H5c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-3h-2v3zM14 4v2h3.59l-9.83 9.83 1.41 1.41L19 7.41V11h2V4h-7z"/>
+            </svg>
+            <span>Export JSON</span>
+        </button>
+        
+        <button id="btn-import-json" onclick="document.getElementById('import-file').click()" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border); padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            <span>Import JSON</span>
+        </button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importDB(event)">
+        
+        <button id="btn-reset-db" onclick="resetDB()" style="flex:1; background:#dc3545; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+            </svg>
+            <span>Reset DB</span>
+        </button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 id="search-title" style="margin:0; border:none; display:flex; align-items:center;">
+                <svg width="30px" height="30px" style="margin-right: 8px;" alt="Search" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="10" cy="10" r="6" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.5 14.5L19 19" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>Recherche Wiki
+            </h2>
+        </div>
+        
+        <input type="text" id="search-input" placeholder="Rechercher des mots-clés..." oninput="renderResults()">
+        
+        <div class="suggested-kws" id="recent-keywords"></div>
+
+        <div id="results-container"></div>
+    </div>
+</div>
+
+<footer class="no-print" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; background-color: var(--bg); width: 100%; padding: 10px 20px; border-top: 1px solid var(--border); text-align: center; font-size: 0.8em; opacity: 0.9;">
+    <div style="max-width: 1200px; margin: 0 auto 8px; overflow: hidden; white-space: nowrap; background: var(--surface); padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border);">
+        <div id="footer-ticker" style="display: inline-block; animation: ticker 25s linear infinite;">
+            <span>Ajoutez vos liens favoris pour les voir défiler ici !</span>
+        </div>
+    </div>
+    <p style="margin: 0;">© 2026 - <strong>Das Lehrer-Portfolio</strong> | Osiris Inc.</p>
+</footer>
+
+<script src="/js/apps/wiki-app.js"></script>
+</body>
+</html>

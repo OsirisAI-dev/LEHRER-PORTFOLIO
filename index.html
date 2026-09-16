@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="0; url=pages/home.html">
+  <title>OSIRIS Lehrer-Portfolio</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      background: #1c1c1e;
+      color: #f2f2f7;
+      font-family: 'Inter', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      margin: 0;
+    }
+    p { opacity: .5; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <p>Weiterleitung…</p>
+  <script>
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .catch(console.error);
+    }
+
+    window.location.replace('pages/home.html');
+  </script>
+</body>
+</html>

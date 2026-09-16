@@ -1,0 +1,3602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Tableau de Bord Scolaire</title>
+    <style>
+        :root {
+            --primary-blue: #1a1a1a;
+            --accent: #1a1a1a;
+            --accent-rgb: 26, 26, 26;
+            --primary-hover: #d4af37;
+            --background-grey: #f4f7f6;
+            --white: #ffffff;
+            --text-color: #333333;
+            --sub-nav-bg: #e2e8f0;
+            --school-bar-bg: #edf1f7;
+            --light-grey: #d1d5db;
+            --border-grey: #cbd5e1;
+            --danger-red: #ef4444;
+            --white-fixed: #ffffff;
+        }
+
+        body.dark-mode {
+            --accent: #ffffff;
+            --accent-rgb: 255, 255, 255;
+            --background-grey: #12161c;
+            --white: #1e2530;
+            --text-color: #e5e9f0;
+            --sub-nav-bg: #1a212b;
+            --school-bar-bg: #171d26;
+            --light-grey: #2c3542;
+            --border-grey: #333d4d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-grey);
+            color: var(--text-color);
+            padding-bottom: 40px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        body.font-serif, body.font-serif input, body.font-serif select, body.font-serif button {
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+        body.font-mono, body.font-mono input, body.font-mono select, body.font-mono button {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body.dark-mode input, body.dark-mode select {
+            background-color: var(--white);
+            color: var(--text-color);
+            border-color: var(--border-grey);
+        }
+
+        body.dark-mode .editable-input {
+            background-color: transparent;
+            border-color: transparent;
+            color: #ffffff;
+            font-weight: 800;
+            -webkit-text-stroke: 0 transparent; 
+            text-shadow: none;
+        }
+
+        body.dark-mode .school-pill.active .editable-input,
+        body.dark-mode .class-chip.active .editable-input {
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        body.dark-mode .editable-input:not([readonly]):hover,
+        body.dark-mode .editable-input:not([readonly]):focus {
+            border-color: var(--primary-hover);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        body.dark-mode .book-table th,
+        body.dark-mode .eval-table th {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .modal-close-btn {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .modal-close-btn:hover {
+            color: var(--text-color);
+        }
+
+        .icon-ctrl-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 10px;
+        }
+        .icon-ctrl-btn svg { display: block; }
+
+        body.custom-bg-active {
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        body.custom-bg-active .navbar { background-color: rgba(26,26,26,0.92); }
+        body.custom-bg-active .school-bar,
+        body.custom-bg-active .sub-navbar { background-color: rgba(226,232,240,0.92); }
+        body.custom-bg-active .subject-card,
+        body.custom-bg-active .evaluations-section,
+        body.custom-bg-active .list-card,
+        body.custom-bg-active .modal-content { background-color: rgba(255,255,255,0.94); }
+
+        /* --- Main Navbar --- */
+        .navbar {
+            background-color: var(--primary-blue);
+            color: var(--white-fixed);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .navbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--white-fixed);
+            color: var(--white-fixed);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .ctrl-btn:hover {
+            background: var(--white-fixed);
+            color: var(--primary-blue);
+        }
+
+        /* --- School Subheader --- */
+        .school-bar {
+            background-color: var(--school-bar-bg);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-grey);
+            flex-wrap: wrap;
+        }
+
+        .school-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--white);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-grey);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .school-pill.active {
+            background-color: #d4af37;
+            border-color: #d4af37;
+        }
+
+        .school-pill.active .editable-input {
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        .school-logo-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #475569;
+            cursor: pointer;
+            overflow: hidden;
+            border: 1px solid #94a3b8;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .school-logo-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .editable-input {
+            font-family: inherit;
+            font-size: 0.95rem;
+            border: 1px dashed transparent;
+            background: transparent;
+            outline: none;
+            color: inherit;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .editable-input:hover, .editable-input:focus {
+            border-color: var(--primary-blue);
+            background: rgba(255,255,255,0.8);
+        }
+
+        .editable-input[readonly] {
+            cursor: pointer;
+        }
+
+        .editable-input[readonly]:hover, .editable-input[readonly]:focus {
+            border-color: transparent;
+            background: transparent;
+        }
+
+        .ctrl-btn.edit-active {
+            background: var(--white-fixed);
+            color: var(--primary-blue);
+        }
+
+        .section-locked {
+            opacity: 0.4;
+            filter: grayscale(70%);
+            pointer-events: none;
+            user-select: none;
+            transition: opacity 0.2s, filter 0.2s;
+        }
+
+        /* --- Classes Sub-navbar --- */
+        .sub-navbar {
+            background-color: var(--sub-nav-bg);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-grey);
+            flex-wrap: wrap;
+        }
+
+        .classes-label {
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .class-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--white);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-grey);
+            cursor: pointer;
+        }
+
+        .class-chip.active {
+            background-color: #d4af37;
+            border-color: #d4af37;
+            color: #1a1a1a;
+        }
+
+        .class-chip.active .editable-input {
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        .add-btn-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: var(--primary-blue);
+            color: var(--white-fixed);
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+            flex-shrink: 0;
+        }
+
+        .add-btn-circle:hover {
+            transform: scale(1.1);
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: var(--danger-red);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            line-height: 1;
+            transition: background 0.15s;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+        }
+
+        /* --- Main Content (fluid on wide screens: fills the viewport like the navbar/school-bar instead of sitting in a capped centered column) --- */
+        .main-container {
+            padding: 20px clamp(20px, 4vw, 60px);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .class-header {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* --- Subject Cards --- */
+        .subject-card {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+            margin-bottom: 25px;
+            overflow: hidden;
+            border: 1px solid var(--border-grey);
+            width: 100%;
+        }
+
+        .subject-header {
+            background-color: var(--primary-blue);
+            color: var(--white-fixed);
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-header .editable-input {
+            color: var(--white-fixed);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .subject-body {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        /* --- Book Table --- */
+        .book-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        .book-table th {
+            text-align: center;
+            padding: 10px;
+            border-bottom: 2px solid var(--light-grey);
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .book-table th:first-child,
+        .book-table td:first-child {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .book-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--light-grey);
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .book-title-input {
+            width: 100%;
+            max-width: 220px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .cover-upload-box {
+            width: 60px;
+            height: 75px;
+            background: #f1f5f9;
+            border: 1px dashed var(--border-grey);
+            border-radius: 5px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        .cover-upload-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cover-upload-box .cover-manual-btn {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            font-size: 10px;
+            line-height: 18px;
+            cursor: pointer;
+        }
+
+        .cover-upload-box .cover-busy-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            text-align: center;
+            padding: 4px;
+        }
+
+        .num-input-ctrl {
+            width: 50px;
+            padding: 4px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .checkdots {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 150px;
+            margin: 0 auto;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            background: transparent;
+            padding: 0;
+            transition: all 0.15s ease;
+            box-sizing: border-box;
+        }
+
+        .dot.filled {
+            background-color: var(--accent);
+        }
+
+        .progress-bar-container {
+            width: 100px;
+            height: 12px;
+            background-color: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 0 auto 4px auto;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.25s ease-in-out;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .action-link {
+            text-decoration: none;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--accent);
+        }
+
+        .add-book-row-btn {
+            background: none;
+            border: 1px dashed var(--accent);
+            color: var(--accent);
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .add-book-row-btn:hover {
+            background: rgba(var(--accent-rgb), 0.08);
+        }
+
+        .add-subject-btn {
+            background: var(--primary-blue);
+            color: var(--white-fixed);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        /* --- Evaluations Section --- */
+        .evaluations-section {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-grey);
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .evaluations-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .eval-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        .eval-table th {
+            text-align: center;
+            padding: 10px;
+            border-bottom: 2px solid var(--light-grey);
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .eval-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--light-grey);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .eval-select, .eval-date {
+            padding: 6px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .stat-preview-box {
+            width: 52px;
+            height: 38px;
+            background: #f8fafc;
+            border: 1px solid var(--border-grey);
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 4px;
+        }
+
+        .stat-preview-box:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 6px rgba(var(--accent-rgb), 0.15);
+            transform: scale(1.05);
+        }
+
+        /* --- Lists Section --- */
+        .lists-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .list-card {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 15px;
+            flex: 1;
+            min-width: 260px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-grey);
+            text-align: center;
+        }
+
+        .list-card input {
+            width: 90%;
+            padding: 6px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .toggle-label {
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .toggle-label:hover {
+            color: var(--accent);
+        }
+
+        /* --- Action Buttons Row --- */
+        .action-buttons-row {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pdf-btn {
+            background-color: #1e293b;
+            color: var(--white-fixed);
+            border: 2px solid #1e293b;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: background 0.2s;
+            flex: 1 1 auto;
+        }
+
+        .pdf-btn:hover {
+            background-color: #0f172a;
+        }
+
+        .action-btn {
+            background-color: var(--white);
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: background 0.2s, color 0.2s;
+            flex: 1 1 auto;
+        }
+
+        .action-btn:hover {
+            background-color: #1e293b;
+            color: var(--white-fixed);
+        }
+
+        .reset-btn-container {
+            margin-top: 12px;
+        }
+
+        .reset-btn {
+            width: 100%;
+            background-color: var(--white);
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .reset-btn:hover {
+            background-color: var(--danger-red);
+            border-color: var(--danger-red);
+            color: var(--white-fixed);
+        }
+
+        /* --- Modal Overlay --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-grey);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #64748b;
+            line-height: 1;
+        }
+
+        .modal-close-btn:hover {
+            color: #0f172a;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- PRINT STYLES (PDF REPORT PER HIGHLIGHTED SCHOOL & CLASS) --- */
+        .print-report-header {
+            display: none;
+        }
+
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .navbar, .school-bar, .sub-navbar, .navbar-controls, .add-btn-circle, 
+            .add-book-row-btn, .add-subject-btn, .action-buttons-row, 
+            .reset-btn-container, .modal-overlay, .delete-btn, .num-input-ctrl,
+            .ctrl-btn {
+                display: none !important;
+            }
+
+            /* Hide "Dokumentation" header / "Bibliothek ansehen" link column (book table) */
+            .book-table th:nth-child(6),
+            .book-table td:nth-child(6) {
+                display: none !important;
+            }
+
+            /* Hide "Statistiken", "Grafik" and "Details" columns (evaluations table) */
+            .eval-table th:nth-child(3),
+            .eval-table td:nth-child(3),
+            .eval-table th:nth-child(4),
+            .eval-table td:nth-child(4),
+            .eval-table th:nth-child(5),
+            .eval-table td:nth-child(5) {
+                display: none !important;
+            }
+
+            /* Hide "Externer Link zur Schülerliste" card */
+            #extListCard {
+                display: none !important;
+            }
+
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+            }
+
+            .main-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Dedicated Print Header for Active School & Class */
+            .print-report-header {
+                display: block !important;
+                margin-bottom: 25px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #1a1a1a;
+            }
+
+            .print-header-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .print-school-info {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .print-school-logo {
+                width: 52px;
+                height: 52px;
+                border-radius: 50%;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #cbd5e1;
+                font-size: 1.6rem;
+                background: #f8fafc;
+            }
+
+            .print-school-logo img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .print-school-title {
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: #1a1a1a;
+                margin: 0;
+                text-transform: uppercase;
+            }
+
+            .print-class-title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #475569;
+                margin-top: 2px;
+            }
+
+            .print-meta-info {
+                text-align: right;
+            }
+
+            .print-date {
+                font-size: 0.85rem;
+                color: #64748b;
+            }
+
+            .print-badge {
+                font-size: 0.75rem;
+                font-weight: bold;
+                letter-spacing: 1px;
+                background: #f1f5f9;
+                padding: 4px 10px;
+                border-radius: 4px;
+                margin-top: 5px;
+                display: inline-block;
+                border: 1px solid #cbd5e1;
+                color: #1e293b;
+            }
+
+            .subject-card, .evaluations-section {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                page-break-inside: avoid;
+                margin-bottom: 20px !important;
+            }
+
+            .subject-header {
+                background-color: #1a1a1a !important;
+                color: #ffffff !important;
+            }
+
+            .subject-header .editable-input {
+                color: #ffffff !important;
+            }
+
+            /* Print checkdots rendering (high contrast fill & border) */
+            .checkdots {
+                display: flex !important;
+                gap: 6px !important;
+                justify-content: center !important;
+            }
+
+            .dot {
+                width: 14px !important;
+                height: 14px !important;
+                border-radius: 50% !important;
+                border: 2px solid #1a1a1a !important;
+                background: #ffffff !important;
+                box-sizing: border-box !important;
+                display: inline-block !important;
+            }
+
+            .dot.filled {
+                background-color: #1a1a1a !important;
+                border-color: #1a1a1a !important;
+                box-shadow: inset 0 0 0 10px #1a1a1a !important;
+            }
+
+            .progress-bar-container {
+                border: 1px solid #94a3b8 !important;
+                background-color: #f1f5f9 !important;
+            }
+
+            .progress-bar-fill {
+                background-color: #1a1a1a !important;
+            }
+        }
+
+        /* --- Mobile Adaptive Layout --- */
+        @media (max-width: 640px) {
+            .navbar { padding: 10px 12px; }
+            .navbar-title { font-size: 1rem; letter-spacing: 0.5px; }
+            .navbar-controls { gap: 6px; }
+            .ctrl-btn { padding: 5px 8px; font-size: 0.75rem; }
+            .school-bar, .sub-navbar { padding: 8px 12px; }
+            .school-pill, .class-chip { padding: 5px 10px; }
+            .editable-input { font-size: 0.85rem; }
+            .main-container { padding: 12px; width: 100%; }
+            .class-header { font-size: 1.1rem; }
+            .subject-header { padding: 8px 12px; font-size: 1rem; flex-wrap: wrap; gap: 8px; }
+            .action-buttons-row { flex-direction: column; }
+            .action-btn, .pdf-btn { padding: 12px 16px; font-size: 0.9rem; }
+            .reset-btn { padding: 12px 16px; font-size: 0.9rem; }
+            .lists-section { flex-direction: column; }
+            .list-card { min-width: 0; }
+            .modal-content { padding: 16px; width: 94%; }
+            .add-subject-btn { width: 100%; }
+        }
+
+        /* --- Pointeur module styling --- */
+        #pointeurModal {
+            --bg-color: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --accent-color: #34495e;
+            --dot-color: #ecf0f1;
+            --dot-checked: #27ae60;
+            --dot-special: #e74c3c;
+            --grid-bg: #fdfdfd;
+            --input-bg: #ffffff;
+        }
+
+        body.dark-mode #pointeurModal {
+            --bg-color: var(--white);
+            --text-color: var(--text-color);
+            --border-color: var(--border-grey);
+            --grid-bg: var(--school-bar-bg);
+            --input-bg: var(--white);
+            --dot-color: #2c3542;
+        }
+
+        #pointeurModal .modal-content.ptr-modal-content {
+            max-width: 900px;
+            width: 94%;
+            text-align: left;
+            background: var(--bg-color);
+            color: var(--text-color);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--grid-bg);
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+
+        .input-group { display: flex; flex-direction: column; width: 100%; }
+        .input-group label { font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: var(--text-color); }
+        .input-group input[type="text"], .input-group input[type="number"] {
+            padding: 8px; border: 1px solid var(--border-color); border-radius: 4px;
+            background-color: var(--input-bg); color: var(--text-color); width: 100%;
+        }
+
+        .codes-panel { margin-bottom: 20px; padding: 15px; background: var(--grid-bg); border: 1px solid var(--border-color); border-radius: 5px; }
+        .codes-panel h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: var(--text-color); }
+        .codes-list { display: flex; flex-direction: column; gap: 12px; }
+        .copy-row { display: flex; align-items: center; background: var(--bg-color); padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; gap: 10px; }
+        .copy-notes-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; flex-grow: 1; scrollbar-width: thin; }
+        .note-dot-label { display: flex; flex-direction: column; align-items: center; font-size: 0.75em; cursor: pointer; min-width: 24px; }
+        .note-num { margin-bottom: 4px; font-weight: bold; color: var(--text-color); }
+        .dot-radio { appearance: none; width: 18px; height: 18px; border: 2px solid var(--accent-color); border-radius: 50%; cursor: pointer; background-color: var(--dot-color); transition: all 0.2s; margin: 0; }
+        .dot-radio:checked { background-color: var(--dot-checked); border-color: var(--dot-checked); }
+        .dot-radio.special:checked { background-color: var(--dot-special); border-color: var(--dot-special); }
+        .copy-code { font-family: monospace; font-size: 1.1em; font-weight: bold; color: var(--text-color); min-width: 80px; text-align: left; flex-shrink: 0; border-right: 1px dashed var(--border-color); padding-right: 10px; }
+
+        .statistics-panel { margin-top: 20px; padding: 15px; background: var(--grid-bg); border: 1px solid var(--border-color); border-radius: 5px; }
+        .statistics-panel h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: var(--text-color); }
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-item { font-size: 0.95em; color: var(--text-color); }
+        .stat-item span { font-weight: bold; color: var(--dot-checked); }
+        .stat-item span.special-count { color: var(--dot-special); }
+        .grades-distribution { border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px; }
+        .grades-distribution h4 { margin: 0 0 10px 0; font-size: 1em; color: var(--text-color); }
+        .distribution-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+        .distribution-col { display: flex; flex-direction: column; gap: 8px; }
+        .dist-item { font-size: 0.85em; background: var(--bg-color); padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; text-align: center; color: var(--text-color); }
+        .dist-item span { font-weight: bold; color: var(--dot-checked); }
+        .dist-item span.special-count { color: var(--dot-special); }
+
+        .stats-header-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; padding-bottom: 5px; }
+        .stats-header-row h3 { margin: 0; border-bottom: none; padding-bottom: 0; }
+        .details-btn { width: 34px; height: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-color); border: 1px solid var(--accent-color); border-radius: 6px; cursor: pointer; padding: 0; transition: transform 0.15s, box-shadow 0.15s; }
+        .details-btn:hover { transform: scale(1.06); box-shadow: 0 2px 6px rgba(52, 73, 94, 0.25); }
+
+        .chart-type-select { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-color); font-size: 0.95em; margin-bottom: 15px; }
+        .chart-preview { min-height: 160px; display: block; }
+        .pdf-chart-section { display: none; }
+        .chart-empty-msg { font-size: 0.9em; color: var(--border-color); text-align: center; }
+
+        .chart-preview canvas,
+        #pdfChartSection canvas,
+        #modalChartBody canvas {
+            width: 100%;
+            max-width: 100%;
+            height: 260px !important;
+        }
+
+        .modal-generate-btn { margin-top: 18px; width: 100%; }
+        .save-btn-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin: 30px 0 10px; width: 100%; }
+        .save-btn-center { background-color: var(--dot-checked); color: white; border: none; padding: 15px 40px; border-radius: 8px; font-size: 1.2em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); transition: transform 0.2s, filter 0.2s; }
+        .save-btn-center:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+        .ptr-unsaved-badge {
+            width: 100%;
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #e67e22;
+        }
+
+        .pdf-export-timestamp { display: none; }
+
+        @media (max-width: 768px) {
+            #pointeurModal .modal-content.ptr-modal-content { max-height: 95vh; padding: 16px; }
+            #pointeurModal .header-grid { grid-template-columns: 1fr; }
+            #pointeurModal .stat-grid { grid-template-columns: 1fr; }
+            #pointeurModal .copy-row { flex-wrap: nowrap; }
+            #pointeurModal .copy-code { font-size: 0.85em; min-width: 60px; }
+        }
+
+        @media print {
+            #pointeurModal .stats-header-row { border-bottom: 1px solid black; }
+            #pointeurModal .details-btn { display: none !important; }
+            #pointeurModal #statsModalOverlay { display: none !important; }
+            #pointeurModal .pdf-export-timestamp {
+                display: block; text-align: right; font-size: 0.75em; color: #444 !important; margin-bottom: 4px;
+            }
+            body.ptr-printing > *:not(#pointeurModal) { display: none !important; }
+            body.ptr-printing #pointeurModal { position: static !important; background: none !important; display: block !important; padding: 0 !important; }
+            body.ptr-printing #pointeurModal .modal-content { max-width: 100% !important; width: 100% !important; box-shadow: none !important; max-height: none !important; overflow: visible !important; }
+            body.ptr-printing #pointeurModal .modal-header, body.ptr-printing #pointeurModal .save-btn-container, body.ptr-printing #pointeurModal .codes-panel { display: none !important; }
+            body.ptr-printing #pointeurModal { padding: 5mm; background-color: white; color: black; font-size: 10px; line-height: 1.1; }
+            #pointeurModal .statistics-panel { margin-top: 5px; padding: 4px; border: 1px solid black; background: transparent; border-radius: 0; page-break-inside: avoid; }
+            #pointeurModal .statistics-panel h3 { font-size: 1em; margin-bottom: 4px; padding-bottom: 2px; border-bottom: 1px solid black; }
+            #pointeurModal .stat-grid { display: none !important; }
+            #pointeurModal .grades-distribution { padding-top: 4px; margin-top: 4px; }
+            #pointeurModal .grades-distribution h4 { margin: 0 0 4px 0; font-size: 0.9em; }
+            #pointeurModal .distribution-grid { grid-template-columns: 1fr 1fr; gap: 2px; }
+            #pointeurModal .dist-item { font-size: 0.75em; padding: 1px; border: 1px solid #eee; color: black; background: transparent; }
+            #pointeurModal .dist-item span, #pointeurModal .dist-item span.special-count { color: black !important; }
+            #pointeurModal .pdf-chart-section {
+                display: block; padding-top: 4px; margin-top: 4px; border-top: 1px solid black; page-break-inside: avoid;
+            }
+            #pointeurModal .pdf-chart-section h4 { margin: 0 0 4px 0; font-size: 0.9em; }
+            #pointeurModal .pdf-chart-section canvas {
+                height: 130px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Navbar -->
+    <header class="navbar">
+        <div class="navbar-title" id="navbarTitle">MON TABLEAU DE BORD</div>
+        <div class="navbar-controls">
+            <button class="ctrl-btn icon-ctrl-btn" id="editPencilBtn" onclick="toggleEditMode()"><svg width="18" height="18" viewBox="0 0 512 512" xml:space="preserve"><path style="fill:#C7CFE2;" d="M365.463,283.767c-18.849,0-34.13-15.281-34.13-34.13V143.593c0-41.539-33.795-75.332-75.332-75.332c-41.539,0-75.333,33.795-75.333,75.332v106.044c0,18.849-15.281,34.13-34.13,34.13s-34.13-15.281-34.13-34.13V143.593C112.408,64.416,176.823,0,256,0s143.592,64.416,143.592,143.592v106.044C399.594,268.486,384.312,283.767,365.463,283.767z"/><g style="opacity:0.1;"><path d="M146.538,283.767c18.849,0,34.13-15.281,34.13-34.13v-76.023h-68.26v76.023C112.408,268.486,127.688,283.767,146.538,283.767z"/><path d="M331.333,173.614v76.023c0,18.849,15.281,34.13,34.13,34.13s34.13-15.281,34.13-34.13v-76.023H331.333z"/></g><path style="fill:#FFD782;" d="M404.055,207.745H107.945c-17.577,0-31.825,14.249-31.825,31.825v240.605c0,17.577,14.248,31.825,31.825,31.825h296.111c17.577,0,31.825-14.248,31.825-31.825V239.57C435.882,221.993,421.632,207.745,404.055,207.745z"/></svg></button>
+            <button class="ctrl-btn" id="langToggleBtn" onclick="toggleLanguage()">FR</button>
+            <button class="ctrl-btn" id="fontToggleBtn" onclick="toggleFont()">Aa</button>
+            <button class="ctrl-btn icon-ctrl-btn" id="themeToggleBtn" onclick="toggleTheme()">
+                <svg class="icon-svg" id="themeIconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                <svg class="icon-svg" id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button class="ctrl-btn icon-ctrl-btn" id="bgToggleBtn" onclick="handleBgButtonClick()"><svg width="16" height="16" viewBox="0 0 58 58" xml:space="preserve"><g><polygon style="fill:#AFB6BB;" points="16,16 16,42 16,58 58,58 58,16 "/><polygon style="fill:#556080;" points="42,16 42,0 0,0 0,42 16,42 16,16 "/></g></svg></button>
+            <input type="file" id="bgFileInput" accept="image/*" style="display:none;" onchange="handleBgUpload(event)">
+        </div>
+    </header>
+
+    <!-- School Subheader with Add School (+) -->
+    <nav class="school-bar">
+        <div id="schoolPillsContainer" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></div>
+        <button class="add-btn-circle" id="addSchoolBtn" onclick="addSchool()" title="Ajouter une école">+</button>
+    </nav>
+
+    <!-- Classes Sub-navbar with Add Class (+) -->
+    <nav class="sub-navbar">
+        <span class="classes-label" id="classesLabel">Classes:</span>
+        <div id="classChipsContainer" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></div>
+        <button class="add-btn-circle" id="addClassBtn" onclick="addClass()" title="Ajouter une classe">+</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <!-- Print-only Report Header (renders active School & Class identity in PDF Export) -->
+        <div id="printReportHeader" class="print-report-header">
+            <div class="print-header-content">
+                <div class="print-school-info">
+                    <div id="printSchoolLogo" class="print-school-logo">🏢</div>
+                    <div>
+                        <h1 id="printSchoolName" class="print-school-title">ÉCOLE</h1>
+                        <h2 id="printClassName" class="print-class-title">CLASSE</h2>
+                    </div>
+                </div>
+                <div class="print-meta-info">
+                    <div id="printReportDate" class="print-date"></div>
+                    <div class="print-badge">RAPPORT DE PROGRESSION & ÉVALUATIONS</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="class-header">
+            <span id="classHeaderLabel">Dashboard: Classe</span>
+        </div>
+
+        <!-- Dynamic Subjects Container -->
+        <div id="subjectsContainer"></div>
+
+        <button class="add-subject-btn" id="addSubjectBtn" onclick="addSubject()">+ Ajouter Matière</button>
+
+        <!-- Evaluations Section -->
+        <div class="evaluations-section" id="evaluationsSection">
+            <div class="evaluations-title" id="evaluationsTitle">Évaluations:</div>
+            <table class="eval-table">
+                <thead>
+                    <tr>
+                        <th id="thType">Types</th>
+                        <th id="thDates">Dates</th>
+                        <th id="thStats">Statistiques</th>
+                        <th id="thChartType">Graphique</th>
+                        <th id="thDetails">Détails</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="evalTbody"></tbody>
+            </table>
+            <button class="add-book-row-btn" onclick="addEvalRow()">+</button>
+        </div>
+
+        <!-- Lists Section -->
+        <div class="lists-section" id="listsSection">
+            <div class="list-card" id="extListCard">
+                <div>
+                    <strong id="extListLabel" class="toggle-label" onclick="toggleExtListInput()" title="Cliquer pour afficher/masquer la zone de saisie">
+                        Lien externe vers la liste des élèves:
+                    </strong>
+                </div>
+                <input type="text" id="extListUrl" value="" placeholder="https://..." oninput="updateExtListUrl(this.value)">
+                <div style="margin-top:8px;">
+                    <a id="extListAnchor" href="#" target="_blank" class="action-link" style="display:none;"></a>
+                </div>
+            </div>
+            <div class="list-card">
+                <div><strong id="classLibLabel">Consulter la bibliothèque:</strong></div>
+                <div style="margin-top:12px;">
+                    <a href="library.html" id="classLibLink" target="_blank" class="action-link" onclick="handleLibraryLinkClick(event, 'library.html')">Ma bibliothèque</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons: Export / PDF / Import -->
+        <div class="action-buttons-row" id="actionButtonsRow">
+            <button class="action-btn" id="exportBtn" onclick="exportData()">SAUVEGARDER DONNÉES</button>
+            <button class="pdf-btn" id="pdfBtn" onclick="triggerPdfReport()">GÉNÉRER RAPPORT PDF</button>
+            <button class="action-btn" id="importBtn" onclick="triggerImport()">RESTAURER DONNÉES</button>
+            <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;" onchange="handleImport(event)">
+        </div>
+
+        <!-- Reset Button -->
+        <div class="reset-btn-container" id="resetBtnContainer">
+            <button class="reset-btn" id="resetBtn" onclick="resetAll()">RÉINITIALISER</button>
+        </div>
+    </main>
+
+    <!-- Modal Popup for Enlarged Diagrams -->
+    <div id="chartModal" class="modal-overlay" onclick="closeChartModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="modalChartTitle">Aperçu du Diagramme</div>
+                <button class="modal-close-btn" onclick="closeChartModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalChartBody"><canvas id="modalChartCanvas"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Pointeur module -->
+    <div id="pointeurModal" class="modal-overlay" onclick="if(event.target===this) closePointeurModal()">
+        <div class="modal-content ptr-modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="ptrModalTitle">Notes</div>
+                <button class="modal-close-btn" id="ptrCloseBtn" onclick="closePointeurModal()" title="Fermer">&times;</button>
+            </div>
+
+            <div id="pdf-export-timestamp" class="pdf-export-timestamp"></div>
+
+            <div class="header-grid">
+                <div class="input-group">
+                    <label id="ptrDevoirLabel">DEVOIR</label>
+                    <input type="text" id="h_devoir" oninput="ptrSaveHeaderData()">
+                </div>
+                <div class="input-group">
+                    <label id="ptrCorrecteurLabel">NOM DU CORRECTEUR</label>
+                    <input type="text" id="h_correcteur" oninput="ptrSaveHeaderData(); updateCodes();">
+                </div>
+                <div class="input-group">
+                    <label id="ptrEtablissementLabel">ÉTABLISSEMENT</label>
+                    <input type="text" id="h_etablissement" oninput="ptrSaveHeaderData()">
+                </div>
+                <div class="input-group">
+                    <label id="ptrTotalCopiesLabel">NOMBRE TOTAL DE COPIES</label>
+                    <input type="number" id="h_total_papers" placeholder="Ex: 25" oninput="ptrSaveHeaderData(); updateCodes();">
+                </div>
+            </div>
+
+            <div class="codes-panel" id="codes-panel">
+                <h3 id="ptrSaisieTitleEl">Saisie des Notes par Copie</h3>
+                <div class="codes-list" id="codes-list"></div>
+            </div>
+
+            <div class="statistics-panel" id="statistics-panel">
+                <div class="stats-header-row">
+                    <h3 id="ptrStatsTitleEl">Statistiques du Lot</h3>
+                    <button class="details-btn" id="ptrDetailsBtn" onclick="openStatsModal()" title="Voir les détails / graphique">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="18" height="18" rx="3" stroke="var(--accent-color)" stroke-width="1.6"/>
+                            <rect x="6.5" y="13" width="2.6" height="5" rx="0.6" fill="var(--dot-checked)"/>
+                            <rect x="10.7" y="9.5" width="2.6" height="8.5" rx="0.6" fill="var(--accent-color)"/>
+                            <rect x="14.9" y="6.5" width="2.6" height="11.5" rx="0.6" fill="var(--dot-special)"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-item"><span id="ptrStatTotalLabel">Total des copies pointées :</span> <span id="stat-total">0</span></div>
+                    <div class="stat-item"><span id="ptrStatMoyenneLabel">Moyenne :</span> <span id="stat-moyenne">0.00</span> / 20</div>
+                    <div class="stat-item"><span id="ptrStatMinLabel">Note la plus basse :</span> <span id="stat-min">-</span></div>
+                    <div class="stat-item"><span id="ptrStatMaxLabel">Note la plus haute :</span> <span id="stat-max">-</span></div>
+                    <div class="stat-item"><span id="ptrStatAbsentLabel">Absent (A)</span> : <span id="stat-count-A" class="special-count">0</span></div>
+                    <div class="stat-item"><span id="ptrStatDispenseLabel">Dispensé (D)</span> : <span id="stat-count-D" class="special-count">0</span></div>
+                    <div class="stat-item"><span id="ptrStatFraudeLabel">Fraude (F)</span> : <span id="stat-count-F" class="special-count">0</span></div>
+                </div>
+
+                <div class="grades-distribution">
+                    <h4 id="ptrDistributionTitleEl">Nombre de copies par Note (0 à 20) :</h4>
+                    <div class="distribution-grid" id="distribution-grid"></div>
+                </div>
+
+                <div class="pdf-chart-section" id="pdfChartSection">
+                    <h4><span id="ptrChartSectionTitleEl">Graphique</span> (<span id="pdfChartTypeLabel"></span>)</h4>
+                    <div id="pdfChartPreview"><canvas id="pdfChartCanvas"></canvas></div>
+                </div>
+            </div>
+
+            <div class="save-btn-container">
+                <span id="ptrUnsavedBadge" class="ptr-unsaved-badge" style="display:none;"></span>
+                <button class="save-btn-center" id="ptrGenerateStatsBtn" onclick="generateStatistics()">GÉNÉRER STATISTIQUES</button>
+                <button class="pdf-btn" onclick="exportPDF()">
+                    <svg width="24" height="24" viewBox="0 0 56 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:6px;">
+                        <path fill="#FFFFFF" d="M5.1,0C2.3,0,0,2.3,0,5.1v53.8C0,61.7,2.3,64,5.1,64h45.8c2.8,0,5.1-2.3,5.1-5.1V20.3L37.1,0H5.1z"/>
+                        <path fill="#E0E0E0" d="M56,20.4v1H43.2c0,0-6.3-1.3-6.1-6.7c0,0,0.2,5.7,6,5.7H56z"/>
+                        <path fill="#8C181A" d="M14.9,49h-3.3v4.1c0,0.4-0.3,0.7-0.8,0.7c-0.4,0-0.7-0.3-0.7-0.7V42.9c0-0.6,0.5-1.1,1.1-1.1h3.7 c2.4,0,3.8,1.7,3.8,3.6C18.7,47.4,17.3,49,14.9,49z M14.8,43.1h-3.2v4.6h3.2c1.4,0,2.4-0.9,2.4-2.3C17.2,44,16.2,43.1,14.8,43.1z M25.2,53.8h-3c-0.6,0-1.1-0.5-1.1-1.1v-9.8c0-0.6,0.5-1.1,1.1-1.1h3c3.7,0,6.2,2.6,6.2,6C31.4,51.2,29,53.8,25.2,53.8z M25.2,43.1 h-2.6v9.3h2.6c2.9,0,4.6-2.1,4.6-4.7C29.9,45.2,28.2,43.1,25.2,43.1z M41.5,43.1h-5.8V47h5.7c0.4,0,0.6,0.3,0.6,0.7 s-0.3,0.6-0.6,0.6h-5.7v4.8c0,0.4-0.3,0.7-0.8,0.7c-0.4,0-0.7-0.3-0.7-0.7V42.9c0-0.6,0.5-1.1,1.1-1.1h6.2c0.4,0,0.6,0.3,0.6,0.7 C42.2,42.8,41.9,43.1,41.5,43.1z"/>
+                    </svg>
+                    <span id="ptrExportPdfBtnLabel">EXPORTER EN PDF</span>
+                </button>
+            </div>
+
+            <!-- Modal for chart preview -->
+            <div class="modal-overlay" id="statsModalOverlay" onclick="if(event.target===this) closeStatsModal()">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="modal-title" id="ptrStatsModalTitleEl">Statistiques</div>
+                        <button class="modal-close-btn" id="ptrStatsCloseBtn" onclick="closeStatsModal()" title="Fermer">&times;</button>
+                    </div>
+                    <select class="chart-type-select" id="chartTypeSelect">
+                        <option value="donut" id="chartOptDonut">Circulaire / Donut</option>
+                        <option value="pie" id="chartOptPie">Camembert / Pie</option>
+                        <option value="bar" id="chartOptBar">Barres</option>
+                        <option value="line" id="chartOptLine">Courbe</option>
+                    </select>
+                    <div class="chart-preview" id="chartPreview">
+                        <div class="chart-empty-msg" id="ptrChartEmptyMsg">Choisissez un type de graphique puis cliquez sur "GÉNÉRER STATISTIQUES".</div>
+                        <canvas id="chartPreviewCanvas" style="display:none;"></canvas>
+                    </div>
+                    <button class="save-btn-center modal-generate-btn" id="ptrGenerateStatsBtn2" onclick="renderChart()">GÉNÉRER STATISTIQUES</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Chart.js loading (local file with fallback to CDN) -->
+<script src="/lib/chart/v4.5.1/chart.umd.min.js"></script>
+<script>if(typeof Chart==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"><\/script>');}</script>
+<!-- Shared Osiris library storage + PDF/EPUB extraction, same files the
+     shelves already load — this assumes DASHBOARD.html sits in the same
+     root folder as library.html/osiris-core.js (matching the
+     existing "Ma bibliothèque" link above, which uses a plain relative
+     path with no folder prefix). Adjust the two "shelves/libs/..." paths
+     below if your actual folder layout differs. -->
+<script src="/lib/jszip/v1/jszip.min.js"></script>
+<script src="/lib/pdf/v1/pdf.min.js"></script>
+<script src="/js/core/osiris-core.js"></script>
+
+<script>
+    console.assert(typeof Chart === 'function', 'Chart.js n\'est pas disponible.');
+
+    // ============================================================
+    // Book file -> cover/title/author/excerpt extraction, feeding the
+    // shared Osiris library (osiris_library_books_v2 via osiris-core.js)
+    // so a book picked here actually appears on the shelves, not just as
+    // a local decorative thumbnail. Ported from the_codex_collection.html
+    // (that shelf's own reference implementation) — same constants, same
+    // page-1/page-2 and spine-entry fallback logic, so an excerpt
+    // extracted here is exactly as AI-Sorting-ready as one extracted from
+    // within a shelf itself.
+    // ============================================================
+    if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdf/v1/pdf.worker.min.js';
+    }
+
+    // One-time repair for books extracted here before this shelf's own
+    // canOpenFile() flag requirement was understood: the file itself was
+    // always genuinely saved to the shared blob store, but the library
+    // entry never got its `fileBlob: true` flag set — and every shelf's
+    // "Open" affordance checks that flag synchronously, not the actual
+    // IndexedDB contents, so those books rendered with no way to open
+    // them despite the file being right there. This scans the shared
+    // library once for entries with no fileBlob/fileHandle/link at all
+    // (i.e. nothing a shelf would currently offer to open), checks
+    // whether a blob genuinely exists for each, and sets the flag where
+    // it does. Guarded so it only ever runs once.
+    const REPAIR_FLAG = 'osiris_dashboard_fileblob_repair_done';
+    function repairMissingFileBlobFlagsIfNeeded() {
+        if (!window.OsirisCore || localStorage.getItem(REPAIR_FLAG)) return;
+        const lib = OsirisCore.loadLibrary();
+        const candidates = lib.filter(function (b) {
+            return !b.fileBlob && !b.fileHandle && !b.link;
+        });
+        if (!candidates.length) {
+            localStorage.setItem(REPAIR_FLAG, '1');
+            return;
+        }
+        Promise.all(candidates.map(function (b) {
+            return OsirisCore.getFileBlob(b.id).then(function (blob) {
+                if (blob) b.fileBlob = true;
+            });
+        })).then(function () {
+            OsirisCore.saveLibrary(lib);
+            localStorage.setItem(REPAIR_FLAG, '1');
+        });
+    }
+
+    // "Ouvrir la bibliothèque" row link: when this dashboard is itself
+    // embedded in Portfolio (window.parent !== window), stay inside the
+    // shell instead of breaking out to a new tab — ask Portfolio to
+    // switch to the Hub's own registered tab, passing along which
+    // specific book to open once it's mounted there. When opened
+    // standalone (not embedded), preventDefault() never runs and the
+    // normal target="_blank" link behavior happens exactly as before —
+    // no regression for that case.
+    //
+    // Waits for Portfolio's own osirisNavigateToAppResult before deciding
+    // anything further, with a timeout as a safety net — Portfolio might
+    // not find a matching registered link (wrong/renamed filename), might
+    // be at its open-tab limit, or this page might end up embedded in
+    // something that isn't Portfolio at all. In every one of those cases
+    // this falls back to a plain new tab instead of silently doing
+    // nothing, which is what a bare preventDefault() with no confirmation
+    // would otherwise risk.
+    function handleLibraryLinkClick(e, libraryLink) {
+        if (window.parent === window) return;
+        e.preventDefault();
+        let bookId = null;
+        try {
+            bookId = new URL(libraryLink, location.href).searchParams.get('book');
+        } catch (err) { /* malformed/empty link - navigate to the Hub in general, no specific book */ }
+
+        let settled = false;
+        let fallbackTimer = setTimeout(function () {
+            if (settled) return;
+            console.warn('[osiris-nav] Dashboard timed out waiting for shell (2500ms) - opening fallback window');
+            window.removeEventListener('message', onResult);
+            window.open(libraryLink, '_blank');
+        }, 2500);
+
+        function onResult(ev) {
+            if (!ev.data || ev.data.type !== 'osirisNavigateToAppResult') return;
+            console.debug('[osiris-nav] Dashboard received result:', ev.data.success);
+            window.removeEventListener('message', onResult);
+            clearTimeout(fallbackTimer);
+            settled = true;
+            if (!ev.data.success) {
+                console.warn('[osiris-nav] Shell refused navigation (success: false) - opening fallback window');
+                window.open(libraryLink, '_blank');
+            }
+        }
+        window.addEventListener('message', onResult);
+
+        console.debug('[osiris-nav] Dashboard sending osirisNavigateToApp, bookId=', bookId);
+        window.parent.postMessage({
+            type: 'osirisNavigateToApp',
+            pageFileName: 'library.html',
+            bookId: bookId
+        }, '*');
+    }
+
+    const MAX_EXCERPT_CHARS = 700;
+    const MIN_EXCERPT_CHARS_BEFORE_FALLBACK = 40;
+
+    function cleanExcerptText(raw) {
+        return String(raw || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function normalizeZipPath(path) {
+        const parts = path.split('/');
+        const out = [];
+        for (let i = 0; i < parts.length; i++) {
+            if (parts[i] === '.' || parts[i] === '') continue;
+            if (parts[i] === '..') { out.pop(); continue; }
+            out.push(parts[i]);
+        }
+        return out.join('/');
+    }
+
+    function blobToDataUrl(blob) {
+        return new Promise(function (resolve, reject) {
+            const r = new FileReader();
+            r.onload = function () { resolve(r.result); };
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+        });
+    }
+
+    function extractPdfCoverAndMeta(arrayBuffer) {
+        return pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdf) {
+            return pdf.getPage(1).then(function (page) {
+                const viewport = page.getViewport({ scale: 1.4 });
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+                return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
+                    const cover = canvas.toDataURL('image/jpeg', 0.85);
+                    return pdf.getMetadata().then(function (m) {
+                        const info = (m && m.info) || {};
+                        return { cover: cover, meta: { title: info.Title || '', author: info.Author || '' } };
+                    }).catch(function () {
+                        return { cover: cover, meta: {} };
+                    }).then(function (result) {
+                        return page.getTextContent().then(function (textContent) {
+                            const text = cleanExcerptText(textContent.items.map(function (it) { return it.str; }).join(' '));
+                            if (text.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || pdf.numPages < 2) {
+                                if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+                                return result;
+                            }
+                            return pdf.getPage(2).then(function (page2) {
+                                return page2.getTextContent();
+                            }).then(function (textContent2) {
+                                const text2 = cleanExcerptText(textContent2.items.map(function (it) { return it.str; }).join(' '));
+                                const combined = (text + ' ' + text2).trim();
+                                if (combined) result.excerpt = combined.slice(0, MAX_EXCERPT_CHARS);
+                                return result;
+                            }).catch(function () {
+                                if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+                                return result;
+                            });
+                        }).catch(function () {
+                            return result; // cover/meta still stand even if text extraction itself fails
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    function extractEpubCoverAndMeta(arrayBuffer) {
+        return JSZip.loadAsync(arrayBuffer).then(function (zip) {
+            const containerFile = zip.file('META-INF/container.xml');
+            if (!containerFile) return { cover: null, meta: {} };
+            return containerFile.async('string').then(function (containerXml) {
+                const containerDoc = new DOMParser().parseFromString(containerXml, 'application/xml');
+                const rootfile = containerDoc.querySelector('rootfile');
+                const opfPath = rootfile ? rootfile.getAttribute('full-path') : null;
+                if (!opfPath) return { cover: null, meta: {} };
+                const opfFile = zip.file(opfPath);
+                if (!opfFile) return { cover: null, meta: {} };
+                return opfFile.async('string').then(function (opfXml) {
+                    const opfDoc = new DOMParser().parseFromString(opfXml, 'application/xml');
+                    const basePath = opfPath.split('/').slice(0, -1).join('/');
+
+                    let coverHref = null;
+                    const metaCover = opfDoc.querySelector('meta[name="cover"]');
+                    if (metaCover) {
+                        const coverId = metaCover.getAttribute('content');
+                        const item = opfDoc.querySelector('manifest > item[id="' + CSS.escape(coverId) + '"]');
+                        if (item) coverHref = item.getAttribute('href');
+                    }
+                    if (!coverHref) {
+                        const propItem = opfDoc.querySelector('manifest > item[properties~="cover-image"]');
+                        if (propItem) coverHref = propItem.getAttribute('href');
+                    }
+                    if (!coverHref) {
+                        const items = Array.prototype.slice.call(opfDoc.querySelectorAll('manifest > item'));
+                        const guess = items.find(function (i) {
+                            const mt = i.getAttribute('media-type') || '';
+                            const href = i.getAttribute('href') || '';
+                            return mt.indexOf('image') !== -1 && /cover/i.test(href);
+                        });
+                        if (guess) coverHref = guess.getAttribute('href');
+                    }
+
+                    const titleEl = opfDoc.querySelector('metadata > title, metadata > dc\\:title');
+                    const creatorEl = opfDoc.querySelector('metadata > creator, metadata > dc\\:creator');
+                    const meta = {
+                        title: titleEl ? titleEl.textContent.trim() : '',
+                        author: creatorEl ? creatorEl.textContent.trim() : ''
+                    };
+
+                    const spineIds = Array.prototype.slice.call(opfDoc.querySelectorAll('spine > itemref'))
+                        .map(function (el) { return el.getAttribute('idref'); })
+                        .filter(Boolean);
+                    const manifestById = {};
+                    Array.prototype.slice.call(opfDoc.querySelectorAll('manifest > item')).forEach(function (item) {
+                        manifestById[item.getAttribute('id')] = item;
+                    });
+
+                    function readSpineText(spineIndex, acc) {
+                        if (spineIndex >= spineIds.length || spineIndex >= 3) {
+                            return Promise.resolve(cleanExcerptText(acc));
+                        }
+                        const manifestItem = manifestById[spineIds[spineIndex]];
+                        const href = manifestItem && manifestItem.getAttribute('href');
+                        if (!href) return readSpineText(spineIndex + 1, acc);
+                        const fullSpinePath = normalizeZipPath(basePath ? basePath + '/' + href : href);
+                        const docEntry = zip.file(fullSpinePath);
+                        if (!docEntry) return readSpineText(spineIndex + 1, acc);
+                        return docEntry.async('string').then(function (html) {
+                            const doc = new DOMParser().parseFromString(html, 'text/html');
+                            const text = cleanExcerptText((doc.body && doc.body.textContent) || '');
+                            const combined = (acc + ' ' + text).trim();
+                            if (combined.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || spineIndex >= 2) {
+                                return combined;
+                            }
+                            return readSpineText(spineIndex + 1, combined);
+                        }).catch(function () { return readSpineText(spineIndex + 1, acc); });
+                    }
+
+                    function attachExcerpt(result) {
+                        return readSpineText(0, '').then(function (excerpt) {
+                            if (excerpt) result.excerpt = excerpt.slice(0, MAX_EXCERPT_CHARS);
+                            return result;
+                        }).catch(function () { return result; });
+                    }
+
+                    if (!coverHref) return attachExcerpt({ cover: null, meta: meta });
+
+                    const fullPath = normalizeZipPath(basePath ? basePath + '/' + coverHref : coverHref);
+                    const imgFile = zip.file(fullPath) || zip.file(coverHref);
+                    if (!imgFile) return attachExcerpt({ cover: null, meta: meta });
+
+                    return imgFile.async('blob').then(function (blob) {
+                        return blobToDataUrl(blob).then(function (dataUrl) {
+                            return attachExcerpt({ cover: dataUrl, meta: meta });
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    // Single entry point: dispatches by file extension, returns
+    // { cover, meta: {title, author}, excerpt? } or null if the format
+    // isn't supported / extraction genuinely fails (caller decides the
+    // fallback — leave any existing cover untouched, offer manual upload).
+    function extractBookCoverAndMeta(file) {
+        const name = (file.name || '').toLowerCase();
+        const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
+        const isEpub = name.endsWith('.epub') || file.type === 'application/epub+zip';
+        if (!isPdf && !isEpub) return Promise.resolve(null);
+        if (isPdf && !window.pdfjsLib) return Promise.resolve(null);
+        if (isEpub && !window.JSZip) return Promise.resolve(null);
+
+        return file.arrayBuffer().then(function (buf) {
+            return isPdf ? extractPdfCoverAndMeta(buf) : extractEpubCoverAndMeta(buf);
+        }).catch(function () { return null; });
+    }
+
+    // --- Default State Template ---
+    const DEFAULT_STATE_TEMPLATE = {
+        lang: 'FR',
+        editMode: false,
+        theme: 'light',
+        font: 'default',
+        customBg: null,
+        activeSchoolIdx: 0,
+        schools: [
+            {
+                id: 'sch_1',
+                name: 'Nouvelle École',
+                logo: null,
+                activeClassIdx: 0,
+                classes: [
+                    {
+                        id: 'cls_1',
+                        name: 'Nouvelle Classe',
+                        showExtInput: true,
+                        extListUrl: '',
+                        subjects: [],
+                        evaluations: []
+                    }
+                ]
+            }
+        ]
+    };
+
+    function createDefaultState(lang) {
+        const state = JSON.parse(JSON.stringify(DEFAULT_STATE_TEMPLATE));
+        const useLang = (lang === 'FR' || lang === 'DE') ? lang : state.lang;
+        state.lang = useLang;
+        const t = i18n[useLang];
+        state.schools[0].name = t.newSchool;
+        state.schools[0].classes[0].name = t.newClass;
+        return state;
+    }
+
+    let appState;
+
+    // --- Translation Strings (FR / DE) ---
+    const i18n = {
+        FR: {
+            title: 'MON TABLEAU DE BORD',
+            classes: 'Classes:',
+            dashHeader: '',
+            addSubject: '+ Ajouter Matière',
+            addBook: '+ Ajouter Livre',
+            colBook: 'Livre',
+            colPreview: 'Aperçu',
+            extractCoverTitle: 'Choisir un livre (PDF/EPUB) — couverture et infos extraites automatiquement',
+            extractCoverHint: '+ livre',
+            manualImageTitle: 'Ou choisir une image manuellement',
+            extracting: 'Extraction…',
+            extractFailedMsg: "Impossible d'extraire la couverture de ce fichier (format non pris en charge ou fichier corrompu). Vous pouvez toujours ajouter une image manuellement via l'icône 🖼️.",
+            colThemes: 'Thèmes',
+            colLessons: 'Leçons',
+            colProgress: 'Progression',
+            colActions: 'Documentation',
+            viewLib: 'Voir Bibliothèque',
+            evalTitle: 'Évaluations:',
+            colType: 'Types',
+            colDates: 'Dates',
+            colStats: 'Statistiques',
+            colDetails: 'Détails',
+            extList: 'Lien externe vers la liste des élèves:',
+            classLib: 'Consulter la bibliothèque:',
+            classLibLink: 'Ma bibliothèque',
+            pdf: 'GÉNÉRER RAPPORT PDF',
+            statDonut: 'Graphique en anneau',
+            statBar: 'Diagramme à barres',
+            statPie: 'Diagramme circulaire',
+            statLine: 'Graphique en courbes',
+            locked: 'Verrouillé (cliquer pour modifier)',
+            unlocked: 'Déverrouillé (cliquer pour verrouiller)',
+            addSchoolTitle: 'Ajouter une école',
+            addClassTitle: 'Ajouter une classe',
+            newSchool: 'Nouvelle École',
+            newClass: 'Nouvelle Classe',
+            schoolNamePlaceholder: "Nom de l'école",
+            classNamePlaceholder: 'Nom de la classe',
+            newSubjectName: 'Nouvelle Matière',
+            newBookTitle: 'NOM',
+            evalCustomPlaceholder: 'Préciser...',
+            evalDefault: 'Évaluation',
+            deleteSchoolTitle: 'Supprimer cette école',
+            deleteClassTitle: 'Supprimer cette classe',
+            deleteSubjectTitle: 'Supprimer cette matière',
+            deleteBookTitle: 'Supprimer ce livre',
+            deleteEvalTitle: 'Supprimer cette évaluation',
+            prevDotTitle: "Sélectionnez d'abord le point précédent",
+            themeLessonRulePrompt: "Pour cocher un 2ème thème (ou plus), vous devez d'abord cocher au moins une leçon.",
+            changeLogoTitle: 'Cliquer pour changer le logo',
+            toggleExtTitle: "Cliquer pour afficher/masquer la zone de saisie",
+            switchSchoolTitle: "Cliquer pour changer d'école active",
+            switchClassTitle: 'Cliquer pour changer de classe active',
+            statCalcTitle: 'Calculateur de statistiques',
+            statCalcAlert: 'Module calculateur de statistiques à implémenter.',
+            ptrUnsavedBadge: '? Modifications non enregistrées',
+            ptrUnsavedConfirm: "Des notes ont été cochées depuis le dernier clic sur \"Générer les statistiques\" et ne sont pas encore répercutées sur le tableau de bord. Fermer quand même et perdre ces coches ?",
+            fontSizeAlert: 'Aa : Taille de police',
+            darkModeAlert: 'Mode sombre',
+            bgAlert: 'Arrière-plan personnalisé',
+            themeToggleTitle: 'Changer de thème (clair / sombre)',
+            fontToggleTitle: 'Changer la police (standard / serif / mono)',
+            bgUploadTitle: 'Importer un arrière-plan personnalisé',
+            bgClearTitle: "Supprimer l'arrière-plan personnalisé",
+            bgClearConfirmMsg: "Supprimer l'arrière-plan personnalisé et revenir à l'arrière-plan par défaut ?",
+            bgImportError: "Impossible d'importer cette image.",
+            editUnlockWarning: 'Attention : le mode édition permet de modifier et de supprimer des données (écoles, classes, matières, évaluations). Continuer ?',
+            modalDefaultTitle: 'Aperçu du Diagramme',
+            modalAnalysis: 'Analyse Statistique:',
+            export: 'SAUVEGARDER DONNÉES',
+            import: 'RESTAURER DONNÉES',
+            reset: 'RÉINITIALISER',
+            confirmReset: '⚠️ Réinitialiser toutes les données ? Écoles, classes, matières et évaluations seront définitivement supprimées. Cette action est irréversible.',
+            importSuccess: 'Données importées avec succès.',
+            importError: "Fichier invalide. Impossible d'importer ces données.",
+            addSubjectFirstTitle: "Ajoutez d'abord une matière pour débloquer cette section.",
+            ptrTitle: 'Notes',
+            ptrDevoir: 'DEVOIR',
+            ptrCorrecteur: 'NOM DU CORRECTEUR',
+            ptrEtablissement: 'ÉTABLISSEMENT',
+            ptrTotalCopies: 'NOMBRE TOTAL DE COPIES',
+            ptrTotalCopiesPlaceholder: 'Ex: 25',
+            ptrSaisieTitle: 'Saisie des Notes par Copie',
+            ptrStatsTitle: 'Statistiques du Lot',
+            ptrDetailsTooltip: 'Voir les détails / graphique',
+            ptrStatTotal: 'Total des copies pointées :',
+            ptrStatMoyenne: 'Moyenne :',
+            ptrStatMin: 'Note la plus basse :',
+            ptrStatMax: 'Note la plus haute :',
+            ptrStatAbsent: 'Absent (A)',
+            ptrStatDispense: 'Dispensé (D)',
+            ptrStatFraude: 'Fraude (F)',
+            ptrDistributionTitle: 'Nombre de copies par Note (0 à 20) :',
+            ptrChartSectionTitle: 'Graphique',
+            ptrGenerateStats: 'GÉNÉRER STATISTIQUES',
+            ptrExportPdf: 'EXPORTER EN PDF',
+            ptrStatsModalTitle: 'Statistiques',
+            ptrChartEmptyChoose: 'Choisissez un type de graphique puis cliquez sur « GÉNÉRER STATISTIQUES ».',
+            ptrChartEmptyNoData: 'Aucune copie pointée pour le moment.',
+            ptrBucketFaible: 'Insuffisant (0-9)',
+            ptrBucketPassable: 'Passable (10-13)',
+            ptrBucketBien: 'Bien (14-16)',
+            ptrBucketTresBien: 'Très bien (17-20)',
+            ptrExportedOn: 'Exporté le',
+            ptrClose: 'Fermer',
+            evalTypeIE: 'IE',
+            evalTypeDS: 'DS',
+            evalTypeIO: 'IO',
+            evalTypeAutres: 'Autres'
+        },
+        DE: {
+            title: 'MEIN DASHBOARD',
+            classes: 'Klassen:',
+            dashHeader: '',
+            addSubject: '+ Fach hinzufügen',
+            addBook: '+ Buch hinzufügen',
+            colBook: 'Buch',
+            colPreview: 'Vorschau',
+            extractCoverTitle: 'Buch wählen (PDF/EPUB) — Cover und Infos werden automatisch extrahiert',
+            extractCoverHint: '+ Buch',
+            manualImageTitle: 'Oder manuell ein Bild wählen',
+            extracting: 'Extrahiere…',
+            extractFailedMsg: 'Das Cover konnte aus dieser Datei nicht extrahiert werden (nicht unterstütztes Format oder beschädigte Datei). Sie können jederzeit manuell ein Bild über das 🖼️-Symbol hinzufügen.',
+            colThemes: 'Themen',
+            colLessons: 'Lektionen',
+            colProgress: 'Fortschritt',
+            colActions: 'Dokumentation',
+            viewLib: 'Bibliothek ansehen',
+            evalTitle: 'Bewertungen:',
+            colType: 'Typen',
+            colDates: 'Daten',
+            colStats: 'Statistiken',
+            colDetails: 'Details',
+            extList: 'Externer Link zur Schülerliste:',
+            classLib: 'Bibliothek ansehen:',
+            classLibLink: 'Meine Bibliothek',
+            pdf: 'PDF-BERICHT ERSTELLEN',
+            statDonut: 'Ringdiagramm',
+            statBar: 'Balkendiagramm',
+            statPie: 'Kreisdiagramm',
+            statLine: 'Liniendiagramm',
+            locked: 'Gesperrt (klicken zum Bearbeiten)',
+            unlocked: 'Entsperrt (klicken zum Sperren)',
+            addSchoolTitle: 'Schule hinzufügen',
+            addClassTitle: 'Klasse hinzufügen',
+            newSchool: 'Neue Schule',
+            newClass: 'Neue Klasse',
+            schoolNamePlaceholder: 'Name der Schule',
+            classNamePlaceholder: 'Name der Klasse',
+            newSubjectName: 'Neues Fach',
+            newBookTitle: 'NAME',
+            evalCustomPlaceholder: 'Angeben...',
+            evalDefault: 'Bewertung',
+            deleteSchoolTitle: 'Diese Schule löschen',
+            deleteClassTitle: 'Diese Klasse löschen',
+            deleteSubjectTitle: 'Dieses Fach löschen',
+            deleteBookTitle: 'Dieses Buch löschen',
+            deleteEvalTitle: 'Diese Bewertung löschen',
+            prevDotTitle: 'Wählen Sie zuerst den vorherigen Punkt aus',
+            themeLessonRulePrompt: 'Um ein 2. Thema (oder mehr) abzuhaken, müssen Sie zuerst mindestens eine Lektion abhaken.',
+            changeLogoTitle: 'Klicken, um das Logo zu ändern',
+            toggleExtTitle: 'Klicken, um das Eingabefeld ein-/auszublenden',
+            switchSchoolTitle: 'Klicken, um die aktive Schule zu wechseln',
+            switchClassTitle: 'Klicken, um die aktive Klasse zu wechseln',
+            statCalcTitle: 'Statistik-Rechner',
+            statCalcAlert: 'Statistik-Rechner-Modul wird noch implementiert.',
+            ptrUnsavedBadge: '? Nicht gespeicherte Änderungen',
+            ptrUnsavedConfirm: 'Seit dem letzten Klick auf "Statistiken generieren" wurden Noten angekreuzt, die noch nicht ins Dashboard übernommen wurden. Trotzdem schließen und diese Ankreuzungen verwerfen?',
+            fontSizeAlert: 'Aa: Schriftgröße',
+            darkModeAlert: 'Dunkelmodus',
+            bgAlert: 'Benutzerdefinierter Hintergrund',
+            themeToggleTitle: 'Design wechseln (hell / dunkel)',
+            fontToggleTitle: 'Schriftart wechseln (Standard / Serif / Mono)',
+            bgUploadTitle: 'Benutzerdefinierten Hintergrund importieren',
+            bgClearTitle: 'Benutzerdefinierten Hintergrund entfernen',
+            bgClearConfirmMsg: 'Benutzerdefinierten Hintergrund entfernen und zum Standardhintergrund zurückkehren?',
+            bgImportError: 'Dieses Bild konnte nicht importiert werden.',
+            editUnlockWarning: 'Achtung: Im Bearbeitungsmodus können Daten (Schulen, Klassen, Fächer, Bewertungen) geändert und gelöscht werden. Fortfahren?',
+            modalDefaultTitle: 'Diagrammvorschau',
+            modalAnalysis: 'Statistische Analyse:',
+            export: 'DATEN SPEICHERN',
+            import: 'DATEN WIEDERHERSTELLEN',
+            reset: 'ZURÜCKSETZEN',
+            confirmReset: '⚠️ Alle Daten zurücksetzen? Schulen, Klassen, Fächer und Bewertungen werden endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
+            importSuccess: 'Daten erfolgreich importiert.',
+            importError: 'Ungültige Datei. Diese Daten können nicht importiert werden.',
+            addSubjectFirstTitle: 'Fügen Sie zuerst ein Fach hinzu, um diesen Bereich freizuschalten.',
+            ptrTitle: 'Noten',
+            ptrDevoir: 'KLASSENARBEIT',
+            ptrCorrecteur: 'KORREKTOR/-IN',
+            ptrEtablissement: 'SCHULE',
+            ptrTotalCopies: 'GESAMTZAHL DER ARBEITEN',
+            ptrTotalCopiesPlaceholder: 'Bsp: 25',
+            ptrSaisieTitle: 'Noteneingabe pro Arbeit',
+            ptrStatsTitle: 'Statistiken',
+            ptrDetailsTooltip: 'Details / Grafik anzeigen',
+            ptrStatTotal: 'Gesamtzahl erfasster Arbeiten :',
+            ptrStatMoyenne: 'Durchschnitt :',
+            ptrStatMin: 'Niedrigste Note :',
+            ptrStatMax: 'Höchste Note :',
+            ptrStatAbsent: 'Abwesend (A)',
+            ptrStatDispense: 'Befreit (D)',
+            ptrStatFraude: 'Betrug (F)',
+            ptrDistributionTitle: 'Anzahl der Arbeiten nach Note (0 bis 20) :',
+            ptrChartSectionTitle: 'Grafik',
+            ptrGenerateStats: 'STATISTIKEN GENERIEREN',
+            ptrExportPdf: 'ALS PDF EXPORTIEREN',
+            ptrStatsModalTitle: 'Statistiken',
+            ptrChartEmptyChoose: 'Wählen Sie einen Diagrammtyp und klicken Sie auf « STATISTIKEN GENERIEREN ».',
+            ptrChartEmptyNoData: 'Noch keine Arbeiten erfasst.',
+            ptrBucketFaible: 'Ungenügend (0-9)',
+            ptrBucketPassable: 'Ausreichend (10-13)',
+            ptrBucketBien: 'Gut (14-16)',
+            ptrBucketTresBien: 'Sehr gut (17-20)',
+            ptrExportedOn: 'Exportiert am',
+            ptrClose: 'Schließen',
+            evalTypeIE: 'TEST',
+            evalTypeDS: 'KA',
+            evalTypeIO: 'MP',
+            evalTypeAutres: 'Sonstiges'
+        }
+    };
+
+    appState = createDefaultState();
+
+    function alertMsg(key) {
+        alert(i18n[appState.lang][key]);
+    }
+
+    const LOCK_SVG_LOCKED = `<svg width="18" height="18" viewBox="0 0 512 512" xml:space="preserve"><path style="fill:#C7CFE2;" d="M365.463,283.767c-18.849,0-34.13-15.281-34.13-34.13V143.593c0-41.539-33.795-75.332-75.332-75.332c-41.539,0-75.333,33.795-75.333,75.332v106.044c0,18.849-15.281,34.13-34.13,34.13s-34.13-15.281-34.13-34.13V143.593C112.408,64.416,176.823,0,256,0s143.592,64.416,143.592,143.592v106.044C399.594,268.486,384.312,283.767,365.463,283.767z"/><g style="opacity:0.1;"><path d="M146.538,283.767c18.849,0,34.13-15.281,34.13-34.13v-76.023h-68.26v76.023C112.408,268.486,127.688,283.767,146.538,283.767z"/><path d="M331.333,173.614v76.023c0,18.849,15.281,34.13,34.13,34.13s34.13-15.281,34.13-34.13v-76.023H331.333z"/></g><path style="fill:#FFD782;" d="M404.055,207.745H107.945c-17.577,0-31.825,14.249-31.825,31.825v240.605c0,17.577,14.248,31.825,31.825,31.825h296.111c17.577,0,31.825-14.248,31.825-31.825V239.57C435.882,221.993,421.632,207.745,404.055,207.745z"/></svg>`;
+    const LOCK_SVG_UNLOCKED = `<svg width="18" height="18" viewBox="0 0 512 512" xml:space="preserve"><path style="fill:#C7CFE2;" d="M112.408,170v-26.406C112.408,64.416,176.823,0,256,0s143.592,64.416,143.592,143.592v106.044c0,18.849-15.281,34.13-34.13,34.13s-34.13-15.281-34.13-34.13V143.592c0-41.539-33.795-75.332-75.332-75.332c-41.539,0-75.333,33.795-75.333,75.332v26.406h-68.259V170z"/><path style="opacity:0.1;" d="M331.333,173.613v76.023c0,18.849,15.281,34.13,34.13,34.13s34.13-15.281,34.13-34.13v-76.023H331.333z"/><path style="fill:#FFD782;" d="M404.055,207.745H107.945c-17.577,0-31.825,14.249-31.825,31.825v240.605c0,17.577,14.248,31.825,31.825,31.825h296.111c17.577,0,31.825-14.248,31.825-31.825V239.57C435.882,221.993,421.632,207.745,404.055,207.745z"/></svg>`;
+    const BG_ICON_SVG = `<svg width="16" height="16" viewBox="0 0 58 58" xml:space="preserve"><g><polygon style="fill:#AFB6BB;" points="16,16 16,42 16,58 58,58 58,16 "/><polygon style="fill:#556080;" points="42,16 42,0 0,0 0,42 16,42 16,16 "/></g></svg>`;
+
+    const STORAGE_KEY = 'osirisTeacherDashboardState_v1';
+    let persistTimer = null;
+
+    function persistState() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        } catch (err) {
+            console.warn('Sauvegarde locale impossible :', err);
+        }
+    }
+
+    function schedulePersist() {
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(persistState, 400);
+    }
+
+    function normalizeState(data) {
+        if (!data || !Array.isArray(data.schools) || !data.schools.length) return null;
+        data.lang = (data.lang === 'FR' || data.lang === 'DE') ? data.lang : 'FR';
+        data.editMode = false;
+        data.theme = data.theme === 'dark' ? 'dark' : 'light';
+        data.font = ['default', 'serif', 'mono'].includes(data.font) ? data.font : 'default';
+        data.customBg = typeof data.customBg === 'string' ? data.customBg : null;
+        if (typeof data.activeSchoolIdx !== 'number') data.activeSchoolIdx = 0;
+        data.schools.forEach(sch => {
+            if (typeof sch.activeClassIdx !== 'number') sch.activeClassIdx = 0;
+            if (!Array.isArray(sch.classes)) sch.classes = [];
+            sch.classes.forEach(cls => {
+                if (!Array.isArray(cls.subjects)) cls.subjects = [];
+                if (!Array.isArray(cls.evaluations)) cls.evaluations = [];
+                if (typeof cls.extListUrl !== 'string') cls.extListUrl = '';
+                if (typeof cls.showExtInput !== 'boolean') cls.showExtInput = true;
+                cls.evaluations.forEach((ev, evIdx) => {
+                    if (!ev.pointeurData || typeof ev.pointeurData !== 'object') ev.pointeurData = null;
+                    if (typeof ev.id !== 'string' || !ev.id) ev.id = 'ev_' + Date.now() + '_' + evIdx;
+                });
+            });
+        });
+        return data;
+    }
+
+    function loadPersistedState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const parsed = normalizeState(JSON.parse(raw));
+            if (!parsed) return false;
+            appState = parsed;
+            return true;
+        } catch (err) {
+            console.warn('Chargement local impossible :', err);
+            return false;
+        }
+    }
+
+    function applyTheme() {
+        document.body.classList.toggle('dark-mode', appState.theme === 'dark');
+        const sun = document.getElementById('themeIconSun');
+        const moon = document.getElementById('themeIconMoon');
+        if (sun && moon) {
+            sun.style.display = appState.theme === 'dark' ? 'none' : 'block';
+            moon.style.display = appState.theme === 'dark' ? 'block' : 'none';
+        }
+    }
+
+    function toggleTheme() {
+        appState.theme = appState.theme === 'dark' ? 'light' : 'dark';
+        applyTheme();
+        persistState();
+    }
+
+    function applyFont() {
+        document.body.classList.remove('font-serif', 'font-mono');
+        if (appState.font === 'serif') document.body.classList.add('font-serif');
+        if (appState.font === 'mono') document.body.classList.add('font-mono');
+    }
+
+    function toggleFont() {
+        const fonts = ['default', 'serif', 'mono'];
+        appState.font = fonts[(fonts.indexOf(appState.font) + 1) % fonts.length];
+        applyFont();
+        persistState();
+    }
+
+    function handleBgButtonClick() {
+        const lang = i18n[appState.lang];
+        if (appState.customBg) {
+            if (confirm(lang.bgClearConfirmMsg)) clearCustomBackground();
+        } else {
+            document.getElementById('bgFileInput').click();
+        }
+    }
+
+    function handleBgUpload(e) {
+        const file = e.target.files[0];
+        const lang = i18n[appState.lang];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert(lang.bgImportError);
+            e.target.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            appState.customBg = evt.target.result;
+            applyCustomBackground();
+            persistState();
+        };
+        reader.onerror = function() {
+            alert(lang.bgImportError);
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
+
+    function clearCustomBackground() {
+        appState.customBg = null;
+        applyCustomBackground();
+        persistState();
+    }
+
+    function applyCustomBackground() {
+        const lang = i18n[appState.lang];
+        const btn = document.getElementById('bgToggleBtn');
+        if (appState.customBg) {
+            document.body.style.backgroundImage = `url("${appState.customBg}")`;
+            document.body.classList.add('custom-bg-active');
+            if (btn) btn.title = lang.bgClearTitle;
+        } else {
+            document.body.style.backgroundImage = '';
+            document.body.classList.remove('custom-bg-active');
+            if (btn) btn.title = lang.bgUploadTitle;
+        }
+    }
+
+    function getActiveSchool() {
+        if (!appState.schools.length) return null;
+        if (appState.activeSchoolIdx >= appState.schools.length) appState.activeSchoolIdx = 0;
+        return appState.schools[appState.activeSchoolIdx];
+    }
+
+    function getActiveClass() {
+        const school = getActiveSchool();
+        if (!school || !school.classes.length) return null;
+        if (school.activeClassIdx >= school.classes.length) school.activeClassIdx = 0;
+        return school.classes[school.activeClassIdx];
+    }
+
+    function renderAll() {
+        renderSchools();
+        renderClasses();
+        updateI18nLabels();
+    }
+
+    function toggleLanguage() {
+        const oldLang = i18n[appState.lang];
+        appState.lang = appState.lang === 'FR' ? 'DE' : 'FR';
+        const newLang = i18n[appState.lang];
+        appState.schools.forEach(sch => {
+            if (sch.name === oldLang.newSchool) sch.name = newLang.newSchool;
+            sch.classes.forEach(cls => {
+                if (cls.name === oldLang.newClass) cls.name = newLang.newClass;
+            });
+        });
+        document.getElementById('langToggleBtn').textContent = appState.lang;
+        document.documentElement.lang = appState.lang.toLowerCase();
+        renderAll();
+        renderClassHeader();
+        persistState();
+    }
+
+    function updateI18nLabels() {
+        const lang = i18n[appState.lang];
+        document.getElementById('navbarTitle').textContent = lang.title;
+        document.getElementById('classesLabel').textContent = lang.classes;
+        document.getElementById('addSubjectBtn').textContent = lang.addSubject;
+        document.getElementById('evaluationsTitle').textContent = lang.evalTitle;
+        document.getElementById('thType').textContent = lang.colType;
+        document.getElementById('thDates').textContent = lang.colDates;
+        document.getElementById('thStats').textContent = lang.colStats;
+        document.getElementById('thChartType').textContent = lang.ptrChartSectionTitle;
+        document.getElementById('thDetails').textContent = lang.colDetails;
+        document.getElementById('extListLabel').textContent = lang.extList;
+        document.getElementById('classLibLabel').textContent = lang.classLib;
+        document.getElementById('classLibLink').textContent = lang.classLibLink;
+        document.getElementById('pdfBtn').textContent = lang.pdf;
+        document.getElementById('exportBtn').textContent = lang.export;
+        document.getElementById('importBtn').textContent = lang.import;
+        document.getElementById('resetBtn').textContent = '⚠️ ' + lang.reset;
+        document.getElementById('resetBtn').title = lang.confirmReset;
+        document.getElementById('addSchoolBtn').title = lang.addSchoolTitle;
+        document.getElementById('addClassBtn').title = lang.addClassTitle;
+        document.getElementById('extListLabel').title = lang.toggleExtTitle;
+        document.getElementById('fontToggleBtn').title = lang.fontToggleTitle;
+        document.getElementById('themeToggleBtn').title = lang.themeToggleTitle;
+        updateEditPencilBtn();
+        applyCustomBackground();
+        renderSchools();
+        renderClasses();
+        renderClassHeader();
+        renderSubjects();
+        renderEvaluations();
+        updatePointeurI18nLabels();
+    }
+
+    function updatePointeurI18nLabels() {
+        const lang = i18n[appState.lang];
+        document.getElementById('ptrModalTitle').textContent = lang.ptrTitle;
+        document.getElementById('ptrCloseBtn').title = lang.ptrClose;
+        document.getElementById('ptrDevoirLabel').textContent = lang.ptrDevoir;
+        document.getElementById('ptrCorrecteurLabel').textContent = lang.ptrCorrecteur;
+        document.getElementById('ptrEtablissementLabel').textContent = lang.ptrEtablissement;
+        document.getElementById('ptrTotalCopiesLabel').textContent = lang.ptrTotalCopies;
+        document.getElementById('h_total_papers').placeholder = lang.ptrTotalCopiesPlaceholder;
+        document.getElementById('ptrSaisieTitleEl').textContent = lang.ptrSaisieTitle;
+        document.getElementById('ptrStatsTitleEl').textContent = lang.ptrStatsTitle;
+        document.getElementById('ptrDetailsBtn').title = lang.ptrDetailsTooltip;
+        document.getElementById('ptrStatTotalLabel').textContent = lang.ptrStatTotal;
+        document.getElementById('ptrStatMoyenneLabel').textContent = lang.ptrStatMoyenne;
+        document.getElementById('ptrStatMinLabel').textContent = lang.ptrStatMin;
+        document.getElementById('ptrStatMaxLabel').textContent = lang.ptrStatMax;
+        document.getElementById('ptrStatAbsentLabel').textContent = lang.ptrStatAbsent;
+        document.getElementById('ptrStatDispenseLabel').textContent = lang.ptrStatDispense;
+        document.getElementById('ptrStatFraudeLabel').textContent = lang.ptrStatFraude;
+        document.getElementById('ptrDistributionTitleEl').textContent = lang.ptrDistributionTitle;
+        document.getElementById('ptrChartSectionTitleEl').textContent = lang.ptrChartSectionTitle;
+        document.getElementById('ptrGenerateStatsBtn').textContent = lang.ptrGenerateStats;
+        document.getElementById('ptrExportPdfBtnLabel').textContent = lang.ptrExportPdf;
+        document.getElementById('ptrStatsModalTitleEl').textContent = lang.ptrStatsModalTitle;
+        document.getElementById('ptrStatsCloseBtn').title = lang.ptrClose;
+        document.getElementById('chartOptDonut').textContent = lang.statDonut;
+        document.getElementById('chartOptPie').textContent = lang.statPie;
+        document.getElementById('chartOptBar').textContent = lang.statBar;
+        document.getElementById('chartOptLine').textContent = lang.statLine;
+        document.getElementById('ptrGenerateStatsBtn2').textContent = lang.ptrGenerateStats;
+
+        const emptyMsgEl = document.getElementById('ptrChartEmptyMsg');
+        const chartPreviewCanvasEl = document.getElementById('chartPreviewCanvas');
+        const chartAlreadyShown = chartPreviewCanvasEl && chartPreviewCanvasEl.style.display !== 'none';
+        if (emptyMsgEl && !chartAlreadyShown) {
+            emptyMsgEl.textContent = lang.ptrChartEmptyChoose;
+        }
+
+        if (typeof currentStats !== 'undefined' && currentStats) {
+            updateCodes();
+        }
+        if (chartAlreadyShown && typeof currentStats !== 'undefined' && currentStats) {
+            renderChart();
+        }
+        const pdfLabelEl = document.getElementById('pdfChartTypeLabel');
+        if (pdfLabelEl && pdfLabelEl.textContent) {
+            const type = document.getElementById('chartTypeSelect').value;
+            pdfLabelEl.textContent = chartTypeLabel(type);
+        }
+    }
+
+    function renderClassHeader() {
+        const lang = i18n[appState.lang];
+        const activeClass = getActiveClass();
+        document.getElementById('classHeaderLabel').textContent = `${lang.dashHeader} ${activeClass ? activeClass.name : ''}`;
+        renderExtList();
+    }
+
+    function toggleEditMode() {
+        const lang = i18n[appState.lang];
+        if (!appState.editMode) {
+            if (!confirm(lang.editUnlockWarning)) return;
+        }
+        appState.editMode = !appState.editMode;
+        updateEditPencilBtn();
+        renderSchools();
+        renderClasses();
+        persistState();
+    }
+
+    function updateEditPencilBtn() {
+        const lang = i18n[appState.lang];
+        const btn = document.getElementById('editPencilBtn');
+        if (appState.editMode) {
+            btn.innerHTML = LOCK_SVG_UNLOCKED;
+            btn.title = lang.unlocked;
+            btn.classList.add('edit-active');
+        } else {
+            btn.innerHTML = LOCK_SVG_LOCKED;
+            btn.title = lang.locked;
+            btn.classList.remove('edit-active');
+        }
+    }
+
+    function renderSchools() {
+        const container = document.getElementById('schoolPillsContainer');
+        const lang = i18n[appState.lang];
+        container.innerHTML = '';
+
+        appState.schools.forEach((sch, sIdx) => {
+            const pill = document.createElement('div');
+            pill.className = 'school-pill' + (sIdx === appState.activeSchoolIdx ? ' active' : '');
+            pill.title = lang.switchSchoolTitle;
+            pill.onclick = (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('.school-logo-btn')) return;
+                if (e.target.tagName === 'INPUT' && appState.editMode) return;
+                appState.activeSchoolIdx = sIdx;
+                renderSchools();
+                renderClasses();
+                renderClassHeader();
+                renderSubjects();
+                renderEvaluations();
+            };
+
+            const fileId = `schoolLogoFile_${sIdx}`;
+            pill.innerHTML = `
+                <input type="file" id="${fileId}" accept="image/*" style="display:none;" onchange="handleSchoolLogoUpload(event, ${sIdx})">
+                <div class="school-logo-btn" ${appState.editMode ? `onclick="document.getElementById('${fileId}').click()"` : ''} title="${lang.changeLogoTitle}">
+                    <div>${sch.logo ? `<img src="${sch.logo}" alt="Logo">` : '🏫'}</div>
+                </div>
+                <input type="text" class="editable-input" value="${sch.name}" ${appState.editMode ? '' : 'readonly'} oninput="appState.schools[${sIdx}].name=this.value" placeholder="${lang.schoolNamePlaceholder}">
+                ${appState.editMode && appState.schools.length > 1 ? `<button class="delete-btn" onclick="removeSchool(${sIdx})" title="${lang.deleteSchoolTitle}">&times;</button>` : ''}
+            `;
+            container.appendChild(pill);
+        });
+
+        const addBtn = document.getElementById('addSchoolBtn');
+        addBtn.style.display = appState.editMode ? 'flex' : 'none';
+    }
+
+    function addSchool() {
+        const lang = i18n[appState.lang];
+        appState.schools.push({
+            id: 'sch_' + Date.now(),
+            name: lang.newSchool,
+            logo: null,
+            activeClassIdx: 0,
+            classes: [{
+                id: 'cls_' + Date.now(),
+                name: lang.newClass,
+                showExtInput: true,
+                extListUrl: '',
+                subjects: [],
+                evaluations: []
+            }]
+        });
+        appState.activeSchoolIdx = appState.schools.length - 1;
+        renderSchools();
+        renderClasses();
+        renderClassHeader();
+        renderSubjects();
+        renderEvaluations();
+        persistState();
+    }
+
+    function removeSchool(sIdx) {
+        if (appState.schools.length > 1) {
+            appState.schools.splice(sIdx, 1);
+            if (appState.activeSchoolIdx >= appState.schools.length) {
+                appState.activeSchoolIdx = appState.schools.length - 1;
+            }
+            renderSchools();
+            renderClasses();
+            renderClassHeader();
+            renderSubjects();
+            renderEvaluations();
+            persistState();
+        }
+    }
+
+    function handleSchoolLogoUpload(e, sIdx) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                appState.schools[sIdx].logo = evt.target.result;
+                renderSchools();
+                persistState();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function renderClasses() {
+        const container = document.getElementById('classChipsContainer');
+        const lang = i18n[appState.lang];
+        container.innerHTML = '';
+        const school = getActiveSchool();
+        if (!school) return;
+
+        school.classes.forEach((cls, cIdx) => {
+            const chip = document.createElement('div');
+            chip.className = 'class-chip' + (cIdx === school.activeClassIdx ? ' active' : '');
+            chip.title = lang.switchClassTitle;
+            chip.onclick = (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                if (e.target.tagName === 'INPUT' && appState.editMode) return;
+                school.activeClassIdx = cIdx;
+                renderClasses();
+                renderClassHeader();
+                renderSubjects();
+                renderEvaluations();
+            };
+
+            chip.innerHTML = `
+                <input type="text" class="editable-input" value="${cls.name}" ${appState.editMode ? '' : 'readonly'} oninput="getActiveSchool().classes[${cIdx}].name=this.value; renderClassHeader();" style="width: 80px;" placeholder="${lang.classNamePlaceholder}">
+                ${appState.editMode && school.classes.length > 1 ? `<button class="delete-btn" onclick="removeClass(${cIdx})" title="${lang.deleteClassTitle}">&times;</button>` : ''}
+            `;
+            container.appendChild(chip);
+        });
+
+        const addBtn = document.getElementById('addClassBtn');
+        addBtn.style.display = appState.editMode ? 'flex' : 'none';
+    }
+
+    function addClass() {
+        const lang = i18n[appState.lang];
+        const school = getActiveSchool();
+        if (!school) return;
+        school.classes.push({
+            id: 'cls_' + Date.now(),
+            name: lang.newClass,
+            showExtInput: true,
+            extListUrl: '',
+            subjects: [],
+            evaluations: []
+        });
+        school.activeClassIdx = school.classes.length - 1;
+        renderClasses();
+        renderClassHeader();
+        renderSubjects();
+        renderEvaluations();
+        persistState();
+    }
+
+    function removeClass(cIdx) {
+        const school = getActiveSchool();
+        if (!school) return;
+        if (school.classes.length > 1) {
+            school.classes.splice(cIdx, 1);
+            if (school.activeClassIdx >= school.classes.length) {
+                school.activeClassIdx = school.classes.length - 1;
+            }
+            renderClasses();
+            renderClassHeader();
+            renderSubjects();
+            renderEvaluations();
+            persistState();
+        }
+    }
+
+    function renderExtList() {
+        const cls = getActiveClass();
+        const inputEl = document.getElementById('extListUrl');
+        const anchor = document.getElementById('extListAnchor');
+        if (!cls || !inputEl || !anchor) return;
+
+        const url = cls.extListUrl && cls.extListUrl.trim() ? cls.extListUrl.trim() : '';
+        inputEl.value = url;
+        inputEl.style.display = cls.showExtInput ? 'inline-block' : 'none';
+
+        if (!url) {
+            anchor.style.display = 'none';
+            anchor.removeAttribute('href');
+            anchor.textContent = '';
+            return;
+        }
+
+        anchor.style.display = 'inline';
+        anchor.href = url;
+
+        let label = url;
+        try {
+            label = new URL(url).hostname.replace(/^www\./, '');
+        } catch (e) {
+            label = url;
+        }
+        anchor.textContent = label + ' ?';
+    }
+
+    function updateExtListUrl(value) {
+        const cls = getActiveClass();
+        if (!cls) return;
+        cls.extListUrl = value ? value.trim() : '';
+        renderExtList();
+    }
+
+    function toggleExtListInput() {
+        const cls = getActiveClass();
+        if (!cls) return;
+        cls.showExtInput = !cls.showExtInput;
+        renderExtList();
+        persistState();
+    }
+
+    function calculateProgress(book) {
+        const total = (book.themesTotal || 0) + (book.lessonsTotal || 0);
+        if (total === 0) return 0;
+        
+        const themesCheckedCount = book.themesChecked.filter(Boolean).length;
+        const lessonsCheckedCount = book.lessonsChecked.filter(Boolean).length;
+        const checked = themesCheckedCount + lessonsCheckedCount;
+
+        return Math.round((checked / total) * 100);
+    }
+
+    // Helper: Enforces that if themes & lessons are defined and no lesson is checked,
+    // theme dots from index 1 upwards cannot be checked.
+    function enforceThemeLessonRule(book) {
+        if (!book) return;
+        const hasLessonChecked = Array.isArray(book.lessonsChecked) && book.lessonsChecked.some(Boolean);
+        const hasBothDefined = (book.themesTotal > 0 && book.lessonsTotal > 0);
+        
+        if (hasBothDefined && !hasLessonChecked && Array.isArray(book.themesChecked)) {
+            for (let k = 1; k < book.themesChecked.length; k++) {
+                book.themesChecked[k] = false;
+            }
+        }
+    }
+
+    // --- Linear Dot Cell Component with Theme/Lesson Rule ---
+    function createDotsCell(sIdx, bIdx, type) {
+        const lang = i18n[appState.lang];
+        const book = getActiveClass().subjects[sIdx].books[bIdx];
+        const totalKey = type + 'Total';
+        const checkedKey = type + 'Checked';
+
+        const wrapper = document.createElement('div');
+
+        // Up/Down Number Input
+        const numInput = document.createElement('input');
+        numInput.type = 'number';
+        numInput.min = '0';
+        numInput.max = '20';
+        numInput.className = 'num-input-ctrl';
+        numInput.value = book[totalKey];
+        numInput.onchange = (e) => {
+            const val = parseInt(e.target.value) || 0;
+            book[totalKey] = val;
+            while (book[checkedKey].length < val) book[checkedKey].push(false);
+            book[checkedKey] = book[checkedKey].slice(0, val);
+            
+            enforceThemeLessonRule(book);
+            renderSubjects();
+            persistState();
+        };
+        wrapper.appendChild(numInput);
+
+        // Linear Dots Container
+        const dotsBox = document.createElement('div');
+        dotsBox.className = 'checkdots';
+
+        const hasLessonChecked = Array.isArray(book.lessonsChecked) && book.lessonsChecked.some(Boolean);
+        const hasBothDefined = (book.themesTotal > 0 && book.lessonsTotal > 0);
+
+        for (let i = 0; i < book[totalKey]; i++) {
+            const isChecked = book[checkedKey][i];
+            
+            let canCheck = (i === 0 || book[checkedKey][i - 1]);
+            let restrictionReason = lang.prevDotTitle;
+
+            // Rule: User defined both theme & lesson totals -> Can't check a 2nd dot (index >= 1) in theme unless at least 1 dot in lesson is checked
+            if (type === 'themes' && hasBothDefined && i >= 1 && !hasLessonChecked) {
+                canCheck = false;
+                restrictionReason = lang.themeLessonRulePrompt;
+            }
+
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'dot' + (isChecked ? ' filled' : '');
+
+            if (!isChecked && !canCheck) {
+                dot.style.opacity = '0.35';
+                dot.style.cursor = 'not-allowed';
+                dot.title = restrictionReason;
+            } else {
+                dot.style.cursor = 'pointer';
+                dot.title = isChecked ? 'Cliquer pour décocher' : 'Cliquer pour cocher';
+            }
+
+            dot.onclick = () => {
+                if (!book[checkedKey][i]) {
+                    // Trying to check dot i
+                    if (type === 'themes' && hasBothDefined && i >= 1 && !hasLessonChecked) {
+                        alert(lang.themeLessonRulePrompt);
+                        return;
+                    }
+                    if (i === 0 || book[checkedKey][i - 1]) {
+                        book[checkedKey][i] = true;
+                    } else {
+                        alert(lang.prevDotTitle);
+                    }
+                } else {
+                    // Unchecking dot i and subsequent dots of this type
+                    for (let k = i; k < book[checkedKey].length; k++) {
+                        book[checkedKey][k] = false;
+                    }
+                    // If unchecking lessons resulted in 0 lessons checked, enforce rule on themes
+                    if (type === 'lessons') {
+                        enforceThemeLessonRule(book);
+                    }
+                }
+                renderSubjects();
+                persistState();
+            };
+            dotsBox.appendChild(dot);
+        }
+
+        wrapper.appendChild(dotsBox);
+        return wrapper;
+    }
+
+    // --- Subjects & Books Rendering ---
+    function renderSubjects() {
+        const container = document.getElementById('subjectsContainer');
+        container.innerHTML = '';
+        const lang = i18n[appState.lang];
+        const activeClass = getActiveClass();
+        if (!activeClass) return;
+
+        activeClass.subjects.forEach((subject, sIdx) => {
+            const card = document.createElement('div');
+            card.className = 'subject-card';
+
+            const header = document.createElement('div');
+            header.className = 'subject-header';
+            header.innerHTML = `
+                <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:0;">
+                    <button class="delete-btn" onclick="removeSubject(${sIdx})" title="${lang.deleteSubjectTitle}">&times;</button>
+                    <input type="text" class="editable-input" value="${subject.name}" oninput="getActiveClass().subjects[${sIdx}].name=this.value">
+                </div>
+            `;
+            card.appendChild(header);
+
+            const body = document.createElement('div');
+            body.className = 'subject-body';
+            
+            const table = document.createElement('table');
+            table.className = 'book-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>${lang.colBook}</th>
+                        <th>${lang.colPreview}</th>
+                        <th>${lang.colThemes}</th>
+                        <th>${lang.colLessons}</th>
+                        <th>${lang.colProgress}</th>
+                        <th>${lang.colActions}</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+            `;
+
+            const tbody = document.createElement('tbody');
+            subject.books.forEach((book, bIdx) => {
+                enforceThemeLessonRule(book);
+
+                const tr = document.createElement('tr');
+
+                // 1. Book Title
+                const tdTitle = document.createElement('td');
+                tdTitle.innerHTML = `<input type="text" class="book-title-input" value="${book.title}" oninput="getActiveClass().subjects[${sIdx}].books[${bIdx}].title=this.value">`;
+                tr.appendChild(tdTitle);
+
+                // 2. Cover Preview / Upload
+                const tdCover = document.createElement('td');
+                const coverId = `cover_input_${sIdx}_${bIdx}`;
+                const coverImgId = `${coverId}_img`;
+                tdCover.innerHTML = `
+                    <input type="file" id="${coverId}" accept="application/pdf,.epub,application/epub+zip" style="display:none;" onchange="handleBookFileExtract(event, ${sIdx}, ${bIdx})">
+                    <input type="file" id="${coverImgId}" accept="image/*" style="display:none;" onchange="handleCoverUpload(event, ${sIdx}, ${bIdx})">
+                    <div class="cover-upload-box" onclick="document.getElementById('${coverId}').click()" title="${lang.extractCoverTitle}">
+                        ${book.coverImg ? `<img src="${book.coverImg}">` : `<span>${lang.extractCoverHint}</span>`}
+                        ${book.extractBusy ? `<div class="cover-busy-overlay">${lang.extracting}</div>` : ''}
+                        <button type="button" class="cover-manual-btn" title="${lang.manualImageTitle}" onclick="event.stopPropagation(); document.getElementById('${coverImgId}').click();">🖼️</button>
+                    </div>
+                `;
+                tr.appendChild(tdCover);
+
+                // 3. Themes
+                const tdThemes = document.createElement('td');
+                tdThemes.appendChild(createDotsCell(sIdx, bIdx, 'themes'));
+                tr.appendChild(tdThemes);
+
+                // 4. Lessons
+                const tdLessons = document.createElement('td');
+                tdLessons.appendChild(createDotsCell(sIdx, bIdx, 'lessons'));
+                tr.appendChild(tdLessons);
+
+                // 5. Progress Bar
+                const pct = calculateProgress(book);
+                const tdProgress = document.createElement('td');
+                tdProgress.innerHTML = `
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                    </div>
+                    <span class="progress-text">${pct}%</span>
+                `;
+                tr.appendChild(tdProgress);
+
+                // 6. Action Link
+                const tdAction = document.createElement('td');
+                tdAction.innerHTML = `<a href="${book.libraryLink || '#'}" target="_blank" class="action-link" onclick="handleLibraryLinkClick(event, '${book.libraryLink || ''}')">${lang.viewLib}</a>`;
+                tr.appendChild(tdAction);
+
+                // 7. Remove Book Row (X)
+                const tdRemove = document.createElement('td');
+                tdRemove.innerHTML = `<button class="delete-btn" onclick="removeBook(${sIdx}, ${bIdx})" title="${lang.deleteBookTitle}">&times;</button>`;
+                tr.appendChild(tdRemove);
+
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            body.appendChild(table);
+
+            const addBkBtn = document.createElement('button');
+            addBkBtn.className = 'add-book-row-btn';
+            addBkBtn.textContent = `+ ${lang.addBook}`;
+            addBkBtn.onclick = () => addBook(sIdx);
+            body.appendChild(addBkBtn);
+
+            card.appendChild(body);
+            container.appendChild(card);
+        });
+
+        updateSectionLocks();
+    }
+
+    function updateSectionLocks() {
+        const lang = i18n[appState.lang];
+        const activeClass = getActiveClass();
+        const hasSubjects = !!(activeClass && activeClass.subjects.length > 0);
+        ['evaluationsSection', 'listsSection', 'actionButtonsRow'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('section-locked', !hasSubjects);
+            el.title = hasSubjects ? '' : lang.addSubjectFirstTitle;
+        });
+    }
+
+    function handleCoverUpload(e, sIdx, bIdx) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                getActiveClass().subjects[sIdx].books[bIdx].coverImg = evt.target.result;
+                renderSubjects();
+                persistState();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Primary path: pick the actual book file (PDF/EPUB). Extracts a real
+    // cover + title/author (+ excerpt when the format supports it) and
+    // writes/updates a matching entry in the shared Osiris library so the
+    // book actually shows up on the shelves — not just as a local
+    // thumbnail here. The dashboard's own row keeps a pointer
+    // (libraryBookId) so re-picking a file for the same row updates that
+    // same library entry instead of creating a duplicate one.
+    function handleBookFileExtract(e, sIdx, bIdx) {
+        const file = e.target.files[0];
+        e.target.value = ''; // allow re-picking the same filename later
+        if (!file) return;
+
+        const lang = i18n[appState.lang];
+        const book = getActiveClass().subjects[sIdx].books[bIdx];
+        book.extractBusy = true;
+        renderSubjects();
+
+        extractBookCoverAndMeta(file).then(function (result) {
+            book.extractBusy = false;
+
+            if (!result) {
+                // Unsupported format or extraction genuinely failed — leave
+                // whatever cover (if any) already there untouched, and let
+                // the person know so it isn't a silent no-op.
+                renderSubjects();
+                alert(lang.extractFailedMsg);
+                return;
+            }
+
+            if (result.cover) book.coverImg = result.cover;
+            const extractedTitle = result.meta && result.meta.title;
+            if (extractedTitle && (!book.title || book.title === lang.newBookTitle)) {
+                book.title = extractedTitle;
+            }
+
+            if (window.OsirisCore) {
+                const lib = OsirisCore.loadLibrary();
+                let entry = book.libraryBookId ? lib.find(function (b) { return b.id === book.libraryBookId; }) : null;
+                if (!entry) {
+                    entry = { id: OsirisCore.makeBookId(), addedAt: Date.now() };
+                    lib.push(entry);
+                    book.libraryBookId = entry.id;
+                }
+                entry.title = extractedTitle || book.title || '';
+                entry.author = (result.meta && result.meta.author) || entry.author || '';
+                entry.cover = result.cover || entry.cover || null;
+                entry.category = entry.category || null;
+                // Every shelf's own canOpenFile() check looks for this exact
+                // flag to decide whether to render an "Open" affordance at
+                // all — it's a synchronous check against the book record,
+                // not a live IndexedDB query per row. Without it, the file
+                // saved below genuinely exists but nothing ever offers to
+                // open it.
+                entry.fileBlob = true;
+                if (result.excerpt) entry.excerpt = result.excerpt;
+                OsirisCore.saveLibrary(lib);
+                book.libraryLink = 'library.html?book=' + entry.id;
+
+                // Reboot-proof copy of the actual file, so "Open" from the
+                // shelf later works — a plain <input type="file"> only
+                // ever gives a one-off File object, no persistent handle
+                // the way the shelves' own file-system-access picker does.
+                OsirisCore.saveFileBlob(entry.id, file);
+            }
+
+            renderSubjects();
+            persistState();
+        }).catch(function () {
+            book.extractBusy = false;
+            renderSubjects();
+            alert(lang.extractFailedMsg);
+        });
+    }
+
+    function addBook(sIdx) {
+        const lang = i18n[appState.lang];
+        getActiveClass().subjects[sIdx].books.push({
+            id: 'bk_' + Date.now(),
+            title: lang.newBookTitle,
+            coverImg: null,
+            themesTotal: 4,
+            themesChecked: [false, false, false, false],
+            lessonsTotal: 4,
+            lessonsChecked: [false, false, false, false],
+            libraryLink: 'library.html'
+        });
+        renderSubjects();
+        persistState();
+    }
+
+    function removeBook(sIdx, bIdx) {
+        getActiveClass().subjects[sIdx].books.splice(bIdx, 1);
+        renderSubjects();
+        persistState();
+    }
+
+    function addSubject() {
+        const lang = i18n[appState.lang];
+        const activeClass = getActiveClass();
+        if (!activeClass) return;
+        activeClass.subjects.push({
+            id: 'subj_' + Date.now(),
+            name: lang.newSubjectName,
+            books: []
+        });
+        renderSubjects();
+        persistState();
+    }
+
+    function removeSubject(sIdx) {
+        const activeClass = getActiveClass();
+        if (!activeClass) return;
+        activeClass.subjects.splice(sIdx, 1);
+        renderSubjects();
+        persistState();
+    }
+
+    // --- SVG Mini Chart Generators ---
+    function getMiniChartEmptySVG() {
+        return `<svg width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="3 3"/><text x="16" y="20.5" font-size="13" text-anchor="middle" fill="#94a3b8">–</text></svg>`;
+    }
+
+    function buildMiniRingSVG(buckets, total, isPie) {
+        const gradientParts = buildGradientParts(buckets, total);
+        const bg = `conic-gradient(${gradientParts.join(', ')})`;
+        if (isPie) {
+            return `<div style="width:28px;height:28px;border-radius:50%;background:${bg};"></div>`;
+        }
+        return `<div style="width:28px;height:28px;border-radius:50%;background:${bg};position:relative;"><div style="position:absolute;inset:6px;background:#f8fafc;border-radius:50%;"></div></div>`;
+    }
+
+    function buildMiniBarSVG(buckets) {
+        const maxCount = Math.max(1, ...buckets.map(b => b.count));
+        const n = buckets.length;
+        const gap = 1.5;
+        const barW = Math.max(2, (30 - (n - 1) * gap) / n);
+        const startX = (32 - (n * barW + (n - 1) * gap)) / 2;
+        const bars = buckets.map((b, i) => {
+            const h = Math.max(1, Math.round((b.count / maxCount) * 20));
+            const x = startX + i * (barW + gap);
+            const y = 24 - h;
+            return `<rect x="${x.toFixed(1)}" y="${y}" width="${barW.toFixed(1)}" height="${h}" rx="1" fill="${b.color}"><title>${b.label} : ${b.count}</title></rect>`;
+        }).join('');
+        return `<svg width="28" height="24" viewBox="0 0 32 28">${bars}</svg>`;
+    }
+
+    function buildMiniLineSVG(buckets) {
+        const maxCount = Math.max(1, ...buckets.map(b => b.count));
+        const w = 32, h = 28, padX = 3, padY = 5;
+        const n = buckets.length;
+        const stepX = n > 1 ? (w - padX * 2) / (n - 1) : 0;
+        const pt = (b, i) => {
+            const x = padX + i * stepX;
+            const y = h - padY - (b.count / maxCount) * (h - padY * 2);
+            return { x: x.toFixed(1), y: y.toFixed(1) };
+        };
+        const points = buckets.map((b, i) => { const p = pt(b, i); return `${p.x},${p.y}`; }).join(' ');
+        const dots = buckets.map((b, i) => { const p = pt(b, i); return `<circle cx="${p.x}" cy="${p.y}" r="1.8" fill="${b.color}"><title>${b.label} : ${b.count}</title></circle>`; }).join('');
+        return `<svg width="28" height="24" viewBox="0 0 32 28"><polyline points="${points}" fill="none" stroke="#003366" stroke-width="1.8"/>${dots}</svg>`;
+    }
+
+    function getMiniChartSVG(style, pointeurData) {
+        if (!pointeurData || !pointeurData.totalCopiesPointed) return getMiniChartEmptySVG();
+        const buckets = getGradeBuckets(pointeurData).filter(b => b.count > 0);
+        if (!buckets.length) return getMiniChartEmptySVG();
+        const total = pointeurData.totalCopiesPointed;
+        if (style === 'bar') return buildMiniBarSVG(buckets);
+        if (style === 'line') return buildMiniLineSVG(buckets);
+        if (style === 'pie') return buildMiniRingSVG(buckets, total, true);
+        return buildMiniRingSVG(buckets, total, false);
+    }
+
+    function openChartModal(idx) {
+        const activeClass = getActiveClass();
+        const ev = activeClass ? activeClass.evaluations[idx] : null;
+        if (!ev) return;
+
+        const modal = document.getElementById('chartModal');
+        const titleEl = document.getElementById('modalChartTitle');
+        const bodyEl = document.getElementById('modalChartBody');
+
+        const lang = i18n[appState.lang];
+        const evalTitleName = ev.type === 'Autres' ? (ev.customType || 'Autres') : ev.type;
+        titleEl.textContent = `${lang.modalAnalysis} ${evalTitleName || lang.evalDefault}`;
+        renderStatChart(bodyEl.querySelector('#modalChartCanvas'), ev.stat, ev.pointeurData);
+        modal.classList.add('active');
+    }
+
+    function closeChartModal(e) {
+        if (!e || e.target.id === 'chartModal' || e.target.classList.contains('modal-close-btn')) {
+            document.getElementById('chartModal').classList.remove('active');
+        }
+    }
+
+    function renderEvaluations() {
+        const tbody = document.getElementById('evalTbody');
+        tbody.innerHTML = '';
+        const lang = i18n[appState.lang];
+        const activeClass = getActiveClass();
+        if (!activeClass) return;
+
+        activeClass.evaluations.forEach((ev, idx) => {
+            const tr = document.createElement('tr');
+
+            const tdType = document.createElement('td');
+            const isAutres = ev.type === 'Autres';
+            tdType.innerHTML = `
+                <div style="display:flex; gap:6px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                    <select class="eval-select" onchange="getActiveClass().evaluations[${idx}].type=this.value; renderEvaluations();">
+                        <option value="IE" ${ev.type === 'IE' ? 'selected' : ''}>${lang.evalTypeIE}</option>
+                        <option value="DS" ${ev.type === 'DS' ? 'selected' : ''}>${lang.evalTypeDS}</option>
+                        <option value="IO" ${ev.type === 'IO' ? 'selected' : ''}>${lang.evalTypeIO}</option>
+                        <option value="Autres" ${ev.type === 'Autres' ? 'selected' : ''}>${lang.evalTypeAutres}</option>
+                    </select>
+                    ${isAutres ? `<input type="text" class="book-title-input" style="width:100px;" placeholder="${lang.evalCustomPlaceholder}" value="${ev.customType || ''}" oninput="getActiveClass().evaluations[${idx}].customType=this.value">` : ''}
+                </div>
+            `;
+            tr.appendChild(tdType);
+
+            const tdDate = document.createElement('td');
+            tdDate.innerHTML = `<input type="date" class="eval-date" value="${ev.date}" onchange="getActiveClass().evaluations[${idx}].date=this.value">`;
+            tr.appendChild(tdDate);
+
+            const tdStat = document.createElement('td');
+            tdStat.innerHTML = `
+                <div class="stat-preview-box" onclick="openChartModal(${idx})" title="${lang.statCalcTitle}">
+                    ${getMiniChartSVG(ev.stat, ev.pointeurData)}
+                </div>
+            `;
+            tr.appendChild(tdStat);
+
+            const tdChartType = document.createElement('td');
+            tdChartType.innerHTML = `
+                <select class="eval-select" style="font-size:0.8rem; padding:3px 6px;" onchange="getActiveClass().evaluations[${idx}].stat=this.value; renderEvaluations();">
+                    <option value="donut" ${ev.stat === 'donut' ? 'selected' : ''}>${lang.statDonut}</option>
+                    <option value="bar" ${ev.stat === 'bar' ? 'selected' : ''}>${lang.statBar}</option>
+                    <option value="pie" ${ev.stat === 'pie' ? 'selected' : ''}>${lang.statPie}</option>
+                    <option value="line" ${ev.stat === 'line' ? 'selected' : ''}>${lang.statLine}</option>
+                </select>
+            `;
+            tr.appendChild(tdChartType);
+
+            const tdDetails = document.createElement('td');
+            tdDetails.innerHTML = `<button class="ctrl-btn" style="color:var(--accent); border-color:var(--accent);" onclick="openPointeurModal('${ev.id}')" title="${lang.statCalcTitle}"><svg width="20px" height="20px" viewBox="0 0 48 48" fill="none">
+        <rect width="48" height="48" fill="white" fill-opacity="0.01"/>
+        <path d="M39 4H11C9.89543 4 9 4.89543 9 6V42C9 43.1046 9.89543 44 11 44H39C40.1046 44 41 43.1046 41 42V6C41 4.89543 40.1046 4 39 4Z" fill="#2F88FF" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 30L31 30" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 36H24" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="17" y="12" width="14" height="10" fill="#2F88FF" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg></button>`;
+            tr.appendChild(tdDetails);
+
+            const tdRemove = document.createElement('td');
+            tdRemove.innerHTML = `<button class="delete-btn" onclick="removeEvalRow(${idx})" title="${lang.deleteEvalTitle}">&times;</button>`;
+            tr.appendChild(tdRemove);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addEvalRow() {
+        const activeClass = getActiveClass();
+        if (!activeClass) return;
+        activeClass.evaluations.push({
+            id: 'ev_' + Date.now(),
+            type: 'IE',
+            customType: '',
+            date: new Date().toISOString().split('T')[0],
+            stat: 'donut',
+            pointeurData: null
+        });
+        renderEvaluations();
+        persistState();
+    }
+
+    function removeEvalRow(idx) {
+        getActiveClass().evaluations.splice(idx, 1);
+        renderEvaluations();
+        persistState();
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify(appState, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const stamp = new Date().toISOString().split('T')[0];
+        a.href = url;
+        a.download = `tableau_de_bord_${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function triggerImport() {
+        document.getElementById('importFileInput').click();
+    }
+
+    function handleImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const lang = i18n[appState.lang];
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const parsed = normalizeState(JSON.parse(evt.target.result));
+                if (parsed) {
+                    appState = parsed;
+                    document.getElementById('langToggleBtn').textContent = appState.lang;
+                    document.documentElement.lang = appState.lang.toLowerCase();
+                    applyTheme();
+                    applyFont();
+                    applyCustomBackground();
+                    renderAll();
+                    renderClassHeader();
+                    renderSubjects();
+                    renderEvaluations();
+                    persistState();
+                    alert(lang.importSuccess);
+                } else {
+                    alert(lang.importError);
+                }
+            } catch (err) {
+                alert(lang.importError);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    }
+
+    function resetAll() {
+        const lang = i18n[appState.lang];
+        if (!confirm(lang.confirmReset)) return;
+        const keepLang = appState.lang;
+        const keepTheme = appState.theme;
+        const keepFont = appState.font;
+        const keepBg = appState.customBg;
+        appState = createDefaultState(keepLang);
+        appState.theme = keepTheme;
+        appState.font = keepFont;
+        appState.customBg = keepBg;
+        document.getElementById('langToggleBtn').textContent = appState.lang;
+        applyTheme();
+        applyFont();
+        applyCustomBackground();
+        renderAll();
+        renderClassHeader();
+        renderSubjects();
+        renderEvaluations();
+        persistState();
+    }
+
+    // --- Dynamic Print Report Header Generator per Highlighted School & Class ---
+    function updatePrintHeader() {
+        const school = getActiveSchool();
+        const cls = getActiveClass();
+        const lang = i18n[appState.lang];
+        const headerEl = document.getElementById('printReportHeader');
+        if (!headerEl) return;
+
+        const schoolName = school ? school.name : lang.newSchool;
+        const className = cls ? cls.name : lang.newClass;
+        const logoHtml = school && school.logo ? `<img src="${school.logo}" alt="Logo">` : '🏢';
+
+        document.getElementById('printSchoolLogo').innerHTML = logoHtml;
+        document.getElementById('printSchoolName').textContent = schoolName;
+        document.getElementById('printClassName').textContent = `${lang.classes} ${className}`;
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(appState.lang === 'FR' ? 'fr-FR' : 'de-DE', {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        document.getElementById('printReportDate').textContent = `${lang.ptrExportedOn || 'Exporté le'} ${dateStr}`;
+    }
+
+    function triggerPdfReport() {
+        updatePrintHeader();
+        window.print();
+    }
+
+    // --- Initializer ---
+    function init() {
+        loadPersistedState();
+        document.documentElement.lang = appState.lang.toLowerCase();
+        document.getElementById('langToggleBtn').textContent = appState.lang;
+        document.getElementById('bgToggleBtn').innerHTML = BG_ICON_SVG;
+        applyTheme();
+        applyFont();
+        applyCustomBackground();
+        updateEditPencilBtn();
+        renderSchools();
+        renderClasses();
+        updateI18nLabels();
+        renderClassHeader();
+        renderSubjects();
+        renderEvaluations();
+        document.addEventListener('input', schedulePersist);
+        document.addEventListener('change', schedulePersist);
+    }
+
+    // --- Pointeur module ---
+    let activeEvalId = null;
+    let tallyState = {};
+    let currentStats = null;
+    let ptrDirty = false;
+    const ptrHeaderFields = ['h_devoir', 'h_correcteur', 'h_etablissement'];
+
+    function ptrEmptyPointeurData() {
+        return {
+            totalPapers: 0,
+            tallyState: {},
+            noteCounts: null,
+            countA: 0, countD: 0, countF: 0,
+            numericCopiesCount: 0,
+            generatedAt: null
+        };
+    }
+
+    function getActiveEvaluation() {
+        const cls = getActiveClass();
+        if (!cls || !activeEvalId) return null;
+        return cls.evaluations.find(e => e.id === activeEvalId) || null;
+    }
+
+    function ptrSetDirty() {
+        ptrDirty = true;
+        const badge = document.getElementById('ptrUnsavedBadge');
+        if (badge) {
+            badge.textContent = i18n[appState.lang].ptrUnsavedBadge;
+            badge.style.display = 'block';
+        }
+    }
+
+    function ptrClearDirty() {
+        ptrDirty = false;
+        const badge = document.getElementById('ptrUnsavedBadge');
+        if (badge) badge.style.display = 'none';
+    }
+
+    function ptrInit() {
+        ptrLoadHeaderData();
+    }
+
+    function ptrLoadHeaderData() {
+        ptrHeaderFields.forEach(id => {
+            const val = localStorage.getItem('osiris_' + id);
+            if (val) document.getElementById(id).value = val;
+        });
+    }
+
+    function ptrSaveHeaderData() {
+        ptrHeaderFields.forEach(id => {
+            localStorage.setItem('osiris_' + id, document.getElementById(id).value);
+        });
+    }
+
+    function openPointeurModal(evalId) {
+        activeEvalId = evalId;
+        const ev = getActiveEvaluation();
+        const data = (ev && ev.pointeurData) ? ev.pointeurData : ptrEmptyPointeurData();
+
+        tallyState = data.tallyState ? JSON.parse(JSON.stringify(data.tallyState)) : {};
+        document.getElementById('h_total_papers').value = data.totalPapers || '';
+        ptrClearDirty();
+
+        ptrLoadHeaderData();
+        updateCodes();
+        document.getElementById('pointeurModal').classList.add('active');
+    }
+
+    function closePointeurModal() {
+        if (ptrDirty) {
+            const lang = i18n[appState.lang];
+            if (!confirm(lang.ptrUnsavedConfirm)) return;
+        }
+        document.getElementById('pointeurModal').classList.remove('active');
+        document.getElementById('statsModalOverlay').classList.remove('active');
+        activeEvalId = null;
+        tallyState = {};
+        ptrClearDirty();
+    }
+
+    function updateCodes() {
+        const name = document.getElementById('h_correcteur').value.trim();
+        const total = parseInt(document.getElementById('h_total_papers').value) || 0;
+
+        let initials = "";
+        if (name) {
+            const parts = name.split(/\s+/).filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                initials = (parts[0][0] + parts[1][0]).toUpperCase();
+            } else if (parts.length === 1) {
+                initials = parts[0].substring(0, 2).toUpperCase();
+            }
+        }
+
+        const padLength = 2;
+        const startNum = 1;
+
+        let codesHTML = "";
+        for (let i = 0; i < total; i++) {
+            let currentNum = startNum + i;
+            let numStr = currentNum.toString().padStart(padLength, '0');
+            let codeText = `${initials}${numStr}`.toUpperCase();
+
+            let notesHTML = "";
+            for (let n = 0; n <= 20; n++) {
+                let noteStr = n.toString().padStart(2, '0');
+                let isChecked = tallyState[i] === n ? 'checked' : '';
+                notesHTML += `
+                    <label class="note-dot-label">
+                        <span class="note-num">${noteStr}</span>
+                        <input type="radio" class="dot-radio" name="grade_${i}" value="${n}" ${isChecked} onchange="setGrade(${i}, ${n})">
+                    </label>
+                `;
+            }
+
+            const specials = ['A', 'D', 'F'];
+            specials.forEach(status => {
+                let isChecked = tallyState[i] === status ? 'checked' : '';
+                notesHTML += `
+                    <label class="note-dot-label">
+                        <span class="note-num" style="color:var(--dot-special);">${status}</span>
+                        <input type="radio" class="dot-radio special" name="grade_${i}" value="${status}" ${isChecked} onchange="setGrade(${i}, '${status}')">
+                    </label>
+                `;
+            });
+
+            codesHTML += `
+                <div class="copy-row">
+                    <div class="copy-code">${codeText}</div>
+                    <div class="copy-notes-container">${notesHTML}</div>
+                </div>
+            `;
+        }
+
+        document.getElementById('codes-list').innerHTML = codesHTML;
+        updateStatistics();
+    }
+
+    function setGrade(index, note) {
+        tallyState[index] = note;
+        ptrSetDirty();
+        updateStatistics();
+    }
+
+    function updateStatistics() {
+        const totalPapers = parseInt(document.getElementById('h_total_papers').value) || 0;
+        let totalCopiesPointed = 0;
+        let sumNotes = 0;
+        let minNote = 21;
+        let maxNote = -1;
+        let countA = 0;
+        let countD = 0;
+        let countF = 0;
+
+        let noteCounts = {};
+        for (let n = 0; n <= 20; n++) {
+            noteCounts[n] = 0;
+        }
+
+        for (let i = 0; i < totalPapers; i++) {
+            if (tallyState[i] !== undefined && tallyState[i] !== null) {
+                let val = tallyState[i];
+                totalCopiesPointed++;
+
+                if (val === 'A') {
+                    countA++;
+                } else if (val === 'D') {
+                    countD++;
+                } else if (val === 'F') {
+                    countF++;
+                } else {
+                    let note = parseInt(val, 10);
+                    noteCounts[note]++;
+                    sumNotes += note;
+                    if (note < minNote) minNote = note;
+                    if (note > maxNote) maxNote = note;
+                }
+            }
+        }
+
+        const numericCopiesCount = totalCopiesPointed - (countA + countD + countF);
+        const hasNumericCopies = numericCopiesCount > 0;
+
+        document.getElementById('stat-total').innerText = totalCopiesPointed;
+        document.getElementById('stat-moyenne').innerText = hasNumericCopies ? (sumNotes / numericCopiesCount).toFixed(2) : "0.00";
+        document.getElementById('stat-min').innerText = hasNumericCopies ? minNote.toString().padStart(2, '0') : "-";
+        document.getElementById('stat-max').innerText = hasNumericCopies ? maxNote.toString().padStart(2, '0') : "-";
+        document.getElementById('stat-count-A').innerText = countA;
+        document.getElementById('stat-count-D').innerText = countD;
+        document.getElementById('stat-count-F').innerText = countF;
+
+        let col1HTML = "";
+        let col2HTML = "";
+
+        for (let n = 0; n <= 11; n++) {
+            let noteStr = n.toString().padStart(2, '0');
+            col1HTML += `<div class="dist-item">Note ${noteStr}/20 : <span id="stat-count-${n}">${noteCounts[n]}</span></div>`;
+        }
+
+        for (let n = 12; n <= 20; n++) {
+            let noteStr = n.toString().padStart(2, '0');
+            col2HTML += `<div class="dist-item">Note ${noteStr}/20 : <span id="stat-count-${n}">${noteCounts[n]}</span></div>`;
+        }
+        const distLang = i18n[appState.lang];
+        col2HTML += `<div class="dist-item">${distLang.ptrStatAbsent} : <span class="special-count" id="stat-dist-A">${countA}</span></div>`;
+        col2HTML += `<div class="dist-item">${distLang.ptrStatDispense} : <span class="special-count" id="stat-dist-D">${countD}</span></div>`;
+        col2HTML += `<div class="dist-item">${distLang.ptrStatFraude} : <span class="special-count" id="stat-dist-F">${countF}</span></div>`;
+
+        document.getElementById('distribution-grid').innerHTML =
+            `<div class="distribution-col">${col1HTML}</div><div class="distribution-col">${col2HTML}</div>`;
+
+        currentStats = { noteCounts, countA, countD, countF, totalCopiesPointed, numericCopiesCount };
+    }
+
+    function generateStatistics() {
+        updateCodes();
+
+        const ev = getActiveEvaluation();
+        if (!ev) return;
+
+        const totalPapers = parseInt(document.getElementById('h_total_papers').value) || 0;
+
+        ev.pointeurData = {
+            totalPapers: totalPapers,
+            tallyState: JSON.parse(JSON.stringify(tallyState)),
+            noteCounts: currentStats.noteCounts,
+            countA: currentStats.countA,
+            countD: currentStats.countD,
+            countF: currentStats.countF,
+            totalCopiesPointed: currentStats.totalCopiesPointed,
+            numericCopiesCount: currentStats.numericCopiesCount,
+            generatedAt: new Date().toISOString()
+        };
+
+        persistState();
+        renderEvaluations();
+        ptrClearDirty();
+    }
+
+    function exportPDF() {
+        updateCodes();
+
+        const now = new Date();
+        const formatted = now.toLocaleString('fr-FR', {
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        const originalTitle = document.title;
+        const stampEl = document.getElementById('pdf-export-timestamp');
+        stampEl.textContent = i18n[appState.lang].ptrExportedOn + ' ' + formatted;
+
+        const devoir = document.getElementById('h_devoir').value.trim();
+        document.title = (devoir ? devoir + ' - ' : '') + 'Pointeur_' + now.toISOString().slice(0, 10);
+
+        const type = document.getElementById('chartTypeSelect').value;
+        document.getElementById('pdfChartTypeLabel').textContent = chartTypeLabel(type);
+
+        // The chart section is display:none outside of print, so Chart.js would
+        // otherwise draw into a 0x0 canvas and the chart stays blank in the PDF.
+        // Make it briefly visible (with a real width) so Chart.js can measure it.
+        const pdfChartSection = document.getElementById('pdfChartSection');
+        pdfChartSection.style.display = 'block';
+        renderStatChart(document.getElementById('pdfChartCanvas'), type, currentStats);
+
+        document.body.classList.add('ptr-printing');
+        window.print();
+        document.body.classList.remove('ptr-printing');
+        pdfChartSection.style.display = '';
+
+        document.title = originalTitle;
+    }
+
+    // Safety net: once the print stylesheet actually applies (canvas height
+    // changes to the print-specific 130px), force the chart to re-measure and
+    // redraw itself so it never gets stuck showing its pre-print size/blank state.
+    window.addEventListener('beforeprint', function() {
+        const pdfChart = ptrChartInstances['pdfChartCanvas'];
+        if (pdfChart) pdfChart.resize();
+    });
+
+    function openStatsModal() {
+        updateCodes();
+        document.getElementById('statsModalOverlay').classList.add('active');
+    }
+
+    function closeStatsModal() {
+        document.getElementById('statsModalOverlay').classList.remove('active');
+    }
+
+    function chartTypeLabel(type) {
+        const lang = i18n[appState.lang];
+        const labels = { donut: lang.statDonut, pie: lang.statPie, bar: lang.statBar, line: lang.statLine };
+        return labels[type] || '';
+    }
+
+    const ptrChartInstances = {};
+
+    const ptrAverageLinePlugin = {
+        id: 'ptrAverageLine',
+        afterDraw(chart, args, opts) {
+            if (!opts || opts.value == null) return;
+            const { ctx, chartArea, scales } = chart;
+            const floorIdx = Math.max(0, Math.floor(opts.value));
+            const fraction = opts.value - floorIdx;
+            const ceilIdx = Math.min(floorIdx + 1, scales.x.ticks.length - 1);
+            const xFloor = scales.x.getPixelForTick(floorIdx);
+            const xCeil = scales.x.getPixelForTick(ceilIdx);
+            const x = xFloor + (xCeil - xFloor) * fraction;
+            ctx.save();
+            ctx.strokeStyle = opts.color || '#e67e22';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(x, chartArea.top);
+            ctx.lineTo(x, chartArea.bottom);
+            ctx.stroke();
+            ctx.fillStyle = opts.color || '#e67e22';
+            ctx.font = '11px sans-serif';
+            ctx.fillText(opts.label || '', x + 4, chartArea.top + 12);
+            ctx.restore();
+        }
+    };
+    Chart.register(ptrAverageLinePlugin);
+
+    function ptrComputeAverage(stats) {
+        let sum = 0, count = 0;
+        for (let n = 0; n <= 20; n++) {
+            const c = stats.noteCounts[n] || 0;
+            sum += n * c;
+            count += c;
+        }
+        return count > 0 ? sum / count : null;
+    }
+
+    function ptrResolveThemeColors(canvas) {
+        const anchor = canvas.closest('#pointeurModal') || document.body;
+        const styles = getComputedStyle(anchor);
+        const textColor = styles.getPropertyValue('--text-color').trim() || '#333333';
+        let gridColor = styles.getPropertyValue('--border-color').trim();
+        if (!gridColor) gridColor = styles.getPropertyValue('--border-grey').trim() || '#cbd5e1';
+        return { textColor, gridColor };
+    }
+
+    function ptrShowChartEmpty(canvas) {
+        const existing = ptrChartInstances[canvas.id];
+        if (existing) { existing.destroy(); delete ptrChartInstances[canvas.id]; }
+        canvas.style.display = 'none';
+        const container = canvas.parentElement;
+        let emptyEl = container.querySelector('.chart-empty-msg');
+        if (!emptyEl) {
+            emptyEl = document.createElement('div');
+            emptyEl.className = 'chart-empty-msg';
+            container.insertBefore(emptyEl, canvas);
+        }
+        emptyEl.textContent = i18n[appState.lang].ptrChartEmptyNoData;
+        emptyEl.style.display = '';
+    }
+
+    function ptrHideChartEmpty(canvas) {
+        const emptyEl = canvas.parentElement.querySelector('.chart-empty-msg');
+        if (emptyEl) emptyEl.style.display = 'none';
+        canvas.style.display = 'block';
+    }
+
+    function renderStatChart(canvas, type, stats) {
+        if (!canvas) return;
+        if (!stats || stats.totalCopiesPointed === 0) {
+            ptrShowChartEmpty(canvas);
+            return;
+        }
+        ptrHideChartEmpty(canvas);
+
+        const existing = ptrChartInstances[canvas.id];
+        if (existing) { existing.destroy(); delete ptrChartInstances[canvas.id]; }
+
+        const { textColor, gridColor } = ptrResolveThemeColors(canvas);
+        const lang = i18n[appState.lang];
+        let config;
+
+        if (type === 'donut' || type === 'pie') {
+            const buckets = getGradeBuckets(stats).filter(b => b.count > 0);
+            const total = stats.totalCopiesPointed;
+            config = {
+                type: type === 'donut' ? 'doughnut' : 'pie',
+                data: {
+                    labels: buckets.map(b => b.label),
+                    datasets: [{ data: buckets.map(b => b.count), backgroundColor: buckets.map(b => b.color) }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: type === 'donut' ? '55%' : 0,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor } },
+                        tooltip: {
+                            callbacks: {
+                                label(ctx) {
+                                    const value = ctx.parsed;
+                                    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                    return `${ctx.label} : ${value} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        } else {
+            const entries = [];
+            for (let n = 0; n <= 20; n++) {
+                entries.push({ label: n.toString().padStart(2, '0'), count: stats.noteCounts[n], color: '#27ae60' });
+            }
+            if (stats.countA > 0) entries.push({ label: 'A', count: stats.countA, color: '#95a5a6' });
+            if (stats.countD > 0) entries.push({ label: 'D', count: stats.countD, color: '#7f8c8d' });
+            if (stats.countF > 0) entries.push({ label: 'F', count: stats.countF, color: '#34495e' });
+
+            const moyenne = ptrComputeAverage(stats);
+            config = {
+                type: type === 'bar' ? 'bar' : 'line',
+                data: {
+                    labels: entries.map(e => e.label),
+                    datasets: [{
+                        label: lang.ptrStatTotal,
+                        data: entries.map(e => e.count),
+                        backgroundColor: entries.map(e => e.color),
+                        borderColor: '#27ae60',
+                        fill: false,
+                        tension: 0.25,
+                        pointBackgroundColor: entries.map(e => e.color),
+                        pointRadius: type === 'line' ? 3 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label(ctx) {
+                                    const value = ctx.parsed.y;
+                                    const pct = stats.totalCopiesPointed > 0 ? ((value / stats.totalCopiesPointed) * 100).toFixed(1) : '0.0';
+                                    return `${value} (${pct}%)`;
+                                }
+                            }
+                        },
+                        ptrAverageLine: (type === 'bar' && moyenne != null) ? {
+                            value: moyenne,
+                            color: '#e67e22',
+                            label: `${lang.ptrStatMoyenne} ${moyenne.toFixed(2)}`
+                        } : { value: null }
+                    },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+                    }
+                }
+            };
+        }
+
+        ptrChartInstances[canvas.id] = new Chart(canvas.getContext('2d'), config);
+    }
+
+    function renderChart() {
+        updateCodes();
+        const type = document.getElementById('chartTypeSelect').value;
+        renderStatChart(document.getElementById('chartPreviewCanvas'), type, currentStats);
+    }
+
+    function getGradeBuckets(stats) {
+        const lang = i18n[appState.lang];
+        const buckets = [
+            { label: lang.ptrBucketFaible, color: '#e74c3c', count: 0 },
+            { label: lang.ptrBucketPassable, color: '#f39c12', count: 0 },
+            { label: lang.ptrBucketBien, color: '#27ae60', count: 0 },
+            { label: lang.ptrBucketTresBien, color: '#16a085', count: 0 }
+        ];
+        for (let n = 0; n <= 20; n++) {
+            const c = stats.noteCounts[n];
+            if (n <= 9) buckets[0].count += c;
+            else if (n <= 13) buckets[1].count += c;
+            else if (n <= 16) buckets[2].count += c;
+            else buckets[3].count += c;
+        }
+        if (stats.countA > 0) buckets.push({ label: lang.ptrStatAbsent, color: '#95a5a6', count: stats.countA });
+        if (stats.countD > 0) buckets.push({ label: lang.ptrStatDispense, color: '#7f8c8d', count: stats.countD });
+        if (stats.countF > 0) buckets.push({ label: lang.ptrStatFraude, color: '#34495e', count: stats.countF });
+        return buckets;
+    }
+
+    function buildGradientParts(buckets, total) {
+        let cumulative = 0;
+        const gradientParts = [];
+        buckets.forEach(b => {
+            if (b.count === 0) return;
+            const start = (cumulative / total) * 360;
+            cumulative += b.count;
+            const end = (cumulative / total) * 360;
+            gradientParts.push(`${b.color} ${start}deg ${end}deg`);
+        });
+        return gradientParts;
+    }
+
+    ptrInit();
+    init();
+    repairMissingFileBlobFlagsIfNeeded();
+</script>
+</body>
+</html>

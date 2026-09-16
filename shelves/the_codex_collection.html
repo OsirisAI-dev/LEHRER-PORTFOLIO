@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Codex — Bibliothèque</title>
+<meta name="description" content="Bibliothèque personnelle avec animation de livres en CSS, extraction de couverture réelle (PDF/EPUB) et thème clair/sombre." />
+<link rel="stylesheet" href="/fonts/fonts.css" />
+<style>
+  /* -- Reset -------------------------------------------------------- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* -- Tokens — dark (default) ------------------------------------- */
+  :root {
+    --bg:        #1a1710;
+    --bg2:       #231f15;
+    --panel:     #211c14;
+    --txt-hi:    #e8dfc8;
+    --txt-mid:   #8a8070;
+    --txt-lo:    #4a4438;
+    --paper:     #f5f0e4;
+    --paper-line:#ddd8c6;
+    --accent:    #d4a76a;
+    --accent-hi: #f0c98a;
+    --input-bg:      #3a2c22;
+    --input-border:  #6b4a2f;
+    --input-focus:   #e0b25a;
+    --overlay-04: rgba(255,255,255,.04);
+    --overlay-06: rgba(255,255,255,.06);
+    --overlay-08: rgba(255,255,255,.08);
+    --overlay-12: rgba(255,255,255,.12);
+    --overlay-strong: rgba(0,0,0,.55);
+    --modal-backdrop: rgba(8,6,3,.72);
+    --danger: #c25050;
+    --spring: cubic-bezier(0.34, 1.18, 0.64, 1);
+    --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --bg:        #efe7d4;
+    --bg2:       #e4dabf;
+    --panel:     #fbf6ea;
+    --txt-hi:    #2c2416;
+    --txt-mid:   #6c6250;
+    --txt-lo:    #a89e88;
+    --paper:     #fffdf7;
+    --paper-line:#e2dcc9;
+    --accent:    #a56a2c;
+    --accent-hi: #7d4e1c;
+    --input-bg:      #fffaf0;
+    --input-border:  #d3bf98;
+    --input-focus:   #a56a2c;
+    --overlay-04: rgba(0,0,0,.035);
+    --overlay-06: rgba(0,0,0,.05);
+    --overlay-08: rgba(0,0,0,.07);
+    --overlay-12: rgba(0,0,0,.1);
+    --overlay-strong: rgba(0,0,0,.28);
+    --modal-backdrop: rgba(60,50,30,.45);
+    --danger: #a83c3c;
+    color-scheme: light;
+  }
+
+  /* -- Base --------------------------------------------------------- */
+  html, body { height: 100%; }
+
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--txt-hi);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 5rem;
+    position: relative;
+    transition: background .35s var(--smooth), color .35s var(--smooth);
+  }
+
+  #bgGradient {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-image: radial-gradient(ellipse at center, color-mix(in srgb, var(--bg2) 85%, transparent) 0%, var(--bg) 100%);
+    transition: background .35s var(--smooth);
+  }
+
+  #bgImage {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity .5s var(--smooth);
+    pointer-events: none;
+  }
+
+  #bgImage.active { opacity: var(--bg-opacity, .35); }
+
+  /* -- Topbar ------------------------------------------------------- */
+  .codex-topbar {
+    width: 100%;
+    max-width: 1613px;
+    display: flex;
+    justify-content: flex-end;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--overlay-12);
+    background: var(--overlay-04);
+    color: var(--txt-hi);
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .15s;
+  }
+
+  .icon-btn:hover { background: var(--overlay-08); border-color: var(--accent); transform: translateY(-1px); }
+  .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    height: 40px;
+    padding: 0 1.1rem;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hi));
+    color: #1a1710;
+    font-family: 'Inter', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .2s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+  .btn-primary svg { width: 16px; height: 16px; stroke: #1a1710; fill: none; stroke-width: 2; }
+
+  /* -- Page header -------------------------------------------------- */
+  .codex-header { text-align: center; margin-bottom: 3rem; }
+
+  .codex-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: var(--txt-hi);
+  }
+
+  .codex-header h1 em {
+    font-style: italic;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hi));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .codex-header p {
+    margin-top: .6rem;
+    font-size: .82rem;
+    font-weight: 300;
+    color: var(--txt-mid);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  /* -- Stage (book grid) ------------------------------------------- */
+  .codex-stage {
+    width: 100%;
+    /* 168px item + 38.4px column gap (2.4rem), 8 columns max:
+       8*168 + 7*38.4 = 1612.8px — caps wide screens at 8-across while
+       narrower widths still wrap naturally to fewer per row. */
+    max-width: 1613px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3.2rem 2.4rem;
+    align-items: flex-end;
+  }
+
+  .codex-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--txt-mid);
+    margin-top: 2rem;
+    text-align: center;
+  }
+  .codex-empty svg { width: 46px; height: 46px; stroke: var(--txt-lo); fill: none; stroke-width: 1.3; }
+  .codex-empty span { font-size: .85rem; letter-spacing: .04em; }
+
+  /* -- Item --------------------------------------------------------- */
+  .codex-item { display: flex; flex-direction: column; align-items: center; }
+
+  /* -- Book shell --------------------------------------------------- */
+  .vol-shell {
+    width: 168px;
+    height: 240px;
+    position: relative;
+    perspective: 900px;
+    transform-origin: left center;
+    transition: transform .45s var(--spring), filter .45s var(--smooth);
+    cursor: pointer;
+  }
+
+  .vol-shell:hover, .vol-shell.force-open {
+    transform: translateY(-10px) scale(1.03) rotateZ(-6deg);
+    filter: drop-shadow(0 22px 36px rgba(0,0,0,.5));
+  }
+
+  .vol-pages {
+    position: absolute;
+    inset: 3px 0 3px 3px;
+    border-radius: 4px 10px 10px 4px;
+    z-index: 1;
+    overflow: hidden;
+    transition: transform .45s var(--smooth);
+    background-color: var(--paper);
+    box-shadow:
+      inset -2px 0 0 var(--paper-line),
+      inset -4px 0 0 #eceadc,
+      inset -6px 0 0 var(--paper-line),
+      inset -8px 0 0 #eceadc,
+      inset -10px 0 0 var(--paper-line),
+      2px 0 8px rgba(0,0,0,.22);
+  }
+
+  .vol-shell:hover .vol-pages, .vol-shell.force-open .vol-pages { transform: translateX(6px); }
+
+  .pages-plain { background-color: var(--paper); }
+  .pages-ruled {
+    background-color: var(--paper);
+    background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 19px, var(--paper-line) 19px, var(--paper-line) 20px);
+  }
+  .pages-crosshatch {
+    background-color: var(--paper);
+    background-image:
+      repeating-linear-gradient(to right, transparent 0px, transparent 14px, var(--paper-line) 14px, var(--paper-line) 15px),
+      repeating-linear-gradient(to bottom, transparent 0px, transparent 14px, var(--paper-line) 14px, var(--paper-line) 15px);
+  }
+  .pages-dotgrid {
+    background-color: var(--paper);
+    background-image: radial-gradient(circle, var(--paper-line) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+
+  /* -- Jacket ------------------------------------------------------- */
+  .vol-jacket {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: 4px 10px 10px 4px;
+    transform-origin: left center;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    transition: transform .5s var(--spring), box-shadow .5s var(--smooth);
+    box-shadow: inset 3px 0 8px rgba(0,0,0,.4), 2px 2px 12px rgba(0,0,0,.4);
+  }
+
+  .vol-shell:hover .vol-jacket, .vol-shell.force-open .vol-jacket {
+    transform: perspective(900px) rotateY(-38deg);
+    box-shadow: inset 3px 0 8px rgba(0,0,0,.4), 16px 8px 40px rgba(0,0,0,.4);
+  }
+
+  .vol-spine {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 10px;
+    z-index: 2;
+    background: var(--spine-color, rgba(0,0,0,.35));
+    border-right: 1px solid rgba(255,255,255,.08);
+  }
+
+  .vol-jacket::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.07) 40%, rgba(255,255,255,0) 60%);
+    pointer-events: none;
+    transition: opacity .4s;
+    opacity: 0;
+  }
+  .vol-shell:hover .vol-jacket::after, .vol-shell.force-open .vol-jacket::after { opacity: 1; }
+
+  /* -- Generated art overlays (used when no real cover image) -------- */
+  .jacket-art { position: absolute; inset: 0; pointer-events: none; }
+
+  .art-comet::before {
+    content: ''; position: absolute; top: 18%; left: 20%;
+    width: 100px; height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.8), transparent);
+    transform: rotate(-25deg);
+  }
+  .art-botanical::before {
+    content: ''; position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 80px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow: 0 0 0 10px transparent, 0 0 0 20px rgba(255,255,255,.06);
+  }
+  .art-arc::before {
+    content: ''; position: absolute; bottom: -20px; left: -20px;
+    width: 180px; height: 180px;
+    border: 2px solid rgba(255,255,255,.16);
+    border-radius: 50%;
+    box-shadow: 0 0 0 16px rgba(255,255,255,.05), 0 0 0 32px rgba(255,255,255,.03);
+  }
+  .art-diamond::before {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 70px; height: 70px;
+    border: 1px solid rgba(255,255,255,.3);
+    box-shadow: 0 0 0 8px rgba(255,255,255,.1), inset 0 0 0 8px rgba(255,255,255,.08);
+  }
+
+  /* -- Ribbon ------------------------------------------------------- */
+  .vol-ribbon {
+    position: absolute; top: -6px; right: 22px; z-index: 4;
+    width: 12px; height: 50px;
+    background: var(--ribbon-color, #c0392b);
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+    transition: height .4s var(--spring);
+    box-shadow: 1px 2px 6px rgba(0,0,0,.4);
+  }
+  .vol-shell:hover .vol-ribbon, .vol-shell.force-open .vol-ribbon { height: 64px; }
+
+  /* -- Title bar ---------------------------------------------------- */
+  .vol-title-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+    padding: 14px 14px 12px 18px;
+    background: linear-gradient(to top, rgba(0,0,0,.82) 0%, rgba(0,0,0,0) 100%);
+    pointer-events: none;
+  }
+  .vol-title-bar .vol-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: .88rem; font-weight: 700; color: #fff;
+    letter-spacing: .04em; line-height: 1.3;
+  }
+  .vol-title-bar .vol-author-small {
+    font-size: .62rem; font-weight: 400; color: rgba(255,255,255,.6);
+    letter-spacing: .1em; text-transform: uppercase; margin-top: 3px;
+  }
+
+  /* -- Delete button on hover -------------------------------------- */
+  .vol-remove {
+    position: absolute; top: 6px; left: 16px; z-index: 6;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .2s, background .2s;
+    cursor: pointer;
+  }
+  .vol-remove svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 1.8; }
+  .vol-shell:hover .vol-remove { opacity: 1; }
+  .vol-remove:hover { background: var(--danger); }
+
+  /* -- "Click to open" affordance, centered on the cover (only rendered
+     when the book has an uploaded file handle or a fallback link — see
+     bookCard()). Revealed on hover/focus like the rest of the jacket's
+     hover state, as a labeled pill rather than a corner-icon-only button
+     so it reads clearly instead of needing to be guessed at. ---------- */
+  .vol-open {
+    position: absolute; top: 50%; left: 50%; z-index: 6;
+    transform: translate(-50%, -50%);
+    display: flex; align-items: center; gap: .35rem;
+    padding: .5rem 1rem; border-radius: 999px;
+    background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.5);
+    color: #fff; font-family: 'Cormorant Garamond', serif;
+    font-size: .72rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; white-space: nowrap;
+    opacity: 0; transition: opacity .2s, background .2s, border-color .2s;
+    cursor: pointer;
+  }
+  .vol-open svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; flex-shrink: 0; }
+  .vol-shell:hover .vol-open, .vol-shell.force-open .vol-open { opacity: 1; }
+  .vol-open:hover { background: var(--accent); border-color: var(--accent); }
+  .vol-open.busy { opacity: .5; pointer-events: none; }
+
+  /* -- Add-book trigger card --------------------------------------- */
+  .vol-add-card {
+    width: 168px; height: 240px;
+    border-radius: 4px 10px 10px 4px;
+    border: 1.5px dashed var(--overlay-12);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .6rem; color: var(--txt-mid);
+    cursor: pointer;
+    transition: border-color .25s, color .25s, background .25s, transform .25s var(--spring);
+    background: var(--overlay-04);
+  }
+  .vol-add-card:hover { border-color: var(--accent); color: var(--accent); background: var(--overlay-06); transform: translateY(-4px); }
+  .vol-add-card svg { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.4; }
+  .vol-add-card span { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; text-align: center; padding: 0 1rem; }
+
+  /* -- Responsive --------------------------------------------------- */
+  @media (max-width: 600px) {
+    .codex-stage { gap: 2rem 1.4rem; }
+    .vol-shell, .vol-add-card { width: 140px; height: 200px; }
+  }
+
+  /* ---------------------- Modal ---------------------------------- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: var(--modal-backdrop);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    padding: 1.2rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--overlay-12);
+    border-radius: 16px;
+    padding: 1.8rem 1.8rem 1.5rem;
+    box-shadow: 0 30px 70px rgba(0,0,0,.5);
+    animation: modalIn .28s var(--spring);
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+  .modal-head h2 {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700;
+    letter-spacing: .03em; color: var(--txt-hi);
+  }
+  .modal-close {
+    width: 30px; height: 30px; border-radius: 50%; border: none;
+    background: var(--overlay-06); color: var(--txt-mid);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .modal-close:hover { background: var(--overlay-12); color: var(--txt-hi); }
+  .modal-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  .field { margin-bottom: 1.15rem; }
+  .field-checkbox { display: flex; flex-direction: column; }
+  .checkbox-label { display: flex; align-items: center; gap: .5rem; cursor: pointer; font-size: .88rem; }
+  .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent, #a56a2c); }
+  .field label {
+    display: block; font-size: .7rem; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--txt-mid); margin-bottom: .5rem;
+  }
+  .field input[type="text"], .field textarea {
+    width: 100%; padding: .7rem .8rem;
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    border-radius: 8px; color: var(--txt-hi); font-family: 'Inter', sans-serif; font-size: .88rem;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field input[type="text"]:focus, .field textarea:focus {
+    outline: none; border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-focus) 25%, transparent);
+  }
+  .field textarea { min-height: 84px; resize: vertical; }
+  .field-hint { margin-top: .55rem; font-size: .72rem; line-height: 1.45; color: var(--txt-lo); }
+
+  .cat-submenu {
+    margin-top: .6rem; border: 1px solid var(--input-border);
+    border-radius: 8px; background: var(--overlay-04); overflow: hidden;
+  }
+  .cat-submenu summary {
+    list-style: none; cursor: pointer; padding: .6rem .8rem;
+    font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--txt-mid); display: flex; align-items: center; gap: .4rem; user-select: none;
+  }
+  .cat-submenu summary::-webkit-details-marker { display: none; }
+  .cat-submenu summary::before { content: '?'; font-size: .65rem; color: var(--accent); transition: transform .2s var(--smooth); }
+  .cat-submenu[open] summary::before { transform: rotate(90deg); }
+  .cat-submenu summary:hover { color: var(--txt-hi); }
+  .cat-submenu-body { padding: 0 .8rem .8rem; }
+  .cat-submenu-body input {
+    width: 100%; padding: .7rem .8rem;
+    background: var(--input-bg); border: 1px solid var(--input-border);
+    border-radius: 8px; color: var(--txt-hi); font-family: 'Inter', sans-serif; font-size: .88rem;
+  }
+  .cat-submenu-body input:focus {
+    outline: none; border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-focus) 25%, transparent);
+  }
+  .cat-tag {
+    display: inline-block; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase;
+    padding: .15rem .5rem; border-radius: 999px; background: var(--overlay-08); color: var(--accent-hi);
+    margin-left: .5rem; vertical-align: middle;
+  }
+  .ai-tag {
+    display: inline-block; font-size: .68rem; letter-spacing: .04em;
+    padding: .15rem .5rem; border-radius: 999px; background: transparent; border: 1px dashed var(--overlay-12);
+    color: var(--txt-mid); margin-left: .5rem; vertical-align: middle;
+  }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: .55rem; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .swatch:hover { transform: scale(1.1); }
+  .swatch.selected { border-color: var(--txt-hi); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--txt-hi); }
+
+  .dropzone {
+    border: 1.5px dashed var(--input-border);
+    border-radius: 10px; padding: 1.6rem 1rem;
+    text-align: center; color: var(--txt-mid); font-size: .82rem;
+    cursor: pointer; transition: border-color .2s, background .2s;
+  }
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: var(--overlay-04); color: var(--txt-hi); }
+  .dropzone .fname { color: var(--accent); font-weight: 600; margin-top: .35rem; word-break: break-all; }
+
+  .extract-status {
+    margin-top: .6rem; font-size: .76rem; color: var(--txt-mid);
+    display: flex; align-items: center; gap: .5rem; min-height: 1.2rem;
+  }
+  .extract-status.ok { color: #7fae74; }
+  .extract-status.warn { color: var(--txt-mid); }
+  .extract-preview {
+    margin-top: .7rem; width: 64px; height: 90px; border-radius: 4px;
+    background-size: cover; background-position: center;
+    border: 1px solid var(--overlay-12); display: none;
+  }
+
+  .spinner {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 2px solid var(--overlay-12); border-top-color: var(--accent);
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: .7rem; margin-top: 1.6rem; }
+  .btn-secondary {
+    height: 40px; padding: 0 1.1rem; border-radius: 10px;
+    border: 1px solid var(--overlay-12); background: transparent; color: var(--txt-mid);
+    font-family: 'Inter', sans-serif; font-size: .82rem; cursor: pointer; transition: color .2s, border-color .2s;
+  }
+  .btn-secondary:hover { color: var(--txt-hi); border-color: var(--txt-hi); }
+
+  /* -- Background modal specific ----------------------------------- */
+  .bg-preview {
+    width: 100%; height: 120px; border-radius: 10px; margin-bottom: 1rem;
+    background: var(--overlay-04); background-size: cover; background-position: center;
+    border: 1px solid var(--overlay-12);
+    display: flex; align-items: center; justify-content: center; color: var(--txt-lo); font-size: .75rem;
+  }
+  .field input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .range-row { display: flex; align-items: center; gap: .8rem; }
+  .range-row span { font-size: .75rem; color: var(--txt-mid); width: 34px; text-align: right; }
+
+  /* -- Book detail modal ------------------------------------------- */
+  .detail-cover {
+    width: 92px; height: 130px; border-radius: 4px 8px 8px 4px; flex-shrink: 0;
+    background-size: cover; background-position: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,.35);
+    position: relative; overflow: hidden;
+  }
+  .detail-cover .strip { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--spine-color, #555); }
+  .detail-top { display: flex; gap: 1rem; margin-bottom: 1.2rem; }
+  .detail-titles { display: flex; flex-direction: column; justify-content: center; }
+  .detail-titles h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; color: var(--txt-hi); }
+  .detail-titles p { font-size: .78rem; color: var(--txt-mid); margin-top: .3rem; letter-spacing: .04em; }
+  .detail-note { font-size: .85rem; line-height: 1.55; color: var(--txt-hi); white-space: pre-wrap; }
+  .detail-note.empty { color: var(--txt-lo); font-style: italic; }
+  .detail-link { font-size: .82rem; word-break: break-all; }
+  .detail-link a { color: var(--accent); text-decoration: none; }
+  .detail-link a:hover { text-decoration: underline; }
+  .detail-link .plain-path { color: var(--txt-hi); font-family: monospace; font-size: .78rem; }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--panel); color: var(--txt-hi); border: 1px solid var(--overlay-12);
+    padding: .7rem 1.1rem; border-radius: 10px; font-size: .82rem;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 80;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="bgGradient"></div>
+<div id="bgImage"></div>
+
+<div class="codex-topbar">
+  <button class="icon-btn" id="bgToggleBtn" title="Fond d'écran" aria-label="Fond d'écran">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+  </button>
+  <button class="icon-btn" id="themeToggleBtn" title="Thème clair/sombre" aria-label="Thème clair/sombre">
+    <svg id="themeIcon" viewBox="0 0 24 24"></svg>
+  </button>
+</div>
+
+<header class="codex-header">
+  <h1>The <em>Codex</em> Collection</h1>
+  <p id="codexSubtitle">Survolez un volume pour l'ouvrir</p>
+</header>
+
+<section class="codex-stage" id="stage" aria-label="Collection de livres"></section>
+
+<div class="codex-empty" id="emptyState">
+  <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+  <span id="emptyStateText">Votre bibliothèque est vide.<br>Ajoutez votre premier livre.</span>
+</div>
+
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">Ajouter un livre</h2>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Fermer">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label for="fTitle" id="fLabelTitle">Titre</label>
+      <input type="text" id="fTitle" placeholder="Titre du livre">
+    </div>
+
+    <div class="field">
+      <label for="fAuthor" id="fLabelAuthor">Auteur</label>
+      <input type="text" id="fAuthor" placeholder="Nom de l'auteur">
+    </div>
+
+    <div class="field">
+      <label for="fNote" id="fLabelNote">Commentaire / Note</label>
+      <textarea id="fNote" placeholder="Vos impressions, citations, notes..."></textarea>
+    </div>
+
+    <div class="field">
+      <label id="fLabelSpine">Couleur de tranche</label>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <div class="field">
+      <label id="fLabelFile">Fichier (PDF, EPUB, TXT... — optionnel)</label>
+      <div class="dropzone" id="dropzone">
+        <div id="dropzoneLabel">Cliquer ou déposer un fichier ici</div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.epub,.txt" hidden>
+      <div class="extract-status" id="extractStatus"></div>
+      <div class="extract-preview" id="extractPreview"></div>
+      <p class="field-hint" id="fileFieldHint">Le fichier sert à extraire la couverture (et le titre/auteur si disponibles) — il n'est pas conservé (les fichiers réels sont trop volumineux pour être stockés ici). Ajoutez un lien ci-dessous pour le retrouver plus tard.</p>
+      <details class="cat-submenu">
+        <summary id="categorySummary">Catégorie (optionnel)</summary>
+        <div class="cat-submenu-body">
+          <input type="text" id="fCategory" list="fCategoryOptions" placeholder="ex. Roman, Poésie, Philosophie…">
+          <datalist id="fCategoryOptions">
+            <option value="Roman"></option>
+            <option value="Poésie"></option>
+            <option value="Philosophie"></option>
+            <option value="Histoire"></option>
+            <option value="Théâtre"></option>
+            <option value="Essai"></option>
+            <option value="Science-fiction"></option>
+            <option value="Biographie"></option>
+          </datalist>
+        </div>
+      </details>
+    </div>
+
+    <details class="cat-submenu">
+      <summary id="linkSummary">Lien vers le livre (optionnel)</summary>
+      <div class="cat-submenu-body">
+        <input type="text" id="fLink" placeholder="https://... ou /chemin/vers/livre.pdf">
+      </div>
+    </details>
+
+    <div class="field field-checkbox">
+      <label class="checkbox-label">
+        <input type="checkbox" id="fExcludeAi">
+        <span id="fLabelExcludeAi">Exclure du Tri IA</span>
+      </label>
+      <p class="field-hint" id="fExcludeAiHint">Ce livre ne sera jamais envoyé à un service IA externe — utile pour un document sensible (ex. liste de classe) ajouté par erreur ou volontairement à la bibliothèque.</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelBtn">Annuler</button>
+      <button class="btn-primary" id="saveBtn">
+        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        <span id="saveBtnLabel">Ajouter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="bgModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="bgModalTitleEl">Fond d'écran</h2>
+      <button class="modal-close" id="bgModalCloseBtn" aria-label="Fermer">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="bg-preview" id="bgPreview">Aucune image</div>
+
+    <div class="field">
+      <div class="dropzone" id="bgDropzone">Cliquer ou déposer une image ici</div>
+      <input type="file" id="bgFileInput" accept="image/*" hidden>
+    </div>
+
+    <div class="field">
+      <label id="opacityLabel">Opacité</label>
+      <div class="range-row">
+        <input type="range" id="bgOpacity" min="5" max="80" value="35">
+        <span id="bgOpacityVal">35%</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" id="bgRemoveBtn">Retirer l'image</button>
+      <button class="btn-primary" id="bgCloseBtn"><span id="bgCloseBtnLabel">Terminé</span></button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="detailModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="detailModalTitleEl">Détails</h2>
+      <button class="modal-close" id="detailCloseBtn" aria-label="Fermer">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="detail-top">
+      <div class="detail-cover" id="detailCover"><div class="strip"></div></div>
+      <div class="detail-titles">
+        <h3 id="detailTitle"></h3>
+        <p id="detailAuthor"></p>
+        <span class="cat-tag" id="detailCategoryTag" style="display:none;"></span>
+        <span class="ai-tag" id="detailAiTag" style="display:none;" title="AI estimate — indicative only"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label id="detailNoteLabelEl">Note</label>
+      <div class="detail-note" id="detailNote"></div>
+    </div>
+    <div class="field" id="detailLinkField" style="display:none;">
+      <label id="detailLinkLabelEl">Lien</label>
+      <div class="detail-link" id="detailLink"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="detailOpenBtn" style="display:none;">📁 <span id="detailOpenBtnLabel">Ouvrir</span></button>
+      <button class="btn-secondary" id="detailDeleteBtn">Supprimer</button>
+      <button class="btn-primary" id="detailEditBtn"><span id="detailEditBtnLabel">Modifier</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="../lib/jszip/v1/jszip.min.js"></script>
+<script src="../lib/pdf/v1/pdf.min.js"></script>
+<script src="../js/core/osiris-core.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+  }
+
+  /* -------------------------- Storage keys -------------------------- */
+  var LIB_KEY = 'osiris_codex_library_v1';
+  var THEME_KEY = 'osiris_codex_theme';
+  var BG_KEY = 'osiris_codex_bg_v1';
+
+  /* -------------------------- DOM refs ------------------------------ */
+  var stage = document.getElementById('stage');
+  var emptyState = document.getElementById('emptyState');
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalTitle = document.getElementById('modalTitle');
+  var fTitle = document.getElementById('fTitle');
+  var fAuthor = document.getElementById('fAuthor');
+  var fNote = document.getElementById('fNote');
+  var fLink = document.getElementById('fLink');
+  var fCategory = document.getElementById('fCategory');
+  var fExcludeAi = document.getElementById('fExcludeAi');
+  var fileFieldHint = document.getElementById('fileFieldHint');
+  var pendingFileHandle = null; // FileSystemFileHandle chosen this modal session, merged in with cover extraction below
+  var pendingFile = null; // the raw File itself, for browsers/contexts (e.g. inside the Hub's cross-origin iframe) where no FileSystemFileHandle is obtainable
+  var fileHandlesSupported = !!(window.OsirisCore && OsirisCore.fileHandlesSupported());
+  var swatchesWrap = document.getElementById('swatches');
+  var dropzone = document.getElementById('dropzone');
+  var dropzoneLabel = document.getElementById('dropzoneLabel');
+  var fileInput = document.getElementById('fileInput');
+  var extractStatus = document.getElementById('extractStatus');
+  var extractPreview = document.getElementById('extractPreview');
+  var saveBtn = document.getElementById('saveBtn');
+  var saveBtnLabel = document.getElementById('saveBtnLabel');
+
+  var bgModalOverlay = document.getElementById('bgModalOverlay');
+  var bgPreview = document.getElementById('bgPreview');
+  var bgDropzone = document.getElementById('bgDropzone');
+  var bgFileInput = document.getElementById('bgFileInput');
+  var bgOpacity = document.getElementById('bgOpacity');
+  var bgOpacityVal = document.getElementById('bgOpacityVal');
+  var bgImageEl = document.getElementById('bgImage');
+
+  var detailModalOverlay = document.getElementById('detailModalOverlay');
+  var detailCover = document.getElementById('detailCover');
+  var detailTitle = document.getElementById('detailTitle');
+  var detailAuthor = document.getElementById('detailAuthor');
+  var detailCategoryTag = document.getElementById('detailCategoryTag');
+  var detailAiTag = document.getElementById('detailAiTag');
+  var detailNote = document.getElementById('detailNote');
+  var detailLinkField = document.getElementById('detailLinkField');
+  var detailLink = document.getElementById('detailLink');
+  var detailOpenBtn = document.getElementById('detailOpenBtn');
+  var detailDeleteBtn = document.getElementById('detailDeleteBtn');
+  var detailEditBtn = document.getElementById('detailEditBtn');
+
+
+  var toastEl = document.getElementById('toast');
+
+  /* -------------------------- i18n (FR/DE) --------------------------
+     Language is driven by the hub header's FR/DE toggle (postMessage
+     'SET_LANG'), with the current hub preference read once at startup
+     (shared 'osiris_hub_prefs' key) so there's no flash of the wrong
+     language before that first message arrives. "The Codex Collection"
+     title is branding and is intentionally never touched here. */
+  var TRANSLATIONS = {
+    fr: {
+      subtitle: "Survolez un volume pour l'ouvrir",
+      bgToggleTitle: "Fond d'écran",
+      themeToggleTitle: 'Thème clair/sombre',
+      emptyStateHtml: 'Votre bibliothèque est vide.<br>Ajoutez votre premier livre.',
+      close: 'Fermer',
+      fieldTitleLabel: 'Titre',
+      fieldTitlePlaceholder: 'Titre du livre',
+      fieldAuthorLabel: 'Auteur',
+      fieldAuthorPlaceholder: "Nom de l'auteur",
+      fieldNoteLabel: 'Commentaire / Note',
+      fieldNotePlaceholder: 'Vos impressions, citations, notes...',
+      fieldSpineLabel: 'Couleur de tranche',
+      fieldFileLabel: 'Fichier (PDF, EPUB, TXT... — optionnel)',
+      dropzoneDefault: 'Cliquer ou déposer un fichier ici',
+      fileFieldHintDefault: "Le fichier sert à extraire la couverture (et le titre/auteur si disponibles) — il n'est pas conservé (les fichiers réels sont trop volumineux pour être stockés ici). Ajoutez un lien ci-dessous pour le retrouver plus tard.",
+      fileFieldHintHandles: "Le fichier choisi est utilisé pour extraire la couverture (et le titre/auteur si disponibles) et reste mémorisé pour l'ouvrir directement depuis la bibliothèque plus tard.",
+      categorySummary: 'Catégorie (optionnel)',
+      categoryPlaceholder: 'ex. Roman, Poésie, Philosophie…',
+      categories: ['Roman', 'Poésie', 'Philosophie', 'Histoire', 'Théâtre', 'Essai', 'Science-fiction', 'Biographie'],
+      linkSummary: 'Lien vers le livre (optionnel)',
+      linkPlaceholder: 'https://... ou /chemin/vers/livre.pdf',
+      cancelBtn: 'Annuler',
+      addModalTitle: 'Ajouter un livre',
+      addBtnLabel: 'Ajouter',
+      editModalTitle: 'Modifier le livre',
+      saveBtnLabel: 'Enregistrer',
+      fLabelExcludeAi: 'Exclure du Tri IA',
+      fExcludeAiHint: 'Ce livre ne sera jamais envoyé à un service IA externe — utile pour un document sensible (ex. liste de classe) ajouté par erreur ou volontairement à la bibliothèque.',
+      bgModalTitle: "Fond d'écran",
+      bookCollectionAria: 'Collection de livres',
+      bgNoImage: 'Aucune image',
+      bgDropzoneText: 'Cliquer ou déposer une image ici',
+      opacityLabel: 'Opacité',
+      bgRemoveBtn: "Retirer l'image",
+      bgDoneBtn: 'Terminé',
+      detailModalTitle: 'Détails',
+      detailNoteLabel: 'Note',
+      detailLinkLabel: 'Lien',
+      detailOpenBtn: 'Ouvrir',
+      detailDeleteBtn: 'Supprimer',
+      detailEditBtn: 'Modifier',
+      noteEmpty: 'Aucune note pour ce livre.',
+      authorUnknown: 'Auteur inconnu',
+      toastStorageFull: "Stockage plein — essayez de retirer un fond d'écran ou un livre volumineux, puis réessayez.",
+      toastChooseImage: 'Veuillez choisir une image.',
+      toastImageTooHeavy: 'Image trop lourde pour être enregistrée.',
+      toastBookUpdated: 'Livre mis à jour.',
+      toastBookAdded: 'Livre ajouté à la bibliothèque.',
+      toastFileNotFound: 'Fichier introuvable et aucun lien de secours renseigné.',
+      toastBookDeleted: 'Livre supprimé.',
+      fileSelectedLabel: 'Fichier sélectionné',
+      opening: 'Ouverture…',
+      confirmDelete: function (title) { return 'Supprimer "' + title + '" de la bibliothèque ?'; },
+      openFileAria: 'Ouvrir le fichier',
+      clickToOpen: 'Cliquer pour ouvrir',
+      addBookCard: 'Ajouter un livre',
+      removeAria: 'Supprimer',
+      volShellAriaSuffix: ' — appuyez pour ouvrir',
+      linkedFilePrefix: 'Fichier lié : ',
+      lastFileUsedPrefix: 'Dernier fichier utilisé : ',
+      fileSuffixHint: " (choisissez-en un nouveau pour le remplacer / ré-extraire la couverture)",
+      extractPdfUnavailable: 'Extraction PDF indisponible.',
+      extractingPdf: 'Extraction de la couverture PDF...',
+      extractNoCoverFound: 'Aucune couverture trouvée — une jaquette générée sera utilisée.',
+      extractSuccess: 'Couverture extraite avec succès ?',
+      extractFailed: "Échec de l'extraction — une jaquette générée sera utilisée.",
+      extractEpubUnavailable: 'Extraction EPUB indisponible.',
+      extractingEpub: 'Extraction de la couverture EPUB...',
+      extractNoCoverEpub: 'Aucune couverture trouvée dans cet EPUB — une jaquette générée sera utilisée.',
+      extractNoCoverType: 'Ce type de fichier ne contient pas de couverture — une jaquette générée sera utilisée.',
+      cannotReadFile: 'Impossible de lire ce fichier.',
+      untitled: 'Sans titre',
+      filePickerDescription: 'Livre'
+    },
+    de: {
+      subtitle: 'Bewegen Sie die Maus über einen Band, um ihn zu öffnen',
+      bgToggleTitle: 'Hintergrund',
+      themeToggleTitle: 'Hell-/Dunkelmodus',
+      emptyStateHtml: 'Ihre Bibliothek ist leer.<br>Fügen Sie Ihr erstes Buch hinzu.',
+      close: 'Schließen',
+      fieldTitleLabel: 'Titel',
+      fieldTitlePlaceholder: 'Buchtitel',
+      fieldAuthorLabel: 'Autor',
+      fieldAuthorPlaceholder: 'Name des Autors',
+      fieldNoteLabel: 'Kommentar / Notiz',
+      fieldNotePlaceholder: 'Ihre Eindrücke, Zitate, Notizen...',
+      fieldSpineLabel: 'Buchrückenfarbe',
+      fieldFileLabel: 'Datei (PDF, EPUB, TXT... – optional)',
+      dropzoneDefault: 'Klicken oder Datei hierher ziehen',
+      fileFieldHintDefault: 'Die Datei dient zur Extraktion des Covers (und von Titel/Autor, falls verfügbar) — sie wird nicht gespeichert (die eigentlichen Dateien sind dafür zu groß). Fügen Sie unten einen Link hinzu, um die Datei später wiederzufinden.',
+      fileFieldHintHandles: 'Die gewählte Datei wird zur Extraktion des Covers (und von Titel/Autor, falls verfügbar) verwendet und bleibt gespeichert, um sie später direkt aus der Bibliothek zu öffnen.',
+      categorySummary: 'Kategorie (optional)',
+      categoryPlaceholder: 'z. B. Roman, Poesie, Philosophie…',
+      categories: ['Roman', 'Poesie', 'Philosophie', 'Geschichte', 'Theater', 'Essay', 'Science-Fiction', 'Biografie'],
+      linkSummary: 'Link zum Buch (optional)',
+      linkPlaceholder: 'https://... oder /pfad/zum/buch.pdf',
+      cancelBtn: 'Abbrechen',
+      addModalTitle: 'Buch hinzufügen',
+      addBtnLabel: 'Hinzufügen',
+      editModalTitle: 'Buch bearbeiten',
+      saveBtnLabel: 'Speichern',
+      fLabelExcludeAi: 'Von KI-Sortierung ausschließen',
+      fExcludeAiHint: 'Dieses Buch wird nie an einen externen KI-Dienst gesendet — nützlich für ein sensibles Dokument (z. B. eine Klassenliste), das versehentlich oder absichtlich zur Bibliothek hinzugefügt wurde.',
+      bgModalTitle: 'Hintergrund',
+      bookCollectionAria: 'Büchersammlung',
+      bgNoImage: 'Kein Bild',
+      bgDropzoneText: 'Klicken oder Bild hierher ziehen',
+      opacityLabel: 'Deckkraft',
+      bgRemoveBtn: 'Bild entfernen',
+      bgDoneBtn: 'Fertig',
+      detailModalTitle: 'Details',
+      detailNoteLabel: 'Notiz',
+      detailLinkLabel: 'Link',
+      detailOpenBtn: 'Öffnen',
+      detailDeleteBtn: 'Löschen',
+      detailEditBtn: 'Bearbeiten',
+      noteEmpty: 'Keine Notiz für dieses Buch.',
+      authorUnknown: 'Unbekannter Autor',
+      toastStorageFull: 'Speicher voll — versuchen Sie, einen Hintergrund oder ein großes Buch zu entfernen, und dann erneut.',
+      toastChooseImage: 'Bitte wählen Sie ein Bild aus.',
+      toastImageTooHeavy: 'Bild ist zu groß, um gespeichert zu werden.',
+      toastBookUpdated: 'Buch aktualisiert.',
+      toastBookAdded: 'Buch zur Bibliothek hinzugefügt.',
+      toastFileNotFound: 'Datei nicht gefunden und kein Ersatzlink hinterlegt.',
+      toastBookDeleted: 'Buch gelöscht.',
+      fileSelectedLabel: 'Datei ausgewählt',
+      opening: 'Wird geöffnet…',
+      confirmDelete: function (title) { return 'Möchten Sie "' + title + '" aus der Bibliothek entfernen?'; },
+      openFileAria: 'Datei öffnen',
+      clickToOpen: 'Zum Öffnen klicken',
+      addBookCard: 'Buch hinzufügen',
+      removeAria: 'Entfernen',
+      volShellAriaSuffix: ' — zum Öffnen klicken',
+      linkedFilePrefix: 'Verknüpfte Datei: ',
+      lastFileUsedPrefix: 'Zuletzt verwendete Datei: ',
+      fileSuffixHint: ' (wählen Sie eine neue Datei, um sie zu ersetzen / das Cover neu zu extrahieren)',
+      extractPdfUnavailable: 'PDF-Extraktion nicht verfügbar.',
+      extractingPdf: 'Cover wird aus PDF extrahiert...',
+      extractNoCoverFound: 'Kein Cover gefunden — es wird ein generiertes Cover verwendet.',
+      extractSuccess: 'Cover erfolgreich extrahiert ?',
+      extractFailed: 'Extraktion fehlgeschlagen — es wird ein generiertes Cover verwendet.',
+      extractEpubUnavailable: 'EPUB-Extraktion nicht verfügbar.',
+      extractingEpub: 'Cover wird aus EPUB extrahiert...',
+      extractNoCoverEpub: 'In diesem EPUB wurde kein Cover gefunden — es wird ein generiertes Cover verwendet.',
+      extractNoCoverType: 'Dieser Dateityp enthält kein Cover — es wird ein generiertes Cover verwendet.',
+      cannotReadFile: 'Diese Datei kann nicht gelesen werden.',
+      untitled: 'Ohne Titel',
+      filePickerDescription: 'Buch'
+    }
+  };
+
+  function readInitialLang() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+      return saved.lang === 'DE' ? 'de' : 'fr';
+    } catch (e) { return 'fr'; }
+  }
+
+  var currentLang = readInitialLang();
+  function t() { return TRANSLATIONS[currentLang] || TRANSLATIONS.fr; }
+
+  if (fileHandlesSupported) {
+    fileFieldHint.textContent = t().fileFieldHintHandles;
+  } else {
+    fileFieldHint.textContent = t().fileFieldHintDefault;
+  }
+
+  /* -------------------------- Palette ------------------------------- */
+  var SPINE_COLORS = ['#a33b46', '#2f6b52', '#2f5aa3', '#6b4a36', '#7a4a91', '#2f8f6f', '#b3792f', '#3f4a91'];
+  var ART_PATTERNS = ['art-comet', 'art-botanical', 'art-arc', 'art-diamond'];
+  var PAGE_TEXTURES = ['pages-plain', 'pages-ruled', 'pages-crosshatch', 'pages-dotgrid'];
+
+  /* -------------------------- State --------------------------------- */
+  var library = loadLibrary();
+  var currentOpenMode = 'popup'; // see the SET_OPEN_MODE handler below
+  var pendingExtractedCover = null;
+  var pendingFileMeta = null;
+
+
+  var pendingExtractedExcerpt = null;
+  var editingId = null;
+
+
+  var sessionFiles = {};
+  var detailId = null;
+  var selectedSwatch = SPINE_COLORS[0];
+
+  /* ---------------- Cross-theme sort row (Hub SET_SORT) ---------------- */
+  var sortOrder = null;
+  function applySortOrder(list) {
+    if (!sortOrder || !sortOrder.length) return list;
+    var pos = {};
+    sortOrder.forEach(function (id, i) { pos[id] = i; });
+    return list.slice().sort(function (a, b) {
+      var pa = pos.hasOwnProperty(a.id) ? pos[a.id] : Infinity;
+      var pb = pos.hasOwnProperty(b.id) ? pos[b.id] : Infinity;
+      return pa - pb;
+    });
+  }
+  if (window.OsirisCore && window.parent !== window) {
+    OsirisCore.listen(window.parent, (function () {
+      var handlers = {};
+      handlers[OsirisCore.MSG.SET_SORT] = function (payload) {
+        sortOrder = (payload && payload.orderedIds) || null;
+        renderLibrary();
+      };
+
+
+      handlers[OsirisCore.MSG.LIBRARY_UPDATED] = function () {
+        library = loadLibrary();
+        renderLibrary();
+      };
+
+
+      handlers[OsirisCore.MSG.OPEN_BOOK] = function (payload) {
+        var book = library.find(function (b) { return b.id === (payload && payload.id); });
+        if (book) openDetail(book);
+      };
+
+
+      handlers[OsirisCore.MSG.SET_OPEN_MODE] = function (payload) {
+        if (payload && payload.mode) currentOpenMode = payload.mode;
+      };
+
+
+      handlers['SET_LANG'] = function (payload) {
+        applyLang(payload && payload.lang === 'DE' ? 'de' : 'fr');
+      };
+      return handlers;
+    })());
+  }
+
+  /* -------------------------- Utils --------------------------------- */
+  function uid() {
+    return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+
+  function canOpenFile(book) {
+    return !!(sessionFiles[book.id] || book.fileBlob || book.fileHandle || book.link);
+  }
+
+  function hashStr(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) { h = (h << 5) - h + str.charCodeAt(i); h |= 0; }
+    return Math.abs(h);
+  }
+
+
+  function resolveSpine(book) {
+    if (book.spine || book.color || book.hex || book.accent) {
+      return book.spine || book.color || book.hex || book.accent;
+    }
+    return SPINE_COLORS[hashStr(book.id) % SPINE_COLORS.length];
+  }
+  function resolveCoverSrc(book) {
+    return book.cover || book.coverSrc || null;
+  }
+
+
+  function hasRealCover(book) {
+    return !!resolveCoverSrc(book);
+  }
+  function resolveArt(book) {
+    return book.art || ART_PATTERNS[hashStr(book.title || book.id) % ART_PATTERNS.length];
+  }
+  function resolveTexture(book) {
+    return book.texture || PAGE_TEXTURES[hashStr((book.title || book.id) + (book.author || '')) % PAGE_TEXTURES.length];
+  }
+
+  function shade(hex, percent) {
+
+    var num = parseInt(hex.replace('#', ''), 16);
+    var r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+    r = Math.min(255, Math.max(0, Math.round(r + (percent < 0 ? r : 255 - r) * percent)));
+    g = Math.min(255, Math.max(0, Math.round(g + (percent < 0 ? g : 255 - g) * percent)));
+    b = Math.min(255, Math.max(0, Math.round(b + (percent < 0 ? b : 255 - b) * percent)));
+    return '#' + [r, g, b].map(function (v) { return v.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+  }
+
+  function readFileAsArrayBuffer(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(r.result); };
+      r.onerror = reject;
+      r.readAsArrayBuffer(file);
+    });
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(r.result); };
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  function compressDataUrl(dataUrl, maxWidth, quality) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxWidth / img.width);
+        var w = Math.round(img.width * scale);
+        var h = Math.round(img.height * scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality || 0.85));
+      };
+      img.onerror = function () { resolve(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
+  function normalizeZipPath(path) {
+    var parts = path.split('/');
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] === '.' || parts[i] === '') continue;
+      if (parts[i] === '..') { out.pop(); continue; }
+      out.push(parts[i]);
+    }
+    return out.join('/');
+  }
+
+  /* -------------------------- Storage ------------------------------- */
+
+
+  var MIGRATION_FLAG = 'osiris_migrated_codex';
+  function migrateLegacyIfNeeded() {
+    if (localStorage.getItem(MIGRATION_FLAG)) return;
+    try {
+      var raw = localStorage.getItem(LIB_KEY);
+      var legacy = raw ? JSON.parse(raw) : [];
+      if (legacy.length) {
+        var shared = OsirisCore.loadLibrary();
+        legacy.forEach(function (b) {
+          shared.push({
+            id: b.id || OsirisCore.makeBookId(),
+            title: b.title || '',
+            author: b.author || '',
+            note: b.note || '',
+            link: b.link || '',
+            category: b.category || null,
+            spine: b.spine || SPINE_COLORS[0],
+            cover: b.cover || null,
+            coverIsReal: !!b.coverIsReal,
+            fileMeta: b.fileName ? { name: b.fileName } : null,
+            openCount: 0,
+            addedAt: b.createdAt || Date.now(),
+            shelf: 'codex'
+          });
+        });
+        OsirisCore.saveLibrary(shared);
+      }
+    } catch (e) { /* legacy key missing or corrupt — nothing to migrate */ }
+    localStorage.setItem(MIGRATION_FLAG, '1');
+  }
+  function loadLibrary() {
+    if (window.OsirisCore) {
+      migrateLegacyIfNeeded();
+      return OsirisCore.loadLibrary();
+    }
+    try {
+      var raw = localStorage.getItem(LIB_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  function saveLibrary() {
+    if (window.OsirisCore) {
+      if (OsirisCore.saveLibrary(library)) return true;
+      showToast(t().toastStorageFull);
+      return false;
+    }
+    try {
+      localStorage.setItem(LIB_KEY, JSON.stringify(library));
+      return true;
+    } catch (e) {
+      showToast(t().toastStorageFull);
+      return false;
+    }
+  }
+
+  /* -------------------------- Theme --------------------------------- */
+  var SUN_PATH = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var MOON_PATH = '<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>';
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeIcon').innerHTML = theme === 'dark' ? SUN_PATH : MOON_PATH;
+    localStorage.setItem(THEME_KEY, theme);
+  }
+
+  document.getElementById('themeToggleBtn').addEventListener('click', function () {
+    var current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
+  /* -------------------------- Background image --------------------- */
+  function loadBg() {
+    try {
+      var raw = localStorage.getItem(BG_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  function applyBg(bg) {
+    if (bg && bg.dataUrl) {
+      bgImageEl.style.backgroundImage = 'url(' + bg.dataUrl + ')';
+      bgImageEl.style.setProperty('--bg-opacity', (bg.opacity || 35) / 100);
+      bgImageEl.classList.add('active');
+      bgPreview.style.backgroundImage = 'url(' + bg.dataUrl + ')';
+      bgPreview.textContent = '';
+    } else {
+      bgImageEl.classList.remove('active');
+      bgImageEl.style.backgroundImage = '';
+      bgPreview.style.backgroundImage = '';
+      bgPreview.textContent = t().bgNoImage;
+    }
+  }
+
+  var currentBg = loadBg();
+  applyBg(currentBg);
+  bgOpacity.value = currentBg ? (currentBg.opacity || 35) : 35;
+  bgOpacityVal.textContent = bgOpacity.value + '%';
+
+  document.getElementById('bgToggleBtn').addEventListener('click', function () {
+    bgModalOverlay.classList.add('open');
+  });
+  document.getElementById('bgModalCloseBtn').addEventListener('click', closeBgModal);
+  document.getElementById('bgCloseBtn').addEventListener('click', closeBgModal);
+  function closeBgModal() { bgModalOverlay.classList.remove('open'); }
+
+  bgDropzone.addEventListener('click', function () { bgFileInput.click(); });
+  bgDropzone.addEventListener('dragover', function (e) { e.preventDefault(); bgDropzone.classList.add('drag'); });
+  bgDropzone.addEventListener('dragleave', function () { bgDropzone.classList.remove('drag'); });
+  bgDropzone.addEventListener('drop', function (e) {
+    e.preventDefault(); bgDropzone.classList.remove('drag');
+    if (e.dataTransfer.files[0]) handleBgFile(e.dataTransfer.files[0]);
+  });
+  bgFileInput.addEventListener('change', function () {
+    if (fileInput !== bgFileInput && bgFileInput.files[0]) handleBgFile(bgFileInput.files[0]);
+  });
+
+  function handleBgFile(file) {
+    if (!file.type.startsWith('image/')) { showToast(t().toastChooseImage); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      compressDataUrl(reader.result, 1600, 0.82).then(function (compressed) {
+        currentBg = { dataUrl: compressed, opacity: Number(bgOpacity.value) };
+        applyBg(currentBg);
+        try { localStorage.setItem(BG_KEY, JSON.stringify(currentBg)); }
+        catch (e) { showToast(t().toastImageTooHeavy); }
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  bgOpacity.addEventListener('input', function () {
+    bgOpacityVal.textContent = bgOpacity.value + '%';
+    if (currentBg) {
+      currentBg.opacity = Number(bgOpacity.value);
+      bgImageEl.style.setProperty('--bg-opacity', currentBg.opacity / 100);
+      try { localStorage.setItem(BG_KEY, JSON.stringify(currentBg)); } catch (e) {}
+    }
+  });
+
+  document.getElementById('bgRemoveBtn').addEventListener('click', function () {
+    currentBg = null;
+    applyBg(null);
+    localStorage.removeItem(BG_KEY);
+  });
+
+  /* -------------------------- Swatches ------------------------------ */
+  function renderSwatches() {
+    swatchesWrap.innerHTML = '';
+    SPINE_COLORS.forEach(function (c) {
+      var el = document.createElement('div');
+      el.className = 'swatch' + (c === selectedSwatch ? ' selected' : '');
+      el.style.background = c;
+      el.addEventListener('click', function () {
+        selectedSwatch = c;
+        renderSwatches();
+      });
+      swatchesWrap.appendChild(el);
+    });
+  }
+
+  /* -------------------------- Language (FR/DE) ----------------------- */
+  function renderCategoryOptions() {
+    var list = document.getElementById('fCategoryOptions');
+    if (!list) return;
+    list.innerHTML = '';
+    t().categories.forEach(function (cat) {
+      var opt = document.createElement('option');
+      opt.value = cat;
+      list.appendChild(opt);
+    });
+  }
+
+
+  function applyLang(lang) {
+    currentLang = lang === 'de' ? 'de' : 'fr';
+    var tt = t();
+    document.documentElement.lang = currentLang;
+
+    document.getElementById('bgToggleBtn').title = tt.bgToggleTitle;
+    document.getElementById('bgToggleBtn').setAttribute('aria-label', tt.bgToggleTitle);
+    document.getElementById('themeToggleBtn').title = tt.themeToggleTitle;
+    document.getElementById('themeToggleBtn').setAttribute('aria-label', tt.themeToggleTitle);
+    document.getElementById('codexSubtitle').textContent = tt.subtitle;
+    document.getElementById('stage').setAttribute('aria-label', tt.bookCollectionAria);
+    document.getElementById('emptyStateText').innerHTML = tt.emptyStateHtml;
+
+    document.getElementById('modalCloseBtn').setAttribute('aria-label', tt.close);
+    document.getElementById('fLabelTitle').textContent = tt.fieldTitleLabel;
+    fTitle.placeholder = tt.fieldTitlePlaceholder;
+    document.getElementById('fLabelAuthor').textContent = tt.fieldAuthorLabel;
+    fAuthor.placeholder = tt.fieldAuthorPlaceholder;
+    document.getElementById('fLabelNote').textContent = tt.fieldNoteLabel;
+    fNote.placeholder = tt.fieldNotePlaceholder;
+    document.getElementById('fLabelSpine').textContent = tt.fieldSpineLabel;
+    document.getElementById('fLabelFile').textContent = tt.fieldFileLabel;
+    if (!editingId) dropzoneLabel.textContent = tt.dropzoneDefault;
+    fileFieldHint.textContent = fileHandlesSupported ? tt.fileFieldHintHandles : tt.fileFieldHintDefault;
+    document.getElementById('categorySummary').textContent = tt.categorySummary;
+    fCategory.placeholder = tt.categoryPlaceholder;
+    renderCategoryOptions();
+    document.getElementById('linkSummary').textContent = tt.linkSummary;
+    document.getElementById('fLabelExcludeAi').textContent = tt.fLabelExcludeAi;
+    document.getElementById('fExcludeAiHint').textContent = tt.fExcludeAiHint;
+    fLink.placeholder = tt.linkPlaceholder;
+    document.getElementById('cancelBtn').textContent = tt.cancelBtn;
+    modalTitle.textContent = editingId ? tt.editModalTitle : tt.addModalTitle;
+    saveBtnLabel.textContent = editingId ? tt.saveBtnLabel : tt.addBtnLabel;
+
+    document.getElementById('bgModalTitleEl').textContent = tt.bgModalTitle;
+    document.getElementById('bgModalCloseBtn').setAttribute('aria-label', tt.close);
+    document.getElementById('bgDropzone').textContent = tt.bgDropzoneText;
+    document.getElementById('opacityLabel').textContent = tt.opacityLabel;
+    document.getElementById('bgRemoveBtn').textContent = tt.bgRemoveBtn;
+    document.getElementById('bgCloseBtnLabel').textContent = tt.bgDoneBtn;
+    if (typeof applyBg === 'function') applyBg(currentBg); // re-renders bgPreview's "no image" text, if applicable
+
+    document.getElementById('detailModalTitleEl').textContent = tt.detailModalTitle;
+    document.getElementById('detailCloseBtn').setAttribute('aria-label', tt.close);
+    document.getElementById('detailNoteLabelEl').textContent = tt.detailNoteLabel;
+    document.getElementById('detailLinkLabelEl').textContent = tt.detailLinkLabel;
+    document.getElementById('detailOpenBtnLabel').textContent = tt.detailOpenBtn;
+    detailDeleteBtn.textContent = tt.detailDeleteBtn;
+    document.getElementById('detailEditBtnLabel').textContent = tt.detailEditBtn;
+
+    if (typeof renderLibrary === 'function') renderLibrary(); // book cards carry lang-dependent aria-labels/strings
+  }
+
+  /* -------------------------- Cover extraction ---------------------- */
+
+
+  var MAX_EXCERPT_CHARS = 700;
+
+
+  var MIN_EXCERPT_CHARS_BEFORE_FALLBACK = 40;
+
+  function cleanExcerptText(raw) {
+    return String(raw || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function setExtractStatus(html, cls) {
+    extractStatus.innerHTML = html;
+    extractStatus.className = 'extract-status' + (cls ? ' ' + cls : '');
+  }
+
+  function showExtractPreview(dataUrl) {
+    if (dataUrl) {
+      extractPreview.style.backgroundImage = 'url(' + dataUrl + ')';
+      extractPreview.style.display = 'block';
+    } else {
+      extractPreview.style.display = 'none';
+      extractPreview.style.backgroundImage = '';
+    }
+  }
+
+  function extractPdfCover(arrayBuffer) {
+    return pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdf) {
+      return pdf.getPage(1).then(function (page) {
+        var viewport = page.getViewport({ scale: 1.4 });
+        var canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        var ctx = canvas.getContext('2d');
+        return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
+          var cover = canvas.toDataURL('image/jpeg', 0.85);
+          return pdf.getMetadata().then(function (m) {
+            var info = (m && m.info) || {};
+            return { cover: cover, meta: { title: info.Title || '', author: info.Author || '' } };
+          }).catch(function () {
+            return { cover: cover, meta: {} };
+          }).then(function (result) {
+
+
+            return page.getTextContent().then(function (textContent) {
+              var text = cleanExcerptText(textContent.items.map(function (it) { return it.str; }).join(' '));
+              if (text.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || pdf.numPages < 2) {
+                if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+                return result;
+              }
+              return pdf.getPage(2).then(function (page2) {
+                return page2.getTextContent();
+              }).then(function (textContent2) {
+                var text2 = cleanExcerptText(textContent2.items.map(function (it) { return it.str; }).join(' '));
+                var combined = (text + ' ' + text2).trim();
+                if (combined) result.excerpt = combined.slice(0, MAX_EXCERPT_CHARS);
+                return result;
+              }).catch(function () {
+                if (text) result.excerpt = text.slice(0, MAX_EXCERPT_CHARS);
+                return result;
+              });
+            }).catch(function () {
+              return result; // cover/meta still stand even if text extraction itself fails
+            });
+          });
+        });
+      });
+    });
+  }
+
+  function extractEpubCover(arrayBuffer) {
+    return JSZip.loadAsync(arrayBuffer).then(function (zip) {
+      var containerFile = zip.file('META-INF/container.xml');
+      if (!containerFile) return { cover: null, meta: {} };
+      return containerFile.async('string').then(function (containerXml) {
+        var containerDoc = new DOMParser().parseFromString(containerXml, 'application/xml');
+        var rootfile = containerDoc.querySelector('rootfile');
+        var opfPath = rootfile ? rootfile.getAttribute('full-path') : null;
+        if (!opfPath) return { cover: null, meta: {} };
+        var opfFile = zip.file(opfPath);
+        if (!opfFile) return { cover: null, meta: {} };
+        return opfFile.async('string').then(function (opfXml) {
+          var opfDoc = new DOMParser().parseFromString(opfXml, 'application/xml');
+          var basePath = opfPath.split('/').slice(0, -1).join('/');
+
+          var coverHref = null;
+          var metaCover = opfDoc.querySelector('meta[name="cover"]');
+          if (metaCover) {
+            var coverId = metaCover.getAttribute('content');
+            var item = opfDoc.querySelector('manifest > item[id="' + CSS.escape(coverId) + '"]');
+            if (item) coverHref = item.getAttribute('href');
+          }
+          if (!coverHref) {
+            var propItem = opfDoc.querySelector('manifest > item[properties~="cover-image"]');
+            if (propItem) coverHref = propItem.getAttribute('href');
+          }
+          if (!coverHref) {
+            var items = Array.prototype.slice.call(opfDoc.querySelectorAll('manifest > item'));
+            var guess = items.find(function (i) {
+              var mt = i.getAttribute('media-type') || '';
+              var href = i.getAttribute('href') || '';
+              return mt.indexOf('image') !== -1 && /cover/i.test(href);
+            });
+            if (guess) coverHref = guess.getAttribute('href');
+          }
+
+          var titleEl = opfDoc.querySelector('metadata > title, metadata > dc\\:title');
+          var creatorEl = opfDoc.querySelector('metadata > creator, metadata > dc\\:creator');
+          var meta = {
+            title: titleEl ? titleEl.textContent.trim() : '',
+            author: creatorEl ? creatorEl.textContent.trim() : ''
+          };
+
+
+          var spineIds = Array.prototype.slice.call(opfDoc.querySelectorAll('spine > itemref'))
+            .map(function (el) { return el.getAttribute('idref'); })
+            .filter(Boolean);
+          var manifestById = {};
+          Array.prototype.slice.call(opfDoc.querySelectorAll('manifest > item')).forEach(function (item) {
+            manifestById[item.getAttribute('id')] = item;
+          });
+
+          function readSpineText(spineIndex, acc) {
+            if (spineIndex >= spineIds.length || spineIndex >= 3) {
+              return Promise.resolve(cleanExcerptText(acc));
+            }
+            var manifestItem = manifestById[spineIds[spineIndex]];
+            var href = manifestItem && manifestItem.getAttribute('href');
+            if (!href) return readSpineText(spineIndex + 1, acc);
+            var fullSpinePath = normalizeZipPath(basePath ? basePath + '/' + href : href);
+            var docEntry = zip.file(fullSpinePath);
+            if (!docEntry) return readSpineText(spineIndex + 1, acc);
+            return docEntry.async('string').then(function (html) {
+              var doc = new DOMParser().parseFromString(html, 'text/html');
+              var text = cleanExcerptText((doc.body && doc.body.textContent) || '');
+              var combined = (acc + ' ' + text).trim();
+              if (combined.length >= MIN_EXCERPT_CHARS_BEFORE_FALLBACK || spineIndex >= 2) {
+                return combined;
+              }
+              return readSpineText(spineIndex + 1, combined);
+            }).catch(function () { return readSpineText(spineIndex + 1, acc); });
+          }
+
+          function attachExcerpt(result) {
+            return readSpineText(0, '').then(function (excerpt) {
+              if (excerpt) result.excerpt = excerpt.slice(0, MAX_EXCERPT_CHARS);
+              return result;
+            }).catch(function () { return result; }); // cover/meta still stand even if excerpt extraction fails
+          }
+
+          if (!coverHref) return attachExcerpt({ cover: null, meta: meta });
+
+          var fullPath = normalizeZipPath(basePath ? basePath + '/' + coverHref : coverHref);
+          var imgFile = zip.file(fullPath) || zip.file(coverHref);
+          if (!imgFile) return attachExcerpt({ cover: null, meta: meta });
+
+          return imgFile.async('blob').then(function (blob) {
+            return blobToDataUrl(blob).then(function (dataUrl) {
+              return attachExcerpt({ cover: dataUrl, meta: meta });
+            });
+          });
+        });
+      });
+    });
+  }
+
+  function handleSelectedFile(file) {
+    pendingFile = file;
+    dropzoneLabel.innerHTML = t().fileSelectedLabel + '<div class="fname">' + escapeHtml(file.name) + '</div>';
+    pendingExtractedCover = null;
+    pendingFileMeta = null;
+    pendingExtractedExcerpt = null;
+    showExtractPreview(null);
+
+    var ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'pdf') {
+      if (!window.pdfjsLib) { setExtractStatus(t().extractPdfUnavailable, 'warn'); return; }
+      setExtractStatus('<span class="spinner"></span> ' + t().extractingPdf);
+      readFileAsArrayBuffer(file).then(function (buf) {
+        return extractPdfCover(buf);
+      }).then(function (res) {
+        pendingExtractedExcerpt = res.excerpt || null; // step 9 — independent of whether a cover was found
+        if (!res.cover) {
+          setExtractStatus(t().extractNoCoverFound, 'warn');
+          applyExtractedMeta(res.meta);
+          return;
+        }
+        return compressDataUrl(res.cover, 500, 0.85).then(function (compressed) {
+          pendingExtractedCover = compressed;
+          showExtractPreview(compressed);
+          setExtractStatus(t().extractSuccess, 'ok');
+          applyExtractedMeta(res.meta);
+        });
+      }).catch(function () {
+        setExtractStatus(t().extractFailed, 'warn');
+      });
+    } else if (ext === 'epub') {
+      if (!window.JSZip) { setExtractStatus(t().extractEpubUnavailable, 'warn'); return; }
+      setExtractStatus('<span class="spinner"></span> ' + t().extractingEpub);
+      readFileAsArrayBuffer(file).then(function (buf) {
+        return extractEpubCover(buf);
+      }).then(function (res) {
+        pendingExtractedExcerpt = res.excerpt || null; // step 9 — independent of whether a cover was found
+        if (!res.cover) {
+          setExtractStatus(t().extractNoCoverEpub, 'warn');
+          applyExtractedMeta(res.meta);
+          return;
+        }
+        return compressDataUrl(res.cover, 500, 0.85).then(function (compressed) {
+          pendingExtractedCover = compressed;
+          showExtractPreview(compressed);
+          setExtractStatus(t().extractSuccess, 'ok');
+          applyExtractedMeta(res.meta);
+        });
+      }).catch(function () {
+        setExtractStatus(t().extractFailed, 'warn');
+      });
+    } else {
+      setExtractStatus(t().extractNoCoverType, 'warn');
+    }
+
+    pendingFileMeta = { name: file.name, size: file.size };
+  }
+
+  function applyExtractedMeta(meta) {
+    if (meta && meta.title && !fTitle.value.trim()) fTitle.value = meta.title;
+    if (meta && meta.author && !fAuthor.value.trim()) fAuthor.value = meta.author;
+  }
+
+
+  function deriveTitleFromFilename(name) {
+    return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+  }
+
+  function fallbackTitle() {
+    if (pendingFileMeta && pendingFileMeta.name) {
+      var fromNewFile = deriveTitleFromFilename(pendingFileMeta.name);
+      if (fromNewFile) return fromNewFile;
+    }
+    if (editingId) {
+      var existing = library.find(function (b) { return b.id === editingId; });
+      if (existing && existing.fileMeta && existing.fileMeta.name) {
+        var fromExistingFile = deriveTitleFromFilename(existing.fileMeta.name);
+        if (fromExistingFile) return fromExistingFile;
+      }
+    }
+    return t().untitled;
+  }
+
+  function filePickerTypes() {
+    return [{
+      description: t().filePickerDescription,
+      accept: { 'application/pdf': ['.pdf'], 'application/epub+zip': ['.epub'], 'text/plain': ['.txt'] }
+    }];
+  }
+
+  function pickFile() {
+    if (!fileHandlesSupported) { fileInput.click(); return; }
+
+
+    OsirisCore.pickFileHandle({ types: filePickerTypes() }).then(function (handle) {
+      if (!handle) return null;
+      return handle.getFile().then(function (file) {
+        pendingFileHandle = handle;
+        handleSelectedFile(file);
+      });
+    }).catch(function () {
+
+
+      pendingFileHandle = null;
+      fileInput.click();
+    });
+  }
+
+  dropzone.addEventListener('click', pickFile);
+  dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', function () { dropzone.classList.remove('drag'); });
+  dropzone.addEventListener('drop', function (e) {
+    e.preventDefault(); dropzone.classList.remove('drag');
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    pendingFileHandle = null;
+
+
+    var item = e.dataTransfer.items && e.dataTransfer.items[0];
+    if (item && item.getAsFileSystemHandle) {
+      item.getAsFileSystemHandle().then(function (handle) {
+        if (handle && handle.kind === 'file') pendingFileHandle = handle;
+      }).catch(function () {});
+    }
+    fileInput.files = e.dataTransfer.files;
+    handleSelectedFile(file);
+  });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files[0]) { pendingFileHandle = null; handleSelectedFile(fileInput.files[0]); }
+  });
+
+  /* -------------------------- Add/Edit modal ------------------------ */
+  function openAddModal() {
+    editingId = null;
+    modalTitle.textContent = t().addModalTitle;
+    saveBtnLabel.textContent = t().addBtnLabel;
+    fTitle.value = '';
+    fAuthor.value = '';
+    fNote.value = '';
+    fLink.value = '';
+    fCategory.value = '';
+    fExcludeAi.checked = false;
+    pendingFileHandle = null;
+    pendingFile = null;
+    selectedSwatch = SPINE_COLORS[0];
+    renderSwatches();
+    dropzoneLabel.textContent = t().dropzoneDefault;
+    fileInput.value = '';
+    pendingExtractedCover = null;
+    pendingFileMeta = null;
+    pendingExtractedExcerpt = null;
+    setExtractStatus('');
+    showExtractPreview(null);
+    modalOverlay.classList.add('open');
+    fTitle.focus();
+  }
+
+  function openEditModal(book) {
+    editingId = book.id;
+    modalTitle.textContent = t().editModalTitle;
+    saveBtnLabel.textContent = t().saveBtnLabel;
+    fTitle.value = book.title || '';
+    fAuthor.value = book.author || '';
+    fNote.value = book.note || '';
+    fLink.value = book.link || '';
+    fCategory.value = book.category || '';
+    fExcludeAi.checked = !!book.aiExcluded;
+    pendingFileHandle = null;
+    pendingFile = null;
+    selectedSwatch = book.spine || SPINE_COLORS[0];
+    renderSwatches();
+    if (book.fileMeta) {
+      dropzoneLabel.textContent = (book.fileHandle ? t().linkedFilePrefix : t().lastFileUsedPrefix) + book.fileMeta.name +
+        t().fileSuffixHint;
+    } else {
+      dropzoneLabel.textContent = t().dropzoneDefault;
+    }
+    fileInput.value = '';
+    pendingExtractedCover = null;
+    pendingFileMeta = null;
+    pendingExtractedExcerpt = null;
+    setExtractStatus('');
+    showExtractPreview(book.cover && book.coverIsReal ? book.cover : null);
+    modalOverlay.classList.add('open');
+    fTitle.focus();
+  }
+
+  function closeModal() { modalOverlay.classList.remove('open'); }
+
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', function (e) { if (e.target === modalOverlay) closeModal(); });
+
+  saveBtn.addEventListener('click', function () {
+    var title = fTitle.value.trim() || fallbackTitle();
+
+    if (editingId) {
+      var book = library.find(function (b) { return b.id === editingId; });
+      if (book) {
+
+
+        var previous = JSON.parse(JSON.stringify(book));
+        book.title = title;
+        book.author = fAuthor.value.trim();
+        book.note = fNote.value.trim();
+        book.link = fLink.value.trim();
+        book.category = fCategory.value.trim() || null;
+        book.aiExcluded = fExcludeAi.checked;
+        book.spine = selectedSwatch;
+        if (pendingExtractedCover) { book.cover = pendingExtractedCover; book.coverIsReal = true; }
+        if (pendingFileMeta) { book.fileMeta = { name: pendingFileMeta.name }; }
+        if (pendingExtractedExcerpt) { book.excerpt = pendingExtractedExcerpt; } // step 9 — feeds aiClassifyBatch
+        if (pendingFileHandle) { book.fileHandle = true; }
+        else if (pendingFile) {
+
+
+          book.fileBlob = true;
+          sessionFiles[book.id] = pendingFile;
+          if (window.OsirisCore) OsirisCore.saveFileBlob(book.id, pendingFile);
+        }
+
+        if (saveLibrary()) {
+          closeModal();
+          renderLibrary();
+          showToast(t().toastBookUpdated);
+        } else {
+          Object.keys(previous).forEach(function (k) { book[k] = previous[k]; });
+        }
+      }
+    } else {
+      var newBook = {
+        id: uid(),
+        title: title,
+        author: fAuthor.value.trim(),
+        note: fNote.value.trim(),
+        link: fLink.value.trim(),
+        category: fCategory.value.trim() || null,
+        aiExcluded: fExcludeAi.checked,
+        spine: selectedSwatch,
+        cover: pendingExtractedCover || null,
+        coverIsReal: !!pendingExtractedCover,
+        excerpt: pendingExtractedExcerpt || null, // step 9 — feeds OsirisCore.aiClassifyBatch() via the Hub
+        art: ART_PATTERNS[hashStr(title) % ART_PATTERNS.length],
+        texture: PAGE_TEXTURES[hashStr(title + (fAuthor.value || '')) % PAGE_TEXTURES.length],
+        fileMeta: pendingFileMeta ? { name: pendingFileMeta.name } : null,
+        fileHandle: !!pendingFileHandle,
+        fileBlob: !!(pendingFile && !pendingFileHandle),
+        openCount: 0,
+        addedAt: Date.now(),
+        shelf: 'codex'
+      };
+      library.unshift(newBook);
+
+      if (saveLibrary()) {
+        closeModal();
+        renderLibrary();
+        showToast(t().toastBookAdded);
+        if (pendingFileHandle && window.OsirisCore) {
+          OsirisCore.saveFileHandle(newBook.id, pendingFileHandle);
+        } else if (pendingFile) {
+
+
+          sessionFiles[newBook.id] = pendingFile;
+          if (window.OsirisCore) OsirisCore.saveFileBlob(newBook.id, pendingFile);
+        }
+      } else {
+
+
+        library.shift();
+      }
+    }
+  });
+
+  /* -------------------------- Detail modal -------------------------- */
+  function openDetail(book) {
+    detailId = book.id;
+    detailTitle.textContent = book.title;
+    detailAuthor.textContent = book.author || t().authorUnknown;
+    detailCategoryTag.textContent = book.category || '';
+    detailCategoryTag.style.display = book.category ? '' : 'none';
+    if (book.aiTags && book.aiTags.theme) {
+      detailAiTag.textContent = book.aiTags.theme + (book.aiTags.cecr ? ' · ' + book.aiTags.cecr : '');
+      detailAiTag.style.display = '';
+    } else {
+      detailAiTag.style.display = 'none';
+    }
+    detailNote.textContent = book.note || '';
+    detailNote.classList.toggle('empty', !book.note);
+    if (!book.note) detailNote.textContent = t().noteEmpty;
+
+
+    detailOpenBtn.style.display = canOpenFile(book) ? '' : 'none';
+
+
+    if (book.link) {
+      detailLinkField.style.display = 'block';
+      var isUrl = /^https?:\/\//i.test(book.link);
+      detailLink.innerHTML = isUrl
+        ? '<a href="' + escapeHtml(book.link) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(book.link) + ' ?</a>'
+        : '<span class="plain-path">' + escapeHtml(book.link) + '</span>';
+    } else {
+      detailLinkField.style.display = 'none';
+      detailLink.innerHTML = '';
+    }
+
+    detailCover.querySelector('.strip').style.background = resolveSpine(book);
+    if (hasRealCover(book)) {
+      detailCover.style.backgroundImage = 'url(' + resolveCoverSrc(book) + ')';
+    } else {
+      detailCover.style.backgroundImage = generatedGradient(resolveSpine(book));
+    }
+    detailModalOverlay.classList.add('open');
+  }
+
+  function closeDetail() { detailModalOverlay.classList.remove('open'); detailId = null; }
+
+
+  function openUrlWithMode(url) {
+    if (currentOpenMode === 'popup') {
+      window.open(url, 'osirisReader', 'width=820,height=1040');
+    } else {
+      window.open(url, '_blank');
+    }
+  }
+
+
+  function resolveAndOpenFile(id) {
+
+
+    if (currentOpenMode === 'reader') {
+      if (window.OsirisCore && window.parent !== window) {
+        var readerBook = library.find(function (b) { return b.id === id; });
+        OsirisCore.send(window.parent, OsirisCore.MSG.REQUEST_READER_OPEN, {
+          id: id,
+          title: readerBook ? readerBook.title : '',
+          author: readerBook ? readerBook.author : ''
+        });
+        return Promise.resolve('opened');
+      }
+
+
+    }
+
+
+    var cached = sessionFiles[id];
+    if (cached) {
+      var url = URL.createObjectURL(cached);
+      openUrlWithMode(url);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      return Promise.resolve('opened');
+    }
+    if (!window.OsirisCore) return Promise.resolve('unavailable');
+    return OsirisCore.getFileHandle(id).then(function (handle) {
+      if (!handle) return null;
+      return OsirisCore.openFileHandle(handle, currentOpenMode);
+    }).then(function (status) {
+      if (status === 'opened') return 'opened';
+
+
+      return OsirisCore.openFileBlob(id, currentOpenMode);
+    });
+  }
+
+  function openFileBook(id, btn) {
+    var book = library.find(function (b) { return b.id === id; });
+    if (!book) return;
+    var originalLabel = btn.textContent;
+    btn.textContent = t().opening;
+    btn.disabled = true;
+    resolveAndOpenFile(id).then(function (status) {
+      btn.textContent = originalLabel;
+      btn.disabled = false;
+      if (status === 'opened') return;
+      if (book.link) {
+        window.open(book.link, '_blank', 'noopener,noreferrer');
+      } else {
+        showToast(t().toastFileNotFound);
+      }
+    });
+  }
+
+
+  function openBookFromCover(id, btn) {
+    var book = library.find(function (b) { return b.id === id; });
+    if (!book) return;
+    btn.classList.add('busy');
+    resolveAndOpenFile(id).then(function (status) {
+      btn.classList.remove('busy');
+      if (status === 'opened') return;
+      if (book.link) {
+        window.open(book.link, '_blank', 'noopener,noreferrer');
+      } else {
+        showToast(t().toastFileNotFound);
+      }
+    });
+  }
+
+  document.getElementById('detailCloseBtn').addEventListener('click', closeDetail);
+  detailModalOverlay.addEventListener('click', function (e) { if (e.target === detailModalOverlay) closeDetail(); });
+
+  detailOpenBtn.addEventListener('click', function (e) {
+    if (!detailId) return;
+    openFileBook(detailId, e.target);
+  });
+
+  detailDeleteBtn.addEventListener('click', function () {
+    if (!detailId) return;
+    if (window.OsirisCore) { OsirisCore.deleteFileHandle(detailId); OsirisCore.deleteFileBlob(detailId); }
+    delete sessionFiles[detailId];
+    library = library.filter(function (b) { return b.id !== detailId; });
+    saveLibrary();
+    closeDetail();
+    renderLibrary();
+    showToast(t().toastBookDeleted);
+  });
+
+  detailEditBtn.addEventListener('click', function () {
+    var book = library.find(function (b) { return b.id === detailId; });
+    closeDetail();
+    if (book) openEditModal(book);
+  });
+
+  /* -------------------------- Render -------------------------------- */
+  function generatedGradient(spineColor) {
+    var c1 = shade(spineColor, -0.55);
+    var c2 = shade(spineColor, -0.15);
+    var c3 = shade(spineColor, 0.18);
+    return 'radial-gradient(ellipse at 70% 25%, ' + c3 + '55 0%, transparent 55%), linear-gradient(165deg, ' + c1 + ' 0%, ' + c2 + ' 55%, ' + c1 + ' 100%)';
+  }
+
+  function bookCard(book) {
+    var item = document.createElement('div');
+    item.className = 'codex-item';
+
+    var shell = document.createElement('div');
+    shell.className = 'vol-shell';
+    shell.tabIndex = 0;
+    shell.setAttribute('aria-label', book.title + t().volShellAriaSuffix);
+
+    var pages = document.createElement('div');
+    pages.className = 'vol-pages ' + resolveTexture(book);
+
+    var jacket = document.createElement('div');
+    jacket.className = 'vol-jacket';
+    var bookHasRealCover = hasRealCover(book);
+    if (bookHasRealCover) {
+      jacket.style.backgroundImage = 'url(' + resolveCoverSrc(book) + ')';
+    } else {
+      jacket.style.background = generatedGradient(resolveSpine(book));
+    }
+
+    var spine = document.createElement('div');
+    spine.className = 'vol-spine';
+    spine.style.setProperty('--spine-color', shade(resolveSpine(book), -0.35));
+
+    var art = document.createElement('div');
+    art.className = 'jacket-art ' + (bookHasRealCover ? '' : resolveArt(book));
+    art.setAttribute('aria-hidden', 'true');
+
+    var ribbon = document.createElement('div');
+    ribbon.className = 'vol-ribbon';
+    ribbon.style.setProperty('--ribbon-color', resolveSpine(book));
+
+    var titleBar = document.createElement('div');
+    titleBar.className = 'vol-title-bar';
+    titleBar.innerHTML = '<div class="vol-name">' + escapeHtml(book.title) + '</div>' +
+      (book.author ? '<div class="vol-author-small">' + escapeHtml(book.author) + '</div>' : '');
+
+    var removeBtn = document.createElement('div');
+    removeBtn.className = 'vol-remove';
+    removeBtn.setAttribute('role', 'button');
+    removeBtn.setAttribute('aria-label', t().removeAria);
+    removeBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+    removeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (confirm(t().confirmDelete(book.title))) {
+        if (window.OsirisCore) { OsirisCore.deleteFileHandle(book.id); OsirisCore.deleteFileBlob(book.id); }
+        delete sessionFiles[book.id];
+        library = library.filter(function (b) { return b.id !== book.id; });
+        saveLibrary();
+        renderLibrary();
+        showToast(t().toastBookDeleted);
+      }
+    });
+
+    jacket.appendChild(spine);
+    jacket.appendChild(art);
+    jacket.appendChild(ribbon);
+    jacket.appendChild(titleBar);
+
+    shell.appendChild(pages);
+    shell.appendChild(jacket);
+    shell.appendChild(removeBtn);
+
+
+    if (canOpenFile(book)) {
+      var openBtn = document.createElement('div');
+      openBtn.className = 'vol-open';
+      openBtn.setAttribute('role', 'button');
+      openBtn.setAttribute('aria-label', t().openFileAria);
+      openBtn.title = t().openFileAria;
+      openBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>' + escapeHtml(t().clickToOpen) + '</span>';
+      openBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openBookFromCover(book.id, openBtn);
+      });
+      shell.appendChild(openBtn);
+    }
+
+    shell.addEventListener('click', function () { openDetail(book); });
+    shell.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(book); }
+    });
+
+    item.appendChild(shell);
+    return item;
+  }
+
+  function addCard() {
+    var card = document.createElement('div');
+    card.className = 'vol-add-card';
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>' + escapeHtml(t().addBookCard) + '</span>';
+    card.addEventListener('click', openAddModal);
+    card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') openAddModal(); });
+    return card;
+  }
+
+  function renderLibrary() {
+    stage.innerHTML = '';
+    if (library.length === 0) {
+      emptyState.style.display = 'flex';
+      stage.appendChild(addCard());
+      return;
+    }
+    emptyState.style.display = 'none';
+    applySortOrder(library).forEach(function (book) { stage.appendChild(bookCard(book)); });
+    stage.appendChild(addCard());
+  }
+
+  renderSwatches();
+  applyLang(currentLang); // also renders the library, so no separate renderLibrary() call needed here
+
+  if (window.OsirisCore && window.parent !== window) {
+    OsirisCore.send(window.parent, OsirisCore.MSG.SHELF_READY, {});
+  }
+})();
+</script>
+
+</body>
+</html>

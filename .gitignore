@@ -1,0 +1,12 @@
+﻿# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+
+# Temporary Scripts
+__pycache__/

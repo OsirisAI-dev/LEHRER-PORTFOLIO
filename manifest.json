@@ -1,0 +1,117 @@
+{
+  "name": "OSIRIS Lehrer-Portfolio",
+  "short_name": "OSIRIS",
+  "description": "Offline-fähige Lehrerplattform für KI-Testkgenerator, Wörterbücher, Wiki und Bibliothek",
+  "start_url": "/pages/home.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1c1c1e",
+  "theme_color": "#007aff",
+  "categories": ["education", "productivity"],
+  "lang": "de",
+  "icons": [
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "OSIRIS Dashboard"
+    },
+    {
+      "src": "/screenshots/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "OSIRIS auf dem Smartphone"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Test Generator",
+      "short_name": "Tests",
+      "description": "KI-gestützter Test- und Textgenerator",
+      "url": "/pages/test-generator.html",
+      "icons": [{ "src": "/icons/test-quiz-svgrepo-com.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Wörterbuch",
+      "short_name": "Wörter",
+      "description": "KI-Wörterbuch",
+      "url": "/pages/woerterbuch.html",
+      "icons": [{ "src": "/icons/ki-woerterbuch-v2.png", "sizes": "any", "type": "image/png" }]
+    },
+    {
+      "name": "Offline Wiki",
+      "short_name": "Wiki",
+      "description": "Offline-Lesetexte und Wikipedia-Artikel",
+      "url": "/pages/wiki.html",
+      "icons": [{ "src": "/icons/history-log-manuscript-svgrepo-com.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Bibliothek",
+      "short_name": "Bücher",
+      "description": "Digitale Lehrerbibliothek",
+      "url": "/pages/library.html",
+      "icons": [{ "src": "/icons/bibliothek-default.png", "sizes": "any", "type": "image/png" }]
+    },
+    {
+      "name": "Lehrskizze Editor",
+      "short_name": "Lehrskizze",
+      "description": "Éditeur de Fiche de Cours",
+      "url": "/pages/lehrskizze-editor.html",
+      "icons": [{ "src": "/icons/whiteboard-12-svgrepo-com.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

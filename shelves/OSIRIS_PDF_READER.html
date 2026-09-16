@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osiris PDF Reader</title>
+<link rel="stylesheet" href="/fonts/fonts.css" onerror="this.remove()">
+<style>
+/* ── Theme tokens ────────────────────────────────────────────────── */
+:root {
+  --bg:      #1a1a2e; --surface: #16213e; --text: #e2e8f0;
+  --text-dim:#94a3b8; --accent:  #c9a227; --border: #2d3748;
+  --primary: #3a5a8c; --page-bg: #ffffff;
+  --shadow:  rgba(0,0,0,0.55);
+}
+[data-theme="light"] {
+  --bg:#f5f0e8; --surface:#fff; --text:#2c2c2c; --text-dim:#6b7280;
+  --accent:#b8860b; --border:#d1c7b0; --primary:#2c4a7c;
+  --page-bg:#ffffff; --shadow:rgba(0,0,0,0.18);
+}
+[data-theme="osiris"] {
+  --bg:#12100e; --surface:#1a1714; --text:#d4b483; --text-dim:#8b7355;
+  --accent:#c9a227; --border:#3d3020; --primary:#6b4e2a;
+  --page-bg:#faf6ee; --shadow:rgba(0,0,0,0.65);
+}
+[data-theme="snow"] {
+  --bg:#eef2f7; --surface:#fff; --text:#1e293b; --text-dim:#64748b;
+  --accent:#3b82f6; --border:#cbd5e1; --primary:#1e40af;
+  --page-bg:#ffffff; --shadow:rgba(0,0,0,0.12);
+}
+
+*,*::before,*::after { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  font-family:'Inter','Segoe UI',Tahoma,sans-serif;
+  background:var(--bg); color:var(--text);
+  height:100vh; display:flex; flex-direction:column; overflow:hidden;
+  transition:background 0.3s,color 0.3s;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────── */
+#toolbar {
+  background:var(--surface); border-bottom:2px solid var(--accent);
+  padding:5px 10px; display:flex; align-items:center; gap:6px;
+  flex-shrink:0; flex-wrap:wrap; z-index:100; min-height:44px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+#toolbar.collapsed {
+  transform: translateY(-100%);
+  margin-bottom: -46px; 
+}
+#toolbarToggle {
+  position: absolute;
+  right: 20px;
+  bottom: -22px;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 1px 16px;
+  font-size: 0.8rem;
+  z-index: 1000;
+  box-shadow: 0 4px 6px var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+#toolbarToggle:hover {
+  color: var(--accent);
+}
+.tb-sep { width:1px; background:var(--border); align-self:stretch; margin:2px 2px; }
+
+.tb-btn {
+  background:var(--bg); border:1px solid var(--border); color:var(--text);
+  border-radius:5px; padding:5px 10px; cursor:pointer;
+  font-size:0.78rem; font-weight:600; font-family:inherit;
+  display:flex; align-items:center; gap:4px; transition:0.15s;
+  white-space:nowrap; line-height:1;
+}
+.tb-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+.tb-btn.primary { background:var(--accent); color:#1a1200; border-color:var(--accent); }
+.tb-btn.primary:hover { opacity:0.85; }
+.tb-btn:disabled { opacity:0.38; cursor:not-allowed; }
+
+.tb-num {
+  background:var(--bg); border:1px solid var(--border); color:var(--text);
+  border-radius:5px; padding:4px 6px; font-size:0.78rem; font-family:inherit;
+  width:46px; text-align:center;
+}
+.tb-num:focus { outline:none; border-color:var(--accent); }
+.tb-meta {
+  background:var(--bg); border:1px solid var(--border); color:var(--text);
+  border-radius:5px; padding:4px 8px; font-size:0.78rem; font-family:inherit;
+}
+.tb-meta:focus { outline:none; border-color:var(--accent); }
+#metaTitle  { width:180px; }
+#metaAuthor { width:120px; }
+
+.tb-label { font-size:0.75rem; color:var(--text-dim); white-space:nowrap; }
+
+/* ── Scan warning ────────────────────────────────────────────────── */
+#scanWarn {
+  display:none; background:#7a3200; color:#ffd580;
+  padding:6px 14px; font-size:0.76rem; text-align:center; flex-shrink:0;
+  align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+}
+#scanWarn.show { display:flex; }
+#scanWarn .tb-btn, #scanWarn .tb-meta { background:rgba(0,0,0,0.2); color:#ffd580; border-color:#a85a00; }
+#scanWarn .tb-btn:hover:not(:disabled) { color:#fff; border-color:#ffd580; }
+
+/* ── Hub-waiting state (shown until OPEN_PDF arrives) ────────────── */
+#waitState {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:12px; color:var(--text-dim);
+  font-size:0.9rem; text-align:center; padding:20px;
+}
+#waitState .wi { font-size:3rem; opacity:0.25; }
+#waitState.hidden { display:none; }
+
+/* ── Viewer ──────────────────────────────────────────────────────── */
+#viewer {
+  flex:1; overflow-y:auto; overflow-x:auto; display:none;
+  flex-direction:column; align-items:center; padding:20px 20px 40px;
+  gap:14px; background:var(--bg); scroll-behavior:smooth;
+}
+#viewer.show { display:flex; }
+
+/* ── Page wrapper ────────────────────────────────────────────────── */
+.pw {
+  position:relative; background:var(--page-bg);
+  box-shadow:0 3px 16px var(--shadow); border-radius:2px;
+  flex-shrink:0; overflow:hidden;
+}
+.pw canvas { display:block; }
+.pw-badge {
+  position:absolute; bottom:7px; right:9px;
+  background:rgba(0,0,0,0.42); color:#fff;
+  font-size:0.62rem; padding:2px 7px; border-radius:10px;
+  pointer-events:none; z-index:5; font-family:inherit; letter-spacing:0.02em;
+}
+.pw-ph {
+  display:flex; align-items:center; justify-content:center;
+  color:#bbb; font-size:0.8rem; background:var(--page-bg);
+}
+
+/* ── pdf.js text layer ───────────────────────────────────────────── */
+.textLayer {
+  position:absolute; inset:0; overflow:hidden; line-height:1; z-index:2;
+}
+.textLayer span, .textLayer br {
+  color:transparent; position:absolute; white-space:pre; cursor:text;
+  transform-origin:0% 0%;
+}
+.textLayer ::selection { background:rgba(51,144,255,0.35); color:transparent; }
+.textLayer .endOfContent {
+  display:block; position:absolute; left:0; top:100%; right:0; bottom:0;
+  z-index:-1; cursor:default; user-select:none;
+}
+.textLayer span.tts-active {
+  background:rgba(58,90,140,0.42); border-radius:2px;
+}
+
+/* ── Citation button ─────────────────────────────────────────────── */
+#citBtn {
+  position:fixed; z-index:1000; display:none;
+  background:var(--accent); color:#1a1200; border:none;
+  border-radius:7px; padding:6px 13px; font-size:0.8rem; font-weight:700;
+  cursor:pointer; box-shadow:0 2px 10px var(--shadow);
+  font-family:inherit; align-items:center; gap:5px; transition:opacity 0.15s;
+}
+#citBtn:hover { opacity:0.85; }
+#citBtn.show { display:flex; }
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+#toast {
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  background:var(--accent); color:#1a1200;
+  padding:7px 20px; border-radius:20px; font-size:0.84rem; font-weight:700;
+  pointer-events:none; opacity:0; transition:opacity 0.28s;
+  z-index:2000; font-family:inherit;
+}
+#toast.show { opacity:1; }
+
+@media (max-width:600px) {
+  #metaTitle { width:110px; } #metaAuthor { width:80px; }
+  .tb-btn { padding:5px 7px; }
+}
+</style>
+</head>
+<body>
+
+
+<div id="toolbar">
+
+  <button class="tb-btn" id="closeBtn" title="Retour à la bibliothèque">← <span id="lblClose">Bibliothèque</span></button>
+
+  <div class="tb-sep"></div>
+
+  <input class="tb-meta" id="metaTitle"  placeholder="Titre" title="Titre (pour la citation)">
+  <input class="tb-meta" id="metaAuthor" placeholder="Auteur" title="Auteur (pour la citation)">
+
+  <div class="tb-sep"></div>
+
+  <button class="tb-btn" id="prevBtn" disabled>‹</button>
+  <input  class="tb-num" id="pageNum" type="number" value="1" min="1" disabled>
+  <span   class="tb-label" id="lblTotal">/ —</span>
+  <button class="tb-btn" id="nextBtn" disabled>›</button>
+
+  <div class="tb-sep"></div>
+
+  <button class="tb-btn" id="zOutBtn"   disabled title="−">−</button>
+  <span   class="tb-label" id="lblZoom">120%</span>
+  <button class="tb-btn" id="zInBtn"    disabled title="+">+</button>
+  <button class="tb-btn" id="fitWBtn"   disabled>↔</button>
+  <button class="tb-btn" id="fitPBtn"   disabled>⊡</button>
+
+  <div class="tb-sep"></div>
+
+  <button class="tb-btn" id="ttsBtn" disabled><span id="lblTtsPlay">🔊 Écouter</span></button>
+  <button class="tb-btn" id="ttsStopBtn" disabled style="display:none;">⏹</button>
+  <select class="tb-meta" id="ttsRate" disabled title="Vitesse de lecture">
+    <option value="0.75">0.75×</option>
+    <option value="1" selected>1×</option>
+    <option value="1.25">1.25×</option>
+    <option value="1.5">1.5×</option>
+  </select>
+
+  <div class="tb-sep"></div>
+
+  <select class="tb-meta" id="themeSel" title="Thème">
+    <option value="light">Clair</option>
+    <option value="dark">Sombre</option>
+    <option value="osiris">Osiris (Sépia)</option>
+    <option value="snow">Neige (Blanc)</option>
+  </select>
+
+  <button id="toolbarToggle" title="Afficher/Masquer la barre" onclick="this.parentElement.classList.toggle('collapsed'); this.innerHTML = this.parentElement.classList.contains('collapsed') ? '&#x25BC;' : '&#x25B2;';">&#x25B2;</button>
+</div>
+
+<div id="scanWarn">
+  <span id="scanWarnText"></span>
+  <select class="tb-meta" id="ocrLangSel" title="Langue de reconnaissance">
+    <option value="fra">Français</option>
+    <option value="deu">Deutsch</option>
+  </select>
+  <button class="tb-btn" id="ocrBtn">🔎 <span id="lblOcrBtn">Reconnaître le texte de cette page</span></button>
+</div>
+
+
+<div id="waitState">
+  <div class="wi">📚</div>
+  <span id="lblWait">En attente du Hub — ouvrez un livre depuis la Bibliothèque.</span>
+</div>
+
+
+<div id="viewer"></div>
+
+
+<button id="citBtn"><span id="lblCit">📋 Copier avec citation</span></button>
+
+
+<div id="toast"></div>
+
+<script src="../lib/pdf/v1/pdf.min.js"></script>
+<script src="../lib/tesseract/v5/tesseract.min.js"></script>
+<script>
+'use strict';
+
+/* ── Translations ────────────────────────────────────────────────── */
+const TR = {
+  fr: {
+    prev:'Page précédente', next:'Page suivante',
+    wait:'En attente du Hub — ouvrez un livre depuis la Bibliothèque.',
+    zOut:'Zoom arrière', zIn:'Zoom avant',
+    fitW:'Ajuster à la largeur', fitP:'Page entière',
+    cit:'📋 Copier avec citation', copied:'✓ Copié !',
+    title:'Titre', author:'Auteur',
+    scanned:'Ce PDF est un scan — aucun texte sélectionnable.',
+    errLoad:'Impossible de charger ce PDF.',
+    ttsPlay:'Écouter', ttsPause:'Pause', ttsResume:'Reprendre', ttsStop:'Arrêter',
+    ttsRateTitle:'Vitesse de lecture',
+    ttsUnavailable:'Lecture vocale non disponible sur cet appareil.',
+    ttsNoVoice:'Aucune voix disponible pour lire ce document.',
+    ocrBtn:'Reconnaître le texte de cette page',
+    ocrRunning:(pct)=>`Reconnaissance en cours… ${pct}%`,
+    ocrDone:(chars)=>`✓ Texte reconnu (${chars} caractères).`,
+    ocrFailed:'❌ Échec de la reconnaissance — réessayez, ou changez la langue si le résultat est mauvais.',
+    ocrMissingLang:'❌ Fichier de langue manquant dans libs/tesseract-lang/ — placez-y fra.traineddata.gz et/ou deu.traineddata.gz',
+    close:'Bibliothèque',
+    themeTitle:'Thème du lecteur',
+    pageOf:(n,t)=>`/ ${t}`,
+    header:(title,author,page)=>
+      `${title||'Document'}${author?' — '+author:''} (p. ${page})`
+  },
+  de: {
+    prev:'Vorherige Seite', next:'Nächste Seite',
+    wait:'Warte auf Hub — öffnen Sie ein Buch aus der Bibliothek.',
+    zOut:'Verkleinern', zIn:'Vergrößern',
+    fitW:'An Breite anpassen', fitP:'Ganze Seite',
+    cit:'📋 Mit Zitat kopieren', copied:'✓ Kopiert!',
+    title:'Titel', author:'Autor',
+    scanned:'Diese PDF ist ein Scan — kein auswählbarer Text.',
+    errLoad:'Diese PDF-Datei kann nicht geladen werden.',
+    ttsPlay:'Vorlesen', ttsPause:'Pause', ttsResume:'Fortsetzen', ttsStop:'Stopp',
+    ttsRateTitle:'Lesegeschwindigkeit',
+    ttsUnavailable:'Sprachausgabe auf diesem Gerät nicht verfügbar.',
+    ttsNoVoice:'Keine Stimme zum Vorlesen dieses Dokuments verfügbar.',
+    ocrBtn:'Text dieser Seite erkennen',
+    ocrRunning:(pct)=>`Erkennung läuft… ${pct}%`,
+    ocrDone:(chars)=>`✓ Text erkannt (${chars} Zeichen).`,
+    ocrFailed:'❌ Erkennung fehlgeschlagen — erneut versuchen oder die Sprache wechseln, falls das Ergebnis schlecht ist.',
+    ocrMissingLang:'❌ Sprachdatei fehlt in libs/tesseract-lang/ — bitte fra.traineddata.gz und/oder deu.traineddata.gz dort ablegen (siehe OCR_WORKPLAN.md).',
+    close:'Bibliothek',
+    themeTitle:'Lesethema',
+    pageOf:(n,t)=>`/ ${t}`,
+    header:(title,author,page)=>
+      `${title||'Dokument'}${author?' — '+author:''} (S. ${page})`
+  }
+};
+function t(k,...a){ const d=TR[lang]||TR.fr; const v=d[k]; return typeof v==='function'?v(...a):(v||k); }
+
+/* ── State ───────────────────────────────────────────────────────── */
+let lang         = 'fr';
+let pdfDoc       = null;
+let totalPages   = 0;
+let scale        = 1.2;
+let naturalVPs   = [];   // scale-1 viewports cached per page index (1-based)
+let rendering    = new Set();
+let renderObs    = null; // IntersectionObserver for render/clear
+let scrollObs    = null; // IntersectionObserver for page tracking
+let selPage      = 0;
+let toastTmr     = null;
+
+/* ── TTS state ───────────────────────────────────────────────────── */
+const ttsSupported = 'speechSynthesis' in window;
+let ttsState      = 'idle';   // 'idle' | 'playing' | 'paused'
+let ttsPage       = 0;
+let ttsRate       = 1;
+let ttsVoices     = [];
+let ttsUtterance  = null;
+
+/* ── OCR state ───────────────────────────────────────────────────── */
+
+
+const ocrSupported = typeof Tesseract !== 'undefined';
+
+
+const ocrResults = new Map();
+let ocrRunning = false;
+
+
+function updateOcrAvailability() {
+  ocrBtn.disabled = !ocrSupported;
+  ocrLangSel.disabled = !ocrSupported;
+  ocrBtn.title = ocrSupported ? '' : 'Tesseract.js introuvable (libs/tesseract.min.js).';
+}
+
+/* ── DOM refs ────────────────────────────────────────────────────── */
+const $    = id => document.getElementById(id);
+const waitState = $('waitState');
+const viewer    = $('viewer');
+const pageNum   = $('pageNum');
+const citBtn    = $('citBtn');
+const toast     = $('toast');
+const closeBtn  = $('closeBtn');
+const scanWarn  = $('scanWarn');
+const metaTitle = $('metaTitle');
+const metaAuthor= $('metaAuthor');
+const prevBtn   = $('prevBtn');
+const nextBtn   = $('nextBtn');
+const zInBtn    = $('zInBtn');
+const zOutBtn   = $('zOutBtn');
+const fitWBtn   = $('fitWBtn');
+const fitPBtn   = $('fitPBtn');
+const ttsBtn    = $('ttsBtn');
+const ttsStopBtn= $('ttsStopBtn');
+const ttsRateEl = $('ttsRate');
+const ocrBtn    = $('ocrBtn');
+const ocrLangSel= $('ocrLangSel');
+const scanWarnText = $('scanWarnText');
+const themeSel  = $('themeSel');
+
+/* ── pdf.js worker ───────────────────────────────────────────────── */
+if (typeof pdfjsLib !== 'undefined')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+
+/* ════════════════ LOAD PDF ════════════════════════════════════════ */
+async function openPdf(source) {
+  try {
+    ttsStop();
+    showToast('⏳ ' + t('open') + '…', 8000);
+    let buf;
+    if (source instanceof File)          buf = await source.arrayBuffer();
+    else if (source instanceof ArrayBuffer) buf = source;
+    else buf = source;
+
+    const task = pdfjsLib.getDocument({ data: buf });
+    pdfDoc = await task.promise;
+    totalPages = pdfDoc.numPages;
+
+    naturalVPs = new Array(totalPages + 1);
+    const fetches = [];
+    for (let i = 1; i <= totalPages; i++) {
+      fetches.push(pdfDoc.getPage(i).then(p => { naturalVPs[i] = p.getViewport({ scale: 1 }); }));
+    }
+    await Promise.all(fetches);
+
+    if (!metaTitle.value && source instanceof File) {
+      const name = source.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
+      metaTitle.value = name;
+    }
+
+    pageNum.value = 1;
+    pageNum.max   = totalPages;
+    $('lblTotal').textContent = t('pageOf', 1, totalPages);
+    [pageNum, prevBtn, nextBtn, zInBtn, zOutBtn, fitWBtn, fitPBtn].forEach(el => el.disabled = false);
+    updateTtsAvailability();
+
+    waitState.classList.add('hidden');
+    viewer.classList.add('show');
+
+    buildViewer();
+    checkScanned();
+    showToast('');
+
+  } catch(e) {
+    console.error(e);
+    showToast('❌ ' + t('errLoad'), 4000);
+  }
+}
+
+/* ════════════════ BUILD VIEWER ════════════════════════════════════ */
+function buildViewer() {
+  if (renderObs) renderObs.disconnect();
+  if (scrollObs) scrollObs.disconnect();
+  rendering.clear();
+  viewer.innerHTML = '';
+
+  for (let i = 1; i <= totalPages; i++) {
+    const vp = naturalVPs[i];
+    const w  = Math.round(vp.width  * scale);
+    const h  = Math.round(vp.height * scale);
+    const pw = makePlaceholder(i, w, h);
+    viewer.appendChild(pw);
+  }
+
+  /* Observer A — render/clear based on proximity to viewport */
+  renderObs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      const pw  = en.target;
+      const num = +pw.dataset.n;
+      if (en.isIntersecting) {
+        if (pw.dataset.r === '0') renderPageInto(num, pw);
+      } else {
+        if (pw.dataset.r === '1') clearPage(pw);
+      }
+    });
+  }, { root: viewer, rootMargin: '500px 0px', threshold: 0 });
+
+  /* Observer B — track current page in toolbar (robust at high zoom) */
+  scrollObs = new IntersectionObserver(() => {
+    let maxVisiblePage = null;
+    let maxVisibleArea = 0;
+    const vRect = viewer.getBoundingClientRect();
+    viewer.querySelectorAll('.pw').forEach(pw => {
+      const rect = pw.getBoundingClientRect();
+      const top = Math.max(rect.top, vRect.top);
+      const bottom = Math.min(rect.bottom, vRect.bottom);
+      const visibleH = Math.max(0, bottom - top);
+      if (visibleH > maxVisibleArea) {
+        maxVisibleArea = visibleH;
+        maxVisiblePage = +pw.dataset.n;
+      }
+    });
+    if (maxVisiblePage && +pageNum.value !== maxVisiblePage) {
+      pageNum.value = maxVisiblePage;
+      $('lblTotal').textContent = t('pageOf', maxVisiblePage, totalPages);
+      prevBtn.disabled = maxVisiblePage <= 1;
+      nextBtn.disabled = maxVisiblePage >= totalPages;
+    }
+  }, { root: viewer, threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0] });
+
+  viewer.querySelectorAll('.pw').forEach(pw => {
+    renderObs.observe(pw);
+    scrollObs.observe(pw);
+  });
+}
+
+/* ── Placeholder div for a page ──────────────────────────────────── */
+function makePlaceholder(i, w, h) {
+  const pw = document.createElement('div');
+  pw.className = 'pw';
+  pw.dataset.n = i;
+  pw.dataset.r = '0';
+  pw.style.width  = w + 'px';
+  pw.style.height = h + 'px';
+
+  const ph = document.createElement('div');
+  ph.className = 'pw-ph';
+  ph.style.cssText = `width:${w}px;height:${h}px;`;
+  ph.textContent = i;
+  pw.appendChild(ph);
+
+  pw.appendChild(makeBadge(i));
+  return pw;
+}
+
+function makeBadge(i) {
+  const b = document.createElement('span');
+  b.className = 'pw-badge';
+  b.textContent = `${i} / ${totalPages}`;
+  return b;
+}
+
+/* ════════════════ RENDER PAGE ══════════════════════════════════════ */
+
+
+const MAX_CANVAS_DIM = 4096;
+
+async function renderPageInto(n, pw) {
+  if (rendering.has(n)) return;
+  rendering.add(n);
+  try {
+    const page     = await pdfDoc.getPage(n);
+    const vp       = page.getViewport({ scale });
+    const W        = Math.round(vp.width);
+    const H        = Math.round(vp.height);
+
+    const largestDim = Math.max(W, H);
+    const clampRatio = largestDim > MAX_CANVAS_DIM ? MAX_CANVAS_DIM / largestDim : 1;
+    const renderVp = clampRatio < 1 ? page.getViewport({ scale: scale * clampRatio }) : vp;
+
+    /* Canvas */
+    const canvas   = document.createElement('canvas');
+    canvas.width   = Math.round(renderVp.width);
+    canvas.height  = Math.round(renderVp.height);
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    const ctx      = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport: renderVp }).promise;
+
+    /* Text layer */
+    const tl = document.createElement('div');
+    tl.className = 'textLayer';
+    tl.style.cssText = `width:${W}px;height:${H}px;`;
+    try {
+      const tc = await page.getTextContent();
+      if (typeof pdfjsLib.renderTextLayer === 'function') {
+        const rt = pdfjsLib.renderTextLayer({
+          textContentSource: tc,
+          container: tl,
+          viewport: vp,
+          textDivs: []
+        });
+        if (rt?.promise) await rt.promise;
+      }
+    } catch(_) { /* scanned PDF — canvas-only */ }
+
+    /* Inject into wrapper */
+    pw.innerHTML = '';
+    pw.style.width  = W + 'px';
+    pw.style.height = H + 'px';
+    pw.appendChild(canvas);
+    pw.appendChild(tl);
+    pw.appendChild(makeBadge(n));
+    pw.dataset.r = '1';
+
+    if (ocrResults.has(n)) {
+      replaceTextLayer(n, ocrResults.get(n).words);
+    }
+
+  } catch(e) {
+    console.warn(`Page ${n}:`, e);
+  } finally {
+    rendering.delete(n);
+  }
+}
+
+/* ── Clear page from memory ──────────────────────────────────────── */
+function clearPage(pw) {
+  const n  = +pw.dataset.n;
+  const vp = naturalVPs[n];
+  const w  = Math.round(vp.width  * scale);
+  const h  = Math.round(vp.height * scale);
+  pw.innerHTML = '';
+  pw.style.width  = w + 'px';
+  pw.style.height = h + 'px';
+  const ph = document.createElement('div');
+  ph.className = 'pw-ph';
+  ph.style.cssText = `width:${w}px;height:${h}px;`;
+  ph.textContent = n;
+  pw.appendChild(ph);
+  pw.appendChild(makeBadge(n));
+  pw.dataset.r = '0';
+}
+
+/* ════════════════ ZOOM ════════════════════════════════════════════ */
+function setScale(s) {
+  scale = Math.min(4, Math.max(0.3, s));
+  $('lblZoom').textContent = Math.round(scale * 100) + '%';
+  if (!pdfDoc) return;
+
+  viewer.querySelectorAll('.pw').forEach(pw => {
+    const n  = +pw.dataset.n;
+    const vp = naturalVPs[n];
+    pw.style.width  = Math.round(vp.width  * scale) + 'px';
+    pw.style.height = Math.round(vp.height * scale) + 'px';
+    clearPage(pw);
+  });
+  viewer.dispatchEvent(new Event('scroll')); // nudge observers
+}
+
+viewer.addEventListener('wheel', e => {
+  if (e.ctrlKey) {
+    e.preventDefault();
+    setScale(scale + (e.deltaY < 0 ? 0.15 : -0.15));
+  }
+}, { passive: false });
+
+function fitWidth() {
+  if (!pdfDoc) return;
+  const avail = viewer.clientWidth - 48;
+  setScale(avail / naturalVPs[1].width);
+}
+
+function fitPage() {
+  if (!pdfDoc) return;
+  const aw = viewer.clientWidth  - 48;
+  const ah = viewer.clientHeight - 48;
+  setScale(Math.min(aw / naturalVPs[1].width, ah / naturalVPs[1].height));
+}
+
+/* ════════════════ NAVIGATION ═══════════════════════════════════════ */
+function goTo(n) {
+  n = Math.max(1, Math.min(totalPages, n));
+  pageNum.value = n;
+  const el = viewer.querySelector(`[data-n="${n}"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ════════════════ TEXT-TO-SPEECH ═══════════════════════════════════
+   Reads page by page, scroll-synced via goTo(), auto-advancing on
+   utterance end. Text comes straight from pdf.js's getTextContent() —
+   independent of the render/clear virtualization above, so a page
+   doesn't need to be currently rendered just to be read. Word-level
+   highlighting (best-effort, via onboundary/charIndex) DOES need the
+   page's real text-layer spans, so waitForRender() gives the proximity
+   observer a moment to render it after goTo() scrolls it into view
+   before the highlight mapping is built; reading itself never blocks
+   on this — if rendering doesn't finish in time, the page is still
+   read aloud, just without highlighting for that page.
+   Known limitation, confirmed rather than assumed: this was built and
+   verified structurally, but no TTS voices were available in the
+   sandbox this was written in to test actual speech/highlight timing
+   end-to-end. ttsSupported + the voice-availability check below mean
+   the controls simply stay disabled with an explanatory tooltip on
+   any device that truly has none — but real timing behavior on a
+   device that does have voices installed hasn't been observed. */
+
+function loadTtsVoices() {
+  ttsVoices = ttsSupported ? window.speechSynthesis.getVoices() : [];
+  updateTtsAvailability();
+}
+if (ttsSupported) {
+  loadTtsVoices();
+  window.speechSynthesis.addEventListener('voiceschanged', loadTtsVoices);
+}
+
+function updateTtsAvailability() {
+  const available = ttsSupported && !!pdfDoc && ttsVoices.length > 0;
+  ttsBtn.disabled = !available;
+  ttsRateEl.disabled = !available;
+  if (!ttsSupported)         ttsBtn.title = t('ttsUnavailable');
+  else if (pdfDoc && !ttsVoices.length) ttsBtn.title = t('ttsNoVoice');
+  else                        ttsBtn.title = '';
+}
+
+function pickTtsVoice(forLang) {
+  const want = (forLang || lang) === 'de' ? 'de' : 'fr';
+  return ttsVoices.find(v => v.lang && v.lang.toLowerCase() === want + '-' + want)
+      || ttsVoices.find(v => v.lang && v.lang.toLowerCase().startsWith(want))
+      || ttsVoices[0] || null;
+}
+
+
+const DE_MARKERS = /\b(der|die|das|und|ist|nicht|mit|für|auch|eine|einen|einer|sich|auf|von|zu|im|dem|den|wir|sie|ich|haben|sind|oder|aber|wenn|wie)\b/gi;
+const FR_MARKERS = /\b(le|la|les|des|est|dans|pour|avec|une|un|nous|vous|ils|elles|je|qui|que|pas|sont|être|avoir|mais|comme|plus|tout)\b/gi;
+function detectPageLang(text) {
+  const deWords = (text.match(DE_MARKERS) || []).length;
+  const frWords = (text.match(FR_MARKERS) || []).length;
+
+
+  const deChars = (text.match(/[ßäöüÄÖÜ]/g) || []).length;
+  const frChars = (text.match(/[éèêàçîôû]/gi) || []).length;
+  const deScore = deWords * 3 + deChars;
+  const frScore = frWords * 3 + frChars;
+  if (deScore === 0 && frScore === 0) return null; // no real signal — caller falls back to the UI language
+  return deScore >= frScore ? 'de' : 'fr';
+}
+
+/* Waits (briefly) for the proximity observer to render page n after
+   goTo() scrolls it into view, so its text-layer spans exist to
+   highlight. Times out gracefully — reading proceeds either way. */
+function waitForRender(n, timeout = 4000) {
+  return new Promise(resolve => {
+    const pw = viewer.querySelector(`[data-n="${n}"]`);
+    if (!pw) return resolve(null);
+    if (pw.dataset.r === '1') return resolve(pw);
+    const start = Date.now();
+    const iv = setInterval(() => {
+      if (pw.dataset.r === '1' || Date.now() - start > timeout) {
+        clearInterval(iv);
+        resolve(pw.dataset.r === '1' ? pw : null);
+      }
+    }, 80);
+  });
+}
+
+/* Plain text for page n, joined the same way renderTextLayer lays its
+   spans out (one span per tc.items entry, in order) — buildOffsetMap()
+   below relies on that alignment to map onboundary's charIndex back to
+   a specific span. */
+async function getPageText(n) {
+  if (ocrResults.has(n)) {
+    const res = ocrResults.get(n);
+    const items = (res.words || []).map(w => ({ str: w.text }));
+    return { text: res.text || '', items };
+  }
+  const page = await pdfDoc.getPage(n);
+  const tc   = await page.getTextContent();
+  const items = tc.items.filter(it => it.str != null);
+  const text  = items.map(it => it.str).join(' ');
+  return { text, items };
+}
+
+function buildOffsetMap(items) {
+  const offsets = [];
+  let pos = 0;
+  items.forEach(it => { offsets.push(pos); pos += (it.str || '').length + 1; });
+  return offsets;
+}
+
+function highlightSpan(pw, idx) {
+  if (!pw) return;
+  clearHighlight(pw);
+  const tl = pw.querySelector('.textLayer');
+  const span = tl && tl.children[idx];
+  if (span) span.classList.add('tts-active');
+}
+function clearHighlight(pw) {
+  const tl = pw && pw.querySelector('.textLayer');
+  const prev = tl && tl.querySelector('.tts-active');
+  if (prev) prev.classList.remove('tts-active');
+}
+
+function ttsStart(fromPage) {
+  if (!ttsSupported || !pdfDoc) return;
+  ttsPage = Math.max(1, Math.min(totalPages, fromPage || +pageNum.value));
+  ttsState = 'playing';
+  updateTtsUI();
+  readPage(ttsPage);
+}
+
+async function readPage(n) {
+  if (ttsState !== 'playing') return; // stopped/paused before this page started
+  if (n > totalPages) { ttsStop(); return; }
+
+  goTo(n);
+  const pw = await waitForRender(n);
+  if (ttsState !== 'playing') return; // stopped while waiting on render
+
+  const { text, items } = await getPageText(n);
+  const cleanText = text.trim();
+
+  if (!cleanText) { ttsPage = n; readPage(n + 1); return; } // scanned/blank page — skip
+
+  const offsets = buildOffsetMap(items);
+  const utter = new SpeechSynthesisUtterance(cleanText);
+
+
+  const detectedLang = detectPageLang(cleanText) || lang;
+  utter.lang = detectedLang === 'de' ? 'de-DE' : 'fr-FR';
+  utter.rate = ttsRate;
+  const voice = pickTtsVoice(detectedLang);
+  if (voice) utter.voice = voice;
+
+  utter.onboundary = ev => {
+    if (ev.name && ev.name !== 'word') return;
+    let idx = 0;
+    for (let i = 0; i < offsets.length; i++) { if (offsets[i] <= ev.charIndex) idx = i; else break; }
+    highlightSpan(pw, idx);
+  };
+  utter.onend = () => {
+    clearHighlight(pw);
+    if (ttsState === 'playing') { ttsPage = n + 1; readPage(n + 1); }
+  };
+  utter.onerror = () => {
+    clearHighlight(pw);
+    if (ttsState !== 'idle') showToast('❌ ' + t('ttsUnavailable'));
+    ttsStop();
+  };
+
+  ttsUtterance = utter;
+  window.speechSynthesis.speak(utter);
+}
+
+function ttsPauseResume() {
+  if (!ttsSupported) return;
+  if (ttsState === 'playing') { window.speechSynthesis.pause(); ttsState = 'paused'; }
+  else if (ttsState === 'paused') { window.speechSynthesis.resume(); ttsState = 'playing'; }
+  updateTtsUI();
+}
+
+function ttsStop() {
+  if (ttsSupported) window.speechSynthesis.cancel();
+  ttsState = 'idle';
+  ttsUtterance = null;
+  viewer.querySelectorAll('.tts-active').forEach(s => s.classList.remove('tts-active'));
+  updateTtsUI();
+}
+
+function updateTtsUI() {
+  if (ttsState === 'playing') {
+    $('lblTtsPlay').textContent = '⏸ ' + t('ttsPause');
+    ttsStopBtn.style.display = '';
+  } else if (ttsState === 'paused') {
+    $('lblTtsPlay').textContent = '▶ ' + t('ttsResume');
+    ttsStopBtn.style.display = '';
+  } else {
+    $('lblTtsPlay').textContent = '🔊 ' + t('ttsPlay');
+    ttsStopBtn.style.display = 'none';
+  }
+  ttsStopBtn.disabled = ttsState === 'idle';
+}
+
+/* ════════════════ SELECTION → CITATION ════════════════════════════ */
+let lastSelText = '';
+let lastSelPage = 1;
+
+document.addEventListener('selectionchange', () => {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+    citBtn.classList.remove('show'); return;
+  }
+  const anchor = sel.anchorNode;
+  if (!anchor) { citBtn.classList.remove('show'); return; }
+  const pw = (anchor.nodeType === Node.TEXT_NODE
+    ? anchor.parentElement : anchor)?.closest?.('.pw');
+  if (!pw) { citBtn.classList.remove('show'); return; }
+
+  selPage = +pw.dataset.n || 1;
+  lastSelText = sel.toString().trim();
+  lastSelPage = selPage;
+
+  if (!sel.rangeCount) return;
+
+  const rect = sel.getRangeAt(0).getBoundingClientRect();
+  const btnW = 200;
+  const x = Math.min(rect.left, window.innerWidth - btnW - 8);
+  citBtn.style.left = Math.max(4, x) + 'px';
+  citBtn.style.top  = (rect.bottom + 8) + 'px';
+  citBtn.classList.add('show');
+});
+
+citBtn.addEventListener('mousedown', e => e.preventDefault());
+
+citBtn.addEventListener('click', () => {
+  const txt = lastSelText || window.getSelection()?.toString().trim() || '';
+  if (!txt) return;
+
+  const title  = metaTitle.value.trim()  || 'Document';
+  const author = metaAuthor.value.trim() || '';
+  const page   = lastSelPage || selPage || 1;
+  const header = t('header', title, author, page);
+  const full   = `« ${txt} »\n— ${header}`;
+
+  const copy = str => {
+    if (navigator.clipboard?.writeText)
+      return navigator.clipboard.writeText(str);
+
+    const ta = Object.assign(document.createElement('textarea'),
+      { value: str, style: 'position:fixed;opacity:0' });
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    return Promise.resolve();
+  };
+
+  copy(full).then(() => {
+    showToast(t('copied'));
+    window.getSelection()?.removeAllRanges();
+    citBtn.classList.remove('show');
+    lastSelText = '';
+  }).catch(() => showToast('❌ Clipboard error'));
+});
+
+/* ── Scanned-PDF detection ───────────────────────────────────────── */
+async function checkScanned() {
+  if (!pdfDoc) return;
+  try {
+    const page = await pdfDoc.getPage(1);
+    const tc   = await page.getTextContent();
+    const has  = tc.items.some(i => i.str?.trim());
+    scanWarnText.textContent = has ? '' : t('scanned');
+    scanWarn.classList.toggle('show', !has);
+    if (!has) {
+
+
+      ocrLangSel.value = lang === 'de' ? 'deu' : 'fra';
+      updateOcrAvailability();
+    }
+  } catch(_) {}
+}
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+function showToast(msg, dur = 2200) {
+  toast.textContent = msg;
+  toast.classList.toggle('show', !!msg);
+  clearTimeout(toastTmr);
+  if (msg) toastTmr = setTimeout(() => toast.classList.remove('show'), dur);
+}
+
+/* ════════════════ LANGUAGE ══════════════════════════════════════════ */
+function applyI18n() {
+  $('lblWait').textContent     = t('wait');
+  $('lblCit').textContent      = t('cit');
+  $('lblClose').textContent    = t('close');
+  closeBtn.title                = t('close');
+  themeSel.title                = t('themeTitle');
+  metaTitle.placeholder        = t('title');
+  metaAuthor.placeholder       = t('author');
+  prevBtn.title = t('prev'); nextBtn.title = t('next');
+  zInBtn.title  = t('zIn');  zOutBtn.title = t('zOut');
+  fitWBtn.title = t('fitW'); fitPBtn.title = t('fitP');
+  ttsRateEl.title = t('ttsRateTitle');
+  updateTtsAvailability();
+  updateTtsUI();
+  $('lblOcrBtn').textContent = t('ocrBtn');
+  updateOcrAvailability();
+  if (pdfDoc) $('lblTotal').textContent = t('pageOf', +pageNum.value, totalPages);
+  if (scanWarn.classList.contains('show')) scanWarnText.textContent = t('scanned');
+}
+
+/* ════════════════ HUB postMessage ════════════════════════════════════ */
+window.addEventListener('message', ({ data }) => {
+  if (!data) return;
+  if (data.type === 'SET_LANG') {
+    lang = (data.payload?.lang || 'FR').toLowerCase();
+    applyI18n();
+  }
+  if (data.type === 'OPEN_PDF') {
+    const p = data.payload || {};
+    if (p.title)  metaTitle.value  = p.title;
+    if (p.author) metaAuthor.value = p.author;
+    if (p.buffer) openPdf(p.buffer);
+    else if (p.blobUrl) fetch(p.blobUrl).then(r => r.arrayBuffer()).then(openPdf);
+  }
+  if (data.type === 'SET_THEME') {
+    const theme = data.payload?.theme || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    themeSel.value = theme; // reflect the Hub's pushed default; the person can still override from here
+  }
+});
+
+/* ════════════════ EVENT WIRING ══════════════════════════════════════ */
+closeBtn.addEventListener('click', () => {
+  if (window.parent !== window) window.parent.postMessage({ type: 'osirisReaderClose' }, '*');
+});
+themeSel.addEventListener('change', () => {
+  document.documentElement.setAttribute('data-theme', themeSel.value);
+});
+
+prevBtn.addEventListener('click', () => goTo(+pageNum.value - 1));
+nextBtn.addEventListener('click', () => goTo(+pageNum.value + 1));
+pageNum.addEventListener('change',  () => goTo(+pageNum.value));
+
+zInBtn.addEventListener('click',  () => setScale(scale + 0.15));
+zOutBtn.addEventListener('click', () => setScale(scale - 0.15));
+fitWBtn.addEventListener('click', fitWidth);
+fitPBtn.addEventListener('click', fitPage);
+
+ttsBtn.addEventListener('click', () => {
+  if (ttsState === 'idle') ttsStart(+pageNum.value);
+  else ttsPauseResume();
+});
+ttsStopBtn.addEventListener('click', ttsStop);
+ttsRateEl.addEventListener('change', e => {
+  ttsRate = parseFloat(e.target.value) || 1;
+  if (ttsUtterance) ttsUtterance.rate = ttsRate; // takes effect from the next page on — most engines don't re-rate a playing utterance
+});
+
+
+function replaceTextLayer(pageNum, words) {
+  const pw = document.querySelector(`.pw[data-n="${pageNum}"]`);
+  if (!pw) return;
+  const canvas = pw.querySelector('canvas');
+  if (!canvas) return;
+
+  pw.querySelector('.textLayer')?.remove();
+
+  const tl = document.createElement('div');
+  tl.className = 'textLayer';
+
+
+  const displayW = canvas.style.width  ? parseFloat(canvas.style.width)  : canvas.width;
+  const displayH = canvas.style.height ? parseFloat(canvas.style.height) : canvas.height;
+  tl.style.cssText = `width:${canvas.width}px;height:${canvas.height}px;` +
+    `transform-origin:0 0;transform:scale(${displayW / canvas.width},${displayH / canvas.height});`;
+
+  words.forEach(word => {
+    const text = word.text?.trim();
+    if (!text) return;
+    const b = word.bbox; // { x0, y0, x1, y1 } in canvas pixels
+    const bw = b.x1 - b.x0;
+    const bh = b.y1 - b.y0;
+    if (bw <= 0 || bh <= 0) return;
+
+    const span = document.createElement('span');
+    span.textContent = text;
+
+
+    span.style.cssText = `left:${b.x0}px;top:${b.y0}px;font-size:${bh}px;`;
+    tl.appendChild(span);
+
+    requestAnimationFrame(() => {
+      const naturalW = span.getBoundingClientRect().width;
+      if (naturalW > 0) {
+        span.style.transform = `scaleX(${bw / naturalW})`;
+      }
+    });
+  });
+
+  pw.appendChild(tl);
+}
+
+ocrBtn.addEventListener('click', async () => {
+  if (ocrBtn.disabled || ocrRunning) return;
+  const pageNum = selPage || 1;
+  const canvas = document.querySelector(`.pw[data-n="${pageNum}"] canvas`);
+  if (!canvas) return; // page not currently rendered — nothing to recognize yet
+
+  ocrRunning = true;
+  ocrBtn.disabled = true;
+  ocrLangSel.disabled = true;
+  const ocrBtnOriginalLabel = $('lblOcrBtn').textContent;
+  $('lblOcrBtn').textContent = t('ocrRunning', 0);
+
+  try {
+    const result = await Tesseract.recognize(canvas, ocrLangSel.value, {
+      langPath: '../lib/tesseract/v5/tesseract-lang',   // → libs/tesseract-lang/{lang}.traineddata.gz
+      workerPath: '../lib/tesseract/v5/worker.min.js',
+
+
+      corePath: '../lib/tesseract/v5/tesseract-core',
+      logger: (msg) => {
+        if (msg.status === 'recognizing text' || typeof msg.progress === 'number') {
+
+
+          $('lblOcrBtn').textContent = t('ocrRunning', Math.round((msg.progress || 0) * 100));
+        }
+      }
+    });
+    const text  = (result?.data?.text   || '').trim();
+    const words =  result?.data?.words  || [];
+    ocrResults.set(pageNum, { text, words });
+    replaceTextLayer(pageNum, words);          // Step 4 — swap textLayer
+    showToast(t('ocrDone', text.length), 3200);
+  } catch (err) {
+    console.warn('OCR error:', err);
+
+
+    const msg = (err?.message || err?.toString() || '').toLowerCase();
+    const isMissing = msg.includes('fetch') || msg.includes('network') ||
+                      msg.includes('traineddata') || msg.includes('404') ||
+                      msg.includes('failed to load');
+    showToast(t(isMissing ? 'ocrMissingLang' : 'ocrFailed'), isMissing ? 6000 : 3600);
+  } finally {
+    ocrRunning = false;
+    $('lblOcrBtn').textContent = ocrBtnOriginalLabel;
+    updateOcrAvailability();
+  }
+});
+
+/* Keyboard shortcuts */
+document.addEventListener('keydown', e => {
+  if (!pdfDoc || e.target.tagName === 'INPUT') return;
+  const n = +pageNum.value;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') goTo(n + 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp'   || e.key === 'PageUp')   goTo(n - 1);
+  if (e.key === 'Home') goTo(1);
+  if (e.key === 'End')  goTo(totalPages);
+  if ((e.key === '+' || e.key === '=') && !e.ctrlKey) setScale(scale + 0.15);
+  if (e.key === '-' && !e.ctrlKey) setScale(scale - 0.15);
+  if (e.key === 'w' || e.key === 'W') fitWidth();
+  if (e.key === 'f' || e.key === 'F') fitPage();
+});
+
+/* ════════════════ INIT ══════════════════════════════════════════════ */
+(function init() {
+  try {
+    const p = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+    if (p.lang === 'DE') lang = 'de';
+  } catch(_) {}
+  const theme = localStorage.getItem('wiki_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  themeSel.value = theme;
+  $('lblZoom').textContent = Math.round(scale * 100) + '%';
+  applyI18n();
+
+
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'osirisReaderReady' }, '*');
+  }
+})();
+</script>
+</body>
+</html>

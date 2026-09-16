@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KI SPEZIALISIERTES WÖRTERBUCH — Osiris</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-dark:#121212; --bg-panel:#1e1e1e; --bg-input:#2a2a2a;
+  --text-light:#ffffff; --text-dim:#8a8a8a;
+  --accent-green:#4ade80; --accent-red:#e2394a; --accent-gold:#b48645; --accent-blue:#5aa9ff;
+  --border-dim:#333333; --shadow-color:rgba(0,0,0,.5);
+  --font-hand:'Kalam',cursive,'Segoe UI',sans-serif;
+}
+body.light-mode{
+  --bg-dark:#f4f4f8; --bg-panel:#ffffff; --bg-input:#eceff3;
+  --text-light:#101012; --text-dim:#6b6a72; --border-dim:#dddddd; --shadow-color:rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;}
+html{overflow-x:hidden;}
+body, button, input, select, textarea{
+  font-family:var(--font-hand);
+}
+body{
+  margin:0; min-height:100vh;
+  background:var(--bg-dark); color:var(--text-light); transition:background-color .25s ease,color .25s ease;
+  padding-bottom:40px;
+}
+body.font-serif, body.font-serif button, body.font-serif input, body.font-serif select, body.font-serif textarea, body.font-serif a,
+body.font-serif h1, body.font-serif h2, body.font-serif h3{font-family:Georgia,'Times New Roman',serif;}
+body.font-mono, body.font-mono button, body.font-mono input, body.font-mono select, body.font-mono textarea, body.font-mono a,
+body.font-mono h1, body.font-mono h2, body.font-mono h3{font-family:'Courier New',Courier,monospace;}
+[data-fontscale]{font-size:calc(1em * var(--fs-mult,1));}
+:root{--fs-mult:1;}
+
+/* Header */
+.top-section{background:var(--bg-dark); padding:16px clamp(16px,4vw,60px) 10px; border-bottom:1px solid var(--border-dim);}
+.logo-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.logo h1{margin:0; font-size:26px; letter-spacing:.5px; font-family:var(--font-hand); font-weight:700;}
+.logo p{margin:4px 0 0; font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-family:var(--font-hand);}
+.header-icons{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:16px; flex-wrap:wrap; row-gap:10px;}
+.icon-btn{
+  width:44px; height:44px; border-radius:50%; border:1.5px solid var(--text-dim); background:transparent;
+  color:var(--text-light); font-size:13px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:border-color .15s, color .15s, transform .1s; font-family:var(--font-hand); flex-shrink:0;
+}
+.icon-btn svg{width:18px; height:18px;}
+.icon-btn:hover{border-color:var(--accent-green); color:var(--accent-green);}
+.icon-btn:active{transform:scale(.92);}
+.icon-btn.active{border-color:var(--accent-blue); color:var(--accent-blue);}
+.status-dot{
+  display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px;
+  background:var(--accent-red); box-shadow:0 0 0 3px rgba(226,57,74,.18);
+  transition:background-color .2s, box-shadow .2s; vertical-align:middle;
+}
+.status-dot.online{ background:var(--accent-green); box-shadow:0 0 0 3px rgba(74,222,128,.18); }
+
+/* Scrim + Wordlist panel */
+.scrim{position:fixed; inset:0; background:var(--shadow-color); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60;}
+.scrim.show{opacity:1; pointer-events:auto;}
+.wl-panel{
+  position:fixed; top:0; left:0; bottom:0; width:min(320px,86vw); background:var(--bg-panel);
+  border-right:1px solid var(--border-dim); transform:translateX(-100%); transition:transform .25s;
+  z-index:70; display:flex; flex-direction:column;
+}
+.wl-panel.open{transform:translateX(0);}
+.wl-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border-dim);}
+.wl-head h2{margin:0; font-size:14px; letter-spacing:1px; text-transform:uppercase;}
+.wl-close{background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer;}
+.wl-body{flex:1; overflow-y:auto; padding:10px 12px;}
+.wl-cat{margin-bottom:14px;}
+.wl-cat-title{font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); margin:8px 4px 6px;}
+.wl-word{
+  display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer;
+  background:var(--bg-input); margin-bottom:6px; border:1px solid transparent;
+}
+.wl-word:hover{border-color:var(--accent-gold);}
+.wl-word.selected{border-color:var(--accent-green);}
+.wl-icon{width:26px; height:26px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--accent-blue);}
+.wl-icon svg{width:100%; height:100%;}
+.wl-icon img{width:100%; height:100%; object-fit:contain; border-radius:4px;}
+.wl-word-name{flex:1; font-size:13px;}
+.wl-del-btn{background:none; border:none; color:var(--text-dim); font-size:15px; line-height:1; cursor:pointer; padding:2px 6px; border-radius:4px; flex-shrink:0;}
+.wl-del-btn:hover{color:var(--accent-red);}
+.wl-word input[type=checkbox]{accent-color:var(--accent-green);}
+.wl-foot{padding:12px 16px; border-top:1px solid var(--border-dim); display:flex; flex-direction:column; gap:8px;}
+.wl-btn{
+  border:1px solid var(--text-dim); background:transparent; color:var(--text-light); border-radius:8px;
+  padding:8px 10px; font-size:12px; cursor:pointer;
+}
+.wl-btn:hover{border-color:var(--accent-green); color:var(--accent-green);}
+.wl-btn.primary{border-color:var(--accent-blue); color:var(--accent-blue);}
+
+/* Main */
+main{padding:20px clamp(16px,4vw,60px); max-width:900px; margin:0 auto;}
+
+.search-card{background:var(--bg-panel); border:1px solid var(--border-dim); border-radius:16px; padding:18px; margin-bottom:16px;}
+.search-card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.search-label{font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--accent-gold); font-weight:700; font-family:var(--font-hand);}
+.search-row{display:flex; align-items:center; gap:8px; background:var(--bg-input); border-radius:999px; padding:6px 8px 6px 16px;}
+.search-row input{
+  flex:1; background:transparent; border:none; outline:none; color:var(--text-light); font-size:16px; font-family:var(--font-hand);
+}
+.sq-btn{
+  width:34px; height:34px; border-radius:50%; border:none; background:var(--bg-dark); color:var(--text-dim);
+  cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  font-size:14px; line-height:1; padding:0;
+}
+.sq-btn svg{width:17px; height:17px;}
+.sq-btn:hover{color:var(--accent-green);}
+.sq-btn.danger:hover{color:var(--accent-red);}
+.sq-btn.search-main{color:var(--accent-blue);}
+
+.word-card{background:var(--bg-panel); border:1px solid var(--border-dim); border-radius:14px; padding:18px; margin-bottom:16px; display:none;}
+.word-card.show{display:block;}
+.word-title-row{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+.word-title-icon{width:38px; height:38px; color:var(--accent-blue);}
+.word-title-icon svg{width:100%; height:100%;}
+.word-title{font-size:22px; font-weight:bold; font-family:var(--font-hand);}
+.domain-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
+.domain-chip{
+  background:var(--bg-input); border:1px solid var(--accent-gold); color:var(--accent-gold);
+  border-radius:999px; padding:4px 12px; font-size:11px; letter-spacing:.5px; text-transform:uppercase;
+}
+.tools-row{margin-bottom:16px;}
+.lang-label{font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px; font-family:var(--font-hand);}
+.lang-select{
+  display:block; width:100%; background:var(--bg-input); color:var(--text-light); border:1px solid var(--border-dim); border-radius:10px;
+  padding:12px 14px; font-size:15px; margin-bottom:12px; font-family:var(--font-hand); appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center; background-size:16px;
+}
+.read-all-btn{
+  display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
+  border:none; color:var(--bg-dark); background:var(--accent-gold); border-radius:999px;
+  padding:13px 16px; font-size:14px; letter-spacing:.5px; cursor:pointer; text-transform:uppercase; font-family:var(--font-hand); font-weight:700;
+}
+.read-all-btn svg{width:18px; height:18px; flex-shrink:0;}
+.read-all-btn.paused{background:var(--text-dim);}
+.pause-btn{display:none;}
+
+.plural-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; padding-top:4px;}
+.plural-row .plural-info{display:flex; flex-direction:column; gap:4px;}
+.plural-row .plural-label{font-size:13px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-light); font-family:var(--font-hand);}
+.plural-row .plural-value{color:var(--text-dim); font-weight:400; text-transform:none;}
+.plural-read-btn{
+  background:none; border:none; color:var(--text-dim); font-size:12px; letter-spacing:.5px; text-transform:uppercase;
+  cursor:pointer; font-family:var(--font-hand);
+}
+.plural-read-btn:hover{color:var(--accent-gold);}
+
+.def-list{display:flex; flex-direction:column; gap:10px;}
+.def-row{background:var(--bg-input); border-radius:10px; padding:12px 14px;}
+.def-head{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.def-domain{font-weight:bold; font-size:13px; color:var(--accent-blue); text-transform:uppercase; letter-spacing:.5px;}
+.def-actions{display:flex; gap:6px;}
+.mini-btn{
+  border:1px solid var(--text-dim); background:transparent; color:var(--text-dim); border-radius:999px;
+  padding:4px 10px; font-size:11px; cursor:pointer;
+}
+.mini-btn:hover{border-color:var(--accent-green); color:var(--accent-green);}
+.mini-btn.reading{border-color:var(--accent-green); color:var(--accent-green);}
+.mini-btn.paused{border-color:var(--accent-gold); color:var(--accent-gold);}
+.read-btn-wrap{display:flex; align-items:center; gap:4px;}
+.mini-btn.read-reset{display:none; padding:4px 8px; font-size:12px; line-height:1;}
+.mini-btn.read-reset.show{display:inline-block;}
+.def-text{font-size:13.5px; color:var(--text-light); margin-top:8px; line-height:1.5;}
+.def-preview{
+  margin-top:8px; padding:8px 10px; border-left:3px solid var(--accent-green); background:var(--bg-dark);
+  font-size:12.5px; color:var(--text-dim); border-radius:0 6px 6px 0; display:none;
+}
+.def-preview.show{display:block;}
+
+.no-icon-note{margin-top:8px; margin-bottom:26px; font-size:11px; color:var(--text-dim); display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.no-icon-note input[type=file]{font-size:11px;}
+
+/* Discover strip: fixed dock pinned to the bottom of the viewport,
+   horizontally scrolling, always visible above the page content. */
+main{padding-bottom:132px;}
+.discover-wrap{
+  position:fixed; left:0; right:0; bottom:0; z-index:50;
+  background:var(--bg-panel); border-top:1px solid var(--border-dim);
+  padding:10px clamp(16px,4vw,60px) 12px; box-shadow:0 -6px 18px var(--shadow-color);
+}
+.discover-title{font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;}
+.discover-strip{display:flex; gap:10px; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
+.discover-card{
+  flex:0 0 auto; min-width:130px; background:var(--bg-input); border:1px solid var(--border-dim); border-radius:10px;
+  padding:12px; cursor:pointer; transition:border-color .15s;
+}
+.discover-card:hover{border-color:var(--accent-gold);}
+.discover-card .dc-token{font-weight:bold; font-size:13px; margin-bottom:4px;}
+.discover-card .dc-domain{font-size:10px; color:var(--text-dim); text-transform:uppercase;}
+
+.status-msg{font-size:12px; color:var(--text-dim); margin:8px 0; min-height:16px;}
+
+/* ---------- Settings Modal (draggable, same pattern as KI_sample) ---------- */
+.settings-modal{
+  position:fixed; top:12%; left:50%; transform:translateX(-50%);
+  width:360px; max-width:90vw; background:var(--bg-panel); border:1px solid var(--text-dim);
+  border-radius:10px; box-shadow:0 10px 40px var(--shadow-color);
+  z-index:100; display:none; flex-direction:column; overflow:hidden; color:var(--text-light);
+}
+.settings-modal.show{display:flex;}
+.settings-header{
+  background:var(--bg-dark); padding:12px 16px; border-bottom:1px solid var(--border-dim);
+  display:flex; justify-content:space-between; align-items:center; cursor:grab;
+}
+.settings-header:active{cursor:grabbing;}
+.settings-header h3{margin:0; font-size:13px; letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:8px; color:var(--text-light);}
+.settings-close{
+  width:28px; height:28px; border-radius:50%; border:none; background:var(--accent-red); color:#fff;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; line-height:1;
+}
+.settings-body{padding:16px; display:flex; flex-direction:column; gap:14px; max-height:70vh; overflow-y:auto;}
+.settings-body label{font-size:11px; color:var(--accent-gold); text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:6px; font-weight:bold;}
+.settings-body select, .settings-body input{
+  width:100%; background:var(--bg-input); border:1px solid var(--text-dim); color:var(--text-light);
+  border-radius:6px; padding:8px 10px; font-size:12px; outline:none; box-sizing:border-box;
+}
+.settings-section{border-top:1px solid var(--border-dim); padding-top:12px;}
+.settings-section:first-child{border-top:none; padding-top:0;}
+.api-hint{font-size:10.5px; color:var(--text-dim); margin-top:6px; line-height:1.5;}
+
+/* ---------- Target-language picker (full Google Translate list, searchable) ---------- */
+.lang-trigger{
+  display:flex; align-items:center; justify-content:space-between; width:100%;
+  background:var(--bg-input); color:var(--text-light); border:1px solid var(--border-dim); border-radius:10px;
+  padding:12px 14px; font-size:15px; margin-bottom:12px; font-family:var(--font-hand); cursor:pointer;
+}
+.lang-modal{
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:360px; max-width:90vw; max-height:70vh; background:var(--bg-panel); border:1px solid var(--text-dim);
+  border-radius:10px; box-shadow:0 10px 40px var(--shadow-color); z-index:100; display:none; flex-direction:column; overflow:hidden;
+}
+.lang-modal.show{display:flex;}
+.lang-modal-head{background:var(--bg-dark); padding:12px 16px; border-bottom:1px solid var(--border-dim); display:flex; justify-content:space-between; align-items:center;}
+.lang-modal-head h3{margin:0; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--text-light);}
+.lang-modal-body{padding:12px 16px; display:flex; flex-direction:column; gap:10px; overflow:hidden;}
+.lang-modal-body input{background:var(--bg-input); border:1px solid var(--border-dim); color:var(--text-light); border-radius:8px; padding:8px 10px; font-size:13px;}
+.lang-list{overflow-y:auto; display:flex; flex-direction:column; gap:2px;}
+.lang-item{background:none; border:none; text-align:left; padding:8px 10px; border-radius:6px; color:var(--text-light); font-size:13px; cursor:pointer; font-family:var(--font-hand);}
+.lang-item:hover{background:var(--bg-input);}
+.lang-item.active{color:var(--accent-green); font-weight:bold;}
+
+/* ---------- Definition PNG preview image ---------- */
+.def-preview-img{margin-top:8px; display:block; max-width:100%; border-radius:8px; border:1px solid var(--border-dim);}
+
+/* Big loading-circle overlay, shown during word lookups (same as KI_sample) */
+.big-loader-overlay{display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:200;}
+.big-loader-overlay.show{display:flex;}
+.big-loader-inner{position:relative; display:flex; align-items:center; justify-content:center;}
+.big-spinner{width:72px; height:72px; border:7px solid var(--bg-input); border-top-color:var(--accent-green); border-radius:50%; animation:big-spin .9s linear infinite; box-shadow:0 6px 24px var(--shadow-color);}
+@keyframes big-spin{to{transform:rotate(360deg);}}
+.big-loader-cancel{
+  position:absolute; top:-6px; right:-6px; width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--border-dim); background:var(--bg-panel); color:var(--text-light);
+  font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 10px var(--shadow-color);
+}
+.big-loader-cancel:hover{border-color:var(--accent-red); color:var(--accent-red);}
+
+/* New-word confirmation popup (shown automatically after a KI search for an unknown word) */
+.modal-scrim{position:fixed; inset:0; background:var(--shadow-color); display:none; align-items:center; justify-content:center; z-index:90;}
+.modal-scrim.show{display:flex;}
+.modal-box{background:var(--bg-panel); border-radius:14px; padding:20px; width:min(420px,90vw); border:1px solid var(--border-dim); max-height:85vh; overflow-y:auto;}
+.modal-box h3{margin-top:0; font-size:15px;}
+.modal-box p.modal-hint{font-size:11.5px; color:var(--text-dim); margin:0 0 4px;}
+.modal-box label{display:block; font-size:11px; color:var(--text-dim); margin:10px 0 4px; text-transform:uppercase;}
+.modal-box input, .modal-box select{
+  width:100%; background:var(--bg-input); border:1px solid var(--border-dim); color:var(--text-light);
+  border-radius:8px; padding:8px 10px; font-size:13px;
+}
+.modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:16px;}
+</style>
+</head>
+<body>
+
+<div class="scrim" id="scrim"></div>
+
+
+<div class="modal-scrim" id="dbUploadModalScrim">
+  <div class="modal-box" id="dbUploadModal">
+    <h3>Willkommen bei KI Wörterbuch</h3>
+    <p class="modal-hint">Laden Sie optional eine bestehende Wortlisten-Datenbank (.db) hoch, um sofort mit Ihren gespeicherten Wörtern zu starten. Sie können diesen Schritt auch überspringen — die Wortliste funktioniert auch ohne Import und wächst automatisch über die KI-Suche.</p>
+    <input type="file" id="dbFileInput" accept=".db, .sqlite">
+    <button type="button" class="wl-btn primary" id="processDbBtn" style="width:100%; margin-top:10px;">Extrahieren &amp; Initialisieren</button>
+    <button type="button" class="wl-btn" id="importDefaultDbBtn" style="width:100%; margin-top:10px; display:none; border-color:var(--accent-gold); color:var(--accent-gold);">Standard-Datenbank gefunden: Importieren?</button>
+    <p class="modal-hint" id="dbUploadStatusMsg" style="min-height:16px; margin-top:8px;"></p>
+    <div class="modal-actions">
+      <button type="button" class="wl-btn" id="skipDbUploadBtn">Später — ohne Import fortfahren</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="big-loader-overlay" id="bigLoader">
+  <div class="big-loader-inner">
+    <div class="big-spinner"></div>
+    <button type="button" class="big-loader-cancel" id="bigLoaderCancel" title="Suche abbrechen">✕</button>
+  </div>
+</div>
+
+
+<aside class="wl-panel" id="wlPanel">
+  <div class="wl-head">
+    <h2 id="wlTitle">WORTLISTE</h2>
+    <button class="wl-close" id="wlClose">✕</button>
+  </div>
+  <div class="wl-body" id="wlBody"></div>
+  <div class="wl-foot">
+    <button class="wl-btn primary" id="updateSvgBtn" data-i18n="updateSvg">⟳ Icons aktualisieren (SVG)</button>
+    <div class="status-msg" id="wlStatus"></div>
+  </div>
+</aside>
+
+
+<div class="top-section">
+  <div class="logo-row">
+    <div class="logo">
+      <h1><span class="status-dot" id="statusDot" title="Online / Offline"></span>KI SPEZIALISIERTES WÖRTERBUCH</h1>
+      <p>DEUTSCHES SPEZIALISIERTES KI-WÖRTERBUCH</p>
+    </div>
+  </div>
+  <div class="header-icons">
+    <button class="icon-btn" id="wlOpenBtn" title="Wortliste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></button>
+    <button class="icon-btn" id="btnFontDown" title="Schrift kleiner">A-</button>
+    <button class="icon-btn" id="btnFontUp" title="Schrift größer">A+</button>
+    <button class="icon-btn" id="btnFontStyle" title="Schriftstil">Aa</button>
+    <button class="icon-btn" id="btnTheme" title="Hell-/Dunkelmodus"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg></button>
+    <button class="icon-btn" id="btnSettings" title="API-Schlüssel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </div>
+</div>
+
+<main>
+  
+  <div class="search-card">
+    <div class="search-card-head">
+      <div class="search-label" id="searchLabel">WORT</div>
+      <button class="sq-btn danger" id="btnClear" title="Löschen">✕</button>
+    </div>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="token…" data-i18n-ph="searchPh">
+      <button class="sq-btn search-main" id="btnSearch" title="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></button>
+      <button class="sq-btn" id="btnReload" title="Neu laden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+    </div>
+  </div>
+  <div class="status-msg" id="searchStatus"></div>
+
+  
+  <div class="word-card" id="wordCard">
+    <div class="word-title-row">
+      <div class="word-title-icon" id="wordIcon"></div>
+      <div class="word-title" id="wordTitle"></div>
+    </div>
+    <div class="domain-row" id="domainRow"></div>
+
+    <div class="tools-row">
+      <div class="lang-label" id="langLabel">ZIELSPRACHE AUSWÄHLEN</div>
+      <button type="button" class="lang-trigger" id="targetLangTrigger">
+        <span id="targetLangTriggerLabel">Französisch</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="read-all-btn" id="btnReadAll"><svg viewBox="0 0 24 24" fill="currentColor" id="readAllIcon"><path d="M8 5v14l11-7z"/></svg><span id="readAllLabel">ALLES VORLESEN</span></button>
+      <button class="pause-btn" id="btnPause" data-i18n="pause">⏸ Pause</button>
+    </div>
+
+    <div class="plural-row">
+      <div class="plural-info">
+        <div class="plural-label">WORT: <span class="plural-value" id="wordArticleValue">—</span></div>
+        <div class="plural-label">PLURAL: <span class="plural-value" id="pluralValue">—</span></div>
+      </div>
+      <button class="plural-read-btn" id="btnReadPlural">VORLESEN</button>
+    </div>
+
+    <div class="def-list" id="defList"></div>
+  </div>
+
+  
+  <div class="discover-wrap">
+    <div class="discover-title" id="discoverTitle">Weitere Wörter entdecken (KI)</div>
+    <div class="discover-strip" id="discoverStrip"></div>
+  </div>
+</main>
+
+
+<div class="settings-modal" id="settingsModal">
+  <div class="settings-header" id="settingsHeader">
+    <h3><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>API-Konfiguration</span></h3>
+    <button class="settings-close" id="cancelSettings">✕</button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section">
+      <label>Definitionsanbieter</label>
+      <select id="providerSelect">
+        <option value="pollinations">Pollinations AI (kostenloser Schlüssel)</option>
+        <option value="cerebras">Cerebras (ultra-schnell)</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="groq">Groq</option>
+        <option value="google">Google Gemini</option>
+        <option value="nvidia">NVIDIA NIM</option>
+        <option value="github">GitHub Models</option>
+        <option value="cloudflare">Cloudflare Workers AI</option>
+        <option value="huggingface">Hugging Face</option>
+      </select>
+    </div>
+    <div class="settings-section">
+      <label>API-Schlüssel (falls nötig)</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-...">
+      <div class="api-hint" id="apiKeyStatus" style="display:none;"></div>
+      <div class="api-hint">Der Schlüssel wird verschlüsselt in diesem Browser gespeichert (nicht im Klartext) und verlässt dieses Gerät nie.</div>
+    </div>
+    <div class="settings-section">
+      <label>Stimme (Vorlesen)</label>
+      <select id="voiceProfileSelect">
+        <option value="female">Weiblich</option>
+        <option value="male">Männlich</option>
+        <option value="child">Kind</option>
+        <option value="senior">Senior (ältere Stimme)</option>
+      </select>
+      <div class="api-hint">Wirkt sich auf die deutsche Stimme und (per Tonhöhe/Tempo) auf alle Vorlesefunktionen aus.</div>
+    </div>
+    <div class="settings-section">
+      <label>Lokale Wortliste</label>
+      <div class="api-hint">Alle Wörter sind lokal in diesem Browser gespeichert (JSON).</div>
+      <button type="button" class="clear-btn" id="clearLocalDbBtn" style="width:100%; margin-top:8px; border:1px solid var(--accent-red); color:var(--accent-red); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Lokalen Wörterbuch-Cache löschen</button>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="clear-btn" id="exportLocalDbBtn" style="flex:1; border:1px solid var(--accent-green); color:var(--accent-green); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Exportieren (JSON)</button>
+        <button type="button" class="clear-btn" id="importLocalDbBtn" style="flex:1; border:1px solid var(--accent-gold); color:var(--accent-gold); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Importieren (JSON)</button>
+      </div>
+      <input type="file" id="importLocalDbInput" accept="application/json,.json" style="display:none;">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="clear-btn" id="extractDbBtn" style="flex:1; border:1px solid var(--accent-blue); color:var(--accent-blue); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Extrahieren (.db)</button>
+        <button type="button" class="clear-btn" id="importDbBtn" style="flex:1; border:1px solid var(--accent-gold); color:var(--accent-gold); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Importieren (.db)</button>
+      </div>
+      <input type="file" id="importDbInput" accept=".db, .sqlite" style="display:none;">
+      <button type="button" class="clear-btn" id="reopenDbUploadBtn" style="width:100%; margin-top:8px; border:1px solid var(--text-dim); color:var(--text-dim); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Willkommens-Import erneut öffnen</button>
+      <div class="api-hint" id="localDbIoMsg" style="display:none;"></div>
+    </div>
+    <div class="settings-section">
+      <button class="wl-btn primary" id="saveSettings" style="width:100%;">Speichern</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="scrim" id="langScrim"></div>
+<div class="lang-modal" id="langModal">
+  <div class="lang-modal-head">
+    <h3>Zielsprache</h3>
+    <button class="settings-close" id="closeLangModal">✕</button>
+  </div>
+  <div class="lang-modal-body">
+    <input type="text" id="langSearchInput" placeholder="Sprache suchen…" autocomplete="off">
+    <div class="lang-list" id="langList"></div>
+  </div>
+</div>
+
+
+<div class="modal-scrim" id="newWordModalScrim">
+  <div class="modal-box">
+    <h3 id="newWordModalTitle">Neues Wort gefunden (KI)</h3>
+    <p class="modal-hint" id="newWordModalHint">Von der KI generiert. Prüfen und der Wortliste hinzufügen?</p>
+    <label>Kategorie</label>
+    <input type="text" id="nwCategory" placeholder="z.B. GENERIERT">
+    <label>Wort</label>
+    <input type="text" id="nwWord" readonly>
+    <label>Artikel (Genus)</label>
+    <select id="nwGenus">
+      <option value="">— (kein Substantiv)</option>
+      <option value="der">der</option>
+      <option value="die">die</option>
+      <option value="das">das</option>
+    </select>
+    <label>Plural (ohne Artikel)</label>
+    <input type="text" id="nwPlural" placeholder="z.B. Stethoskope">
+    <label>Bereiche (durch Komma getrennt)</label>
+    <input type="text" id="nwDomains" placeholder="z.B. Medizin, KI">
+    <div class="modal-actions">
+      <button class="wl-btn" id="cancelNewWord">Verwerfen</button>
+      <button class="wl-btn primary" id="confirmNewWord">Zur Wortliste hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   WORDLIST — Osiris Inc.
+   Dictionnaire multi-domaines : recherche, définitions par
+   domaine, traduction, lecture audio, panneau de mots
+   catégorisés avec icônes SVG, découverte IA.
+   ========================================================= */
+
+/* ---------- i18n ---------- */
+const I18N = {
+  de: {
+    addWord:'+ Wort hinzufügen', updateSvg:'⟳ Icons aktualisieren (SVG)',
+    readAll:'ALLES VORLESEN', pause:'⏸ Pause', resume:'▶ Fortsetzen',
+    searchPh:'Begriff…', preview:'Vorschau', readOne:'Vorlesen',
+    discoverTitle:'Weitere Wörter entdecken (KI)',
+    noWordCard:'Suche ein Wort, um seine Definitionen anzuzeigen.',
+    noIcon:'Kein Icon für dieses Wort gefunden/generiert.',
+    addPng:'Eigenes Bild hinzufügen (PNG)…',
+    genIcons:'Fehlende Icons werden generiert…', done:'Fertig.',
+    searching:'Suche läuft…', notFound:'Wort nicht gefunden, KI generiert…',
+    translating:'Übersetzung…', wort:'WORT', zielsprache:'ZIELSPRACHE AUSWÄHLEN',
+    plural:'PLURAL', noPlural:'—'
+  },
+  fr: {
+    addWord:'+ Ajouter un mot', updateSvg:'⟳ Mettre à jour les icônes (SVG)',
+    readAll:'▶ Tout lire', pause:'⏸ Pause', resume:'▶ Reprendre',
+    searchPh:'terme…', preview:'Aperçu', readOne:'Lire',
+    discoverTitle:"Découvrir d'autres mots (IA)",
+    noWordCard:'Recherchez un mot pour afficher ses définitions.',
+    noIcon:"Aucune icône trouvée/générée pour ce mot.",
+    addPng:'Ajouter une image (PNG)…',
+    genIcons:'Génération des icônes manquantes…', done:'Terminé.',
+    searching:'Recherche en cours…', notFound:'Mot introuvable, génération IA…',
+    translating:'Traduction…', wort:'MOT', zielsprache:'CHOISIR LA LANGUE CIBLE',
+    plural:'PLURIEL', noPlural:'—'
+  },
+  en: {
+    addWord:'+ Add word', updateSvg:'⟳ Update icons (SVG)',
+    readAll:'▶ Read all', pause:'⏸ Pause', resume:'▶ Resume',
+    searchPh:'term…', preview:'Preview', readOne:'Read',
+    discoverTitle:'Discover more words (AI)',
+    noWordCard:'Search a word to see its definitions.',
+    noIcon:'No icon found/generated for this word.',
+    addPng:'Add your own image (PNG)…',
+    genIcons:'Generating missing icons…', done:'Done.',
+    searching:'Searching…', notFound:'Word not found, generating with AI…',
+    translating:'Translating…', wort:'WORD', zielsprache:'SELECT TARGET LANGUAGE',
+    plural:'PLURAL', noPlural:'—'
+  }
+};
+let uiLang = localStorage.getItem('wl_uiLang') || 'de';
+
+/* ---------- Built-in SVG icon set (currentColor) ---------- */
+const SVG_ICONS = {
+  default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z"/><path d="M4 4v13a3 3 0 0 0 3 3h11"/></svg>`,
+  medical: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3v6a5 5 0 0 0 10 0V3"/><circle cx="19" cy="15" r="2.5"/><path d="M11 9v3a5 5 0 0 0 5 5h.5"/></svg>`,
+  ia: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg>`,
+  cybersecurity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`
+};
+function pickBuiltinIcon(domains){
+  const d = (domains||[]).map(x=>x.toLowerCase());
+  if (d.some(x=>x.includes('méd')||x.includes('med'))) return SVG_ICONS.medical;
+  if (d.some(x=>x.includes('cyber'))) return SVG_ICONS.cybersecurity;
+  if (d.some(x=>x.includes('ia')||x.includes('ai'))) return SVG_ICONS.ia;
+  return SVG_ICONS.default;
+}
+
+/* ---------- Data model / storage ---------- */
+
+let wordDB = null;
+try { wordDB = JSON.parse(localStorage.getItem('wl_db') || 'null'); } catch(e){}
+wordDB = wordDB || {
+  'MEDIZIN': [
+    { token:'Stethoskop', genus:'das', plural:'Stethoskope', domains:['Medizin'], defs:{ 'Medizin':"Instrument, mit dem Ärzte innere Körpergeräusche abhören, insbesondere Herz und Lunge." }, icon:{type:'svg', value:SVG_ICONS.medical}, translations:{} }
+  ],
+  'KI & SICHERHEIT': [
+    { token:'Token', genus:'der', plural:'Token', domains:['KI','Cybersicherheit'],
+      defs:{
+        'KI':"Texteinheit (Wort, Teilwort oder Zeichen), die ein Sprachmodell zur Verarbeitung und Erzeugung von Text verwendet.",
+        'Cybersicherheit':"Datenkette (Berechtigungsnachweis), die einen Nutzer oder eine Sitzung authentifiziert, ohne das Passwort erneut preiszugeben."
+      },
+      icon:{type:'svg', value:SVG_ICONS.ia}, translations:{} }
+  ]
+};
+function saveDB(){ try { localStorage.setItem('wl_db', JSON.stringify(wordDB)); } catch(e) {} }
+
+let menuState = null;
+try { menuState = JSON.parse(localStorage.getItem('wl_menu') || 'null'); } catch(e){}
+menuState = menuState || {
+  theme:'dark', fontMult:1, fontStyle:'sans', provider:'pollinations', targetLanguage:'Französisch', voiceProfile:'female'
+};
+if (!menuState.targetLanguage) menuState.targetLanguage = 'Französisch';
+if (!['female','male','child','senior'].includes(menuState.voiceProfile)) menuState.voiceProfile = 'female';
+
+
+if (!menuState.apiKeys || typeof menuState.apiKeys !== 'object') menuState.apiKeys = {};
+delete menuState.apiKeyTimestamps; // legacy field from the old 30-day expiry — no longer used
+if (typeof menuState.apiKey === 'string' && menuState.apiKey.trim() && !menuState.apiKeys[menuState.provider]) {
+  menuState.apiKeys[menuState.provider] = menuState.apiKey.trim();
+}
+delete menuState.apiKey;
+
+
+const VAULT_SUPPORTED = !!(window.crypto && window.crypto.subtle && window.indexedDB);
+const VAULT_DB_NAME = 'wlDictVaultDB';
+const VAULT_STORE = 'keys';
+const VAULT_KEY_ID = 'vaultKey';
+const VAULT_STORAGE_KEY = 'wlDictKeyVault';
+
+function openVaultDb(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(VAULT_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(VAULT_STORE)) req.result.createObjectStore(VAULT_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function getVaultKey(){
+  const db = await openVaultDb();
+  const existing = await new Promise((resolve, reject) => {
+    const tx = db.transaction(VAULT_STORE, 'readonly');
+    const req = tx.objectStore(VAULT_STORE).get(VAULT_KEY_ID);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+  if (existing) return existing;
+  const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(VAULT_STORE, 'readwrite');
+    tx.objectStore(VAULT_STORE).put(key, VAULT_KEY_ID);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  return key;
+}
+function bufToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function b64ToBuf(b64){ return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+
+
+let vaultKeysPersisted = false;
+
+async function saveApiKeyVault(){
+  if (!VAULT_SUPPORTED) { vaultKeysPersisted = false; return false; }
+  try{
+    const key = await getVaultKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const payload = JSON.stringify({ apiKeys: menuState.apiKeys });
+    const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(payload));
+    localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify({ iv: bufToB64(iv), data: bufToB64(cipher) }));
+    vaultKeysPersisted = true;
+    return true;
+  }catch(err){
+    console.warn('API-Schlüssel-Tresor konnte nicht gespeichert werden:', err);
+    vaultKeysPersisted = false;
+    return false;
+  }
+}
+async function loadApiKeyVault(){
+  if (!VAULT_SUPPORTED) return false;
+  const raw = localStorage.getItem(VAULT_STORAGE_KEY);
+  if (!raw) return false;
+  try{
+    const { iv, data } = JSON.parse(raw);
+    const key = await getVaultKey();
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(iv) }, key, b64ToBuf(data));
+    const parsed = JSON.parse(new TextDecoder().decode(plainBuf));
+    menuState.apiKeys = (parsed && typeof parsed.apiKeys === 'object') ? parsed.apiKeys : {};
+    vaultKeysPersisted = true;
+    return true;
+  }catch(err){
+    console.warn('API-Schlüssel-Tresor beschädigt — wird zurückgesetzt.', err);
+    localStorage.removeItem(VAULT_STORAGE_KEY);
+    menuState.apiKeys = {};
+    vaultKeysPersisted = false;
+    return false;
+  }
+}
+
+
+async function migrateLegacyPlaintextKeys(vaultWasLoaded){
+  if (!VAULT_SUPPORTED || vaultWasLoaded) return;
+  const hasLegacyKeys = menuState.apiKeys && Object.keys(menuState.apiKeys).length > 0;
+  if (hasLegacyKeys) await saveApiKeyVault(); // sets vaultKeysPersisted on success/failure
+  saveMenu(); // strips plaintext apiKeys only if the vault write above actually succeeded
+}
+
+/* ---- Vom portfolio-shell.html aufgerufen (via unsichtbares iframe) —
+   liefert/ersetzt den rohen, weiterhin verschlüsselten Tresor-Blob
+   (wlDictKeyVault), ohne ihn hier zu entschlüsseln. Gleiches Protokoll wie
+   KI_SAFE.html / KI_WÖRTERBUCH.html: es werden nur dieselben
+   Chiffretext-Bytes verschoben, die sonst in localStorage liegen — kein
+   Passphrase-Austausch nötig. */
+
+
+const VAULT_PROVIDER_ALIASES = {
+  'pollinationsai': 'pollinations', 'pollinations': 'pollinations',
+  'cerebras': 'cerebras',
+  'openrouter': 'openrouter',
+  'groq': 'groq',
+  'googlegemini': 'google', 'google': 'google', 'gemini': 'google',
+  'nvidianim': 'nvidia', 'nvidia': 'nvidia',
+  'githubmodels': 'github', 'github': 'github',
+  'cloudflareworkersai': 'cloudflare', 'cloudflare': 'cloudflare',
+  'huggingface': 'huggingface', 'huggingfacecommunityfallback': 'huggingface'
+};
+function normalizeVaultProviderName(name){
+  const key = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return VAULT_PROVIDER_ALIASES[key] || null;
+}
+
+window.addEventListener('message', (e) => {
+  if (!e.data || !e.data.type) return;
+  if (e.data.type === 'osirisVaultRequestExport') {
+    let blob = null;
+    try {
+      const raw = localStorage.getItem(VAULT_STORAGE_KEY);
+      blob = raw ? JSON.parse(raw) : null;
+    } catch (err) { blob = null; }
+    if (e.source) e.source.postMessage({ type: 'osirisVaultExportData', blob }, e.origin || '*');
+  } else if (e.data.type === 'osirisVaultRestoreBlob' && e.data.blob) {
+    try {
+      localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(e.data.blob));
+      loadApiKeyVault().then(() => {
+
+
+        if (typeof settingsModal !== 'undefined' && settingsModal.classList.contains('show')) {
+          settingsDraftKeys = { ...menuState.apiKeys };
+          const provider = document.getElementById('providerSelect').value;
+          apiKeyInputEl.value = settingsDraftKeys[provider] || '';
+          updateApiKeyFormatHint();
+        }
+      });
+    } catch (err) { /* Speicher nicht verfügbar */ }
+  } else if (e.data.type === 'osirisVaultKeys' && Array.isArray(e.data.keys)) {
+
+
+    let applied = 0;
+    e.data.keys.forEach(k => {
+      const providerId = normalizeVaultProviderName(k && k.provider);
+      const value = k && typeof k.key === 'string' ? k.key.trim() : '';
+      if (providerId && value) {
+        menuState.apiKeys[providerId] = value;
+        applied++;
+      }
+    });
+    if (applied > 0) {
+      saveApiKeyVault().then(() => {
+        saveMenu();
+        if (typeof settingsModal !== 'undefined' && settingsModal.classList.contains('show')) {
+          settingsDraftKeys = { ...menuState.apiKeys };
+          const provider = document.getElementById('providerSelect').value;
+          apiKeyInputEl.value = settingsDraftKeys[provider] || '';
+          updateApiKeyFormatHint();
+        }
+      });
+    }
+    if (e.source) e.source.postMessage({ type: 'osirisVaultKeysApplied', count: applied }, e.origin || '*');
+  }
+});
+
+function saveMenu(){
+  if (VAULT_SUPPORTED && vaultKeysPersisted) {
+
+
+    const { apiKeys, ...rest } = menuState;
+    localStorage.setItem('wl_menu', JSON.stringify(rest));
+  } else {
+
+
+    localStorage.setItem('wl_menu', JSON.stringify(menuState));
+  }
+}
+
+/* ---------- Full Google Translate language list (same list as KI_sample) ---------- */
+const LANG_META = {
+  'Afrikaans':{code:'af',speech:'af-ZA'}, 'Akan':{code:'ak',speech:'ak-GH'}, 'Albanisch':{code:'sq',speech:'sq-AL'},
+  'Amharisch':{code:'am',speech:'am-ET'}, 'Arabisch':{code:'ar',speech:'ar-SA'}, 'Armenisch':{code:'hy',speech:'hy-AM'},
+  'Assamesisch':{code:'as',speech:'as-IN'}, 'Aserbaidschanisch':{code:'az',speech:'az-AZ'}, 'Baskisch':{code:'eu',speech:'eu-ES'},
+  'Bengalisch':{code:'bn',speech:'bn-IN'}, 'Birmanisch':{code:'my',speech:'my-MM'}, 'Bosnisch':{code:'bs',speech:'bs-BA'},
+  'Bulgarisch':{code:'bg',speech:'bg-BG'}, 'Chinesisch (vereinfacht)':{code:'zh-CN',speech:'zh-CN'}, 'Chinesisch (traditionell)':{code:'zh-TW',speech:'zh-TW'},
+  'Dänisch':{code:'da',speech:'da-DK'}, 'Deutsch':{code:'de',speech:'de-DE'}, 'Englisch':{code:'en',speech:'en-US'},
+  'Estnisch':{code:'et',speech:'et-EE'}, 'Finnisch':{code:'fi',speech:'fi-FI'}, 'Französisch':{code:'fr',speech:'fr-FR'},
+  'Galicisch':{code:'gl',speech:'gl-ES'}, 'Georgisch':{code:'ka',speech:'ka-GE'}, 'Griechisch':{code:'el',speech:'el-GR'},
+  'Gujarati':{code:'gu',speech:'gu-IN'}, 'Hebräisch':{code:'iw',speech:'he-IL'}, 'Hindi':{code:'hi',speech:'hi-IN'},
+  'Indonesisch':{code:'id',speech:'id-ID'}, 'Irisch':{code:'ga',speech:'ga-IE'}, 'Isländisch':{code:'is',speech:'is-IS'},
+  'Italienisch':{code:'it',speech:'it-IT'}, 'Japanisch':{code:'ja',speech:'ja-JP'}, 'Javanisch':{code:'jv',speech:'jv-ID'},
+  'Kannada':{code:'kn',speech:'kn-IN'}, 'Kasachisch':{code:'kk',speech:'kk-KZ'}, 'Katalanisch':{code:'ca',speech:'ca-ES'},
+  'Khmer':{code:'km',speech:'km-KH'}, 'Koreanisch':{code:'ko',speech:'ko-KR'}, 'Kroatisch':{code:'hr',speech:'hr-HR'},
+  'Kurdisch':{code:'ku',speech:'ku-TR'}, 'Laotisch':{code:'lo',speech:'lo-LA'}, 'Lettisch':{code:'lv',speech:'lv-LV'},
+  'Litauisch':{code:'lt',speech:'lt-LT'}, 'Malaiisch':{code:'ms',speech:'ms-MY'}, 'Malayalam':{code:'ml',speech:'ml-IN'},
+  'Maltesisch':{code:'mt',speech:'mt-MT'}, 'Marathi':{code:'mr',speech:'mr-IN'}, 'Mazedonisch':{code:'mk',speech:'mk-MK'},
+  'Mongolisch':{code:'mn',speech:'mn-MN'}, 'Nepalesisch':{code:'ne',speech:'ne-NP'}, 'Niederländisch':{code:'nl',speech:'nl-NL'},
+  'Norwegisch':{code:'no',speech:'nb-NO'}, 'Paschtu':{code:'ps',speech:'ps-AF'}, 'Persisch':{code:'fa',speech:'fa-IR'},
+  'Polnisch':{code:'pl',speech:'pl-PL'}, 'Portugiesisch':{code:'pt',speech:'pt-PT'}, 'Punjabi':{code:'pa',speech:'pa-IN'},
+  'Rumänisch':{code:'ro',speech:'ro-RO'}, 'Russisch':{code:'ru',speech:'ru-RU'}, 'Schwedisch':{code:'sv',speech:'sv-SE'},
+  'Serbisch':{code:'sr',speech:'sr-RS'}, 'Sinhala':{code:'si',speech:'si-LK'}, 'Slowakisch':{code:'sk',speech:'sk-SK'},
+  'Slowenisch':{code:'sl',speech:'sl-SI'}, 'Somali':{code:'so',speech:'so-SO'}, 'Spanisch':{code:'es',speech:'es-ES'},
+  'Suaheli':{code:'sw',speech:'sw-KE'}, 'Tagalog':{code:'fil',speech:'fil-PH'}, 'Tamil':{code:'ta',speech:'ta-IN'},
+  'Telugu':{code:'te',speech:'te-IN'}, 'Thailändisch':{code:'th',speech:'th-TH'}, 'Tschechisch':{code:'cs',speech:'cs-CZ'},
+  'Türkisch':{code:'tr',speech:'tr-TR'}, 'Ukrainisch':{code:'uk',speech:'uk-UA'}, 'Ungarisch':{code:'hu',speech:'hu-HU'},
+  'Urdu':{code:'ur',speech:'ur-PK'}, 'Usbekisch':{code:'uz',speech:'uz-UZ'}, 'Vietnamesisch':{code:'vi',speech:'vi-VN'},
+  'Walisisch':{code:'cy',speech:'cy-GB'}, 'Weißrussisch':{code:'be',speech:'be-BY'}, 'Xhosa':{code:'xh',speech:'xh-ZA'},
+  'Yoruba':{code:'yo',speech:'yo-NG'}, 'Zulu':{code:'zu',speech:'zu-ZA'}
+};
+function getTargetLangMeta(){ return LANG_META[menuState.targetLanguage] || LANG_META['Französisch']; }
+function getTargetLangCode(){ return getTargetLangMeta().code; }
+function getTargetLangSpeech(){ return getTargetLangMeta().speech; }
+
+let selectedWord = null;
+let previewOpenFor = null;
+
+/* ---------- Article helpers (Genus for the word, "die" for every German plural) ---------- */
+function stripLeadingArticle(str){
+  return (str||'').replace(/^(der|die|das)\s+/i, '').trim();
+}
+function formatWordWithArticle(w){
+  const bare = w.token || '';
+  return w.genus ? `${w.genus} ${bare}` : bare;
+}
+function formatPluralWithArticle(w){
+  const bare = stripLeadingArticle(w.plural);
+  if (!bare) return '';
+  return `die ${bare}`;
+}
+
+/* ---------- Init ---------- */
+function applyI18n(){
+  const t = I18N[uiLang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t[el.dataset.i18n]; });
+  document.getElementById('searchInput').placeholder = t.searchPh;
+  document.getElementById('discoverTitle').textContent = t.discoverTitle;
+  document.getElementById('searchLabel').textContent = t.wort || 'WORT';
+  document.getElementById('langLabel').textContent = t.zielsprache || 'ZIELSPRACHE AUSWÄHLEN';
+  document.getElementById('readAllLabel').textContent = t.readAll;
+}
+function applyTheme(){
+  document.body.classList.toggle('light-mode', menuState.theme==='light');
+}
+function applyFont(){
+  document.documentElement.style.setProperty('--fs-mult', menuState.fontMult);
+  document.body.style.fontSize = (15*menuState.fontMult)+'px';
+  document.body.classList.remove('font-serif','font-mono');
+  if (menuState.fontStyle==='serif') document.body.classList.add('font-serif');
+  if (menuState.fontStyle==='mono') document.body.classList.add('font-mono');
+}
+function updateStatusDot(){
+  const dot = document.getElementById('statusDot');
+  dot.classList.toggle('online', navigator.onLine);
+}
+window.addEventListener('online', updateStatusDot);
+window.addEventListener('offline', updateStatusDot);
+
+function init(){
+  applyI18n(); applyTheme(); applyFont();
+  document.getElementById('targetLangTriggerLabel').textContent = menuState.targetLanguage;
+  renderWordlistPanel();
+  renderDiscoverStrip();
+  updateStatusDot();
+  checkDbUploadOnStart();
+}
+
+/* ---------- Header controls ---------- */
+document.getElementById('btnFontDown').onclick = ()=>{
+  menuState.fontMult = Math.max(0.75, +(menuState.fontMult-0.1).toFixed(2)); saveMenu(); applyFont();
+};
+document.getElementById('btnFontUp').onclick = ()=>{
+  menuState.fontMult = Math.min(1.6, +(menuState.fontMult+0.1).toFixed(2)); saveMenu(); applyFont();
+};
+document.getElementById('btnFontStyle').onclick = ()=>{
+  const order = ['sans','serif','mono'];
+  menuState.fontStyle = order[(order.indexOf(menuState.fontStyle)+1)%order.length];
+  saveMenu(); applyFont();
+};
+document.getElementById('btnTheme').onclick = ()=>{
+  menuState.theme = menuState.theme==='dark' ? 'light' : 'dark'; saveMenu(); applyTheme();
+};
+const settingsModal = document.getElementById('settingsModal');
+const settingsHeader = document.getElementById('settingsHeader');
+
+
+let settingsDraftKeys = {};
+const apiKeyInputEl = document.getElementById('apiKeyInput');
+const apiKeyStatusEl = document.getElementById('apiKeyStatus');
+const saveSettingsBtn = document.getElementById('saveSettings');
+
+
+function apiKeyFormatState(provider, raw){
+  const v = (raw || '').trim();
+  if (!v) return provider === 'pollinations' ? 'neutral' : 'empty';
+  if (/\s/.test(v)) return 'invalid';
+  if (provider === 'cloudflare') {
+    const parts = v.split(':');
+    return (parts.length === 2 && parts[0] && parts[1]) ? 'valid' : 'invalid';
+  }
+  return v.length >= 8 ? 'valid' : 'invalid';
+}
+function showApiKeyStatus(text, kind){
+
+  apiKeyStatusEl.textContent = text;
+  apiKeyStatusEl.style.display = text ? 'block' : 'none';
+  apiKeyStatusEl.style.color = kind === 'valid' ? 'var(--accent-green)'
+    : (kind === 'invalid' || kind === 'empty') ? 'var(--accent-red)'
+    : 'var(--text-dim)';
+}
+function updateApiKeyFormatHint(){
+  const provider = document.getElementById('providerSelect').value;
+  const state = apiKeyFormatState(provider, apiKeyInputEl.value);
+  if (state === 'valid') showApiKeyStatus('✓ Format sieht gültig aus', 'valid');
+  else if (state === 'invalid') showApiKeyStatus('✗ Ungültiges Format' + (provider === 'cloudflare' ? ' (erwartet "AccountID:APIToken")' : ''), 'invalid');
+  else if (state === 'empty') showApiKeyStatus('✗ Kein Schlüssel eingegeben — für diesen Anbieter erforderlich', 'empty');
+  else showApiKeyStatus('', 'neutral');
+}
+apiKeyInputEl.addEventListener('input', updateApiKeyFormatHint);
+
+document.getElementById('btnSettings').onclick = ()=>{
+  settingsDraftKeys = { ...menuState.apiKeys };
+  document.getElementById('providerSelect').value = menuState.provider;
+  apiKeyInputEl.value = settingsDraftKeys[menuState.provider] || '';
+  document.getElementById('voiceProfileSelect').value = menuState.voiceProfile;
+  document.getElementById('localDbIoMsg').style.display = 'none';
+  updateApiKeyFormatHint();
+  settingsModal.classList.add('show');
+};
+
+
+document.getElementById('providerSelect').addEventListener('mousedown', ()=>{
+  const currentProvider = document.getElementById('providerSelect').value;
+  settingsDraftKeys[currentProvider] = apiKeyInputEl.value.trim();
+});
+document.getElementById('providerSelect').addEventListener('keydown', ()=>{
+  const currentProvider = document.getElementById('providerSelect').value;
+  settingsDraftKeys[currentProvider] = apiKeyInputEl.value.trim();
+});
+
+document.getElementById('providerSelect').addEventListener('change', ()=>{
+  const provider = document.getElementById('providerSelect').value;
+  apiKeyInputEl.value = settingsDraftKeys[provider] || '';
+  updateApiKeyFormatHint();
+});
+document.getElementById('cancelSettings').onclick = ()=> settingsModal.classList.remove('show');
+document.getElementById('saveSettings').onclick = async ()=>{
+  const provider = document.getElementById('providerSelect').value;
+  settingsDraftKeys[provider] = apiKeyInputEl.value.trim();
+  menuState.provider = provider;
+  menuState.apiKeys = { ...menuState.apiKeys, ...settingsDraftKeys };
+  menuState.voiceProfile = document.getElementById('voiceProfileSelect').value;
+
+  saveSettingsBtn.disabled = true;
+  saveSettingsBtn.textContent = 'Speichere …';
+
+
+  const vaultOk = await saveApiKeyVault();
+  saveMenu();
+  saveSettingsBtn.disabled = false;
+  saveSettingsBtn.textContent = 'Speichern';
+
+  if (!VAULT_SUPPORTED) {
+    showApiKeyStatus('✓ Gespeichert (unverschlüsselt — Verschlüsselung in diesem Browser nicht verfügbar)', 'invalid');
+    setTimeout(()=> settingsModal.classList.remove('show'), 1400);
+  } else if (vaultOk) {
+    showApiKeyStatus('✓ Sicher gespeichert', 'valid');
+    setTimeout(()=> settingsModal.classList.remove('show'), 700);
+  } else {
+
+
+    showApiKeyStatus('✗ Verschlüsselung fehlgeschlagen — Schlüssel wurde unverschlüsselt gespeichert, damit er nicht verloren geht', 'invalid');
+  }
+};
+
+let isDraggingSettings = false, dragOffsetX = 0, dragOffsetY = 0;
+settingsHeader.addEventListener('mousedown', (e)=>{
+  if (e.target.closest('button')) return;
+  isDraggingSettings = true;
+  const rect = settingsModal.getBoundingClientRect();
+  dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top;
+});
+document.addEventListener('mousemove', (e)=>{
+  if (!isDraggingSettings) return;
+  settingsModal.style.transform = 'none';
+  settingsModal.style.left = (e.clientX - dragOffsetX) + 'px';
+  settingsModal.style.top = (e.clientY - dragOffsetY) + 'px';
+});
+document.addEventListener('mouseup', ()=>{ isDraggingSettings = false; });
+
+/* ---------- Local wordlist DB: clear / export / import (JSON), same UX as KI_sample ---------- */
+function showLocalDbIoMsg(text, isError){
+  const el = document.getElementById('localDbIoMsg');
+  el.textContent = text; el.style.display = 'block';
+  el.style.color = isError ? '#e05252' : 'var(--accent-green)';
+}
+document.getElementById('clearLocalDbBtn').onclick = ()=>{
+  if (!confirm('Den gesamten lokalen Wörterbuch-Cache löschen?')) return;
+  wordDB = {};
+  saveDB(); renderWordlistPanel(); renderDiscoverStrip();
+  showLocalDbIoMsg('Lokaler Cache gelöscht.', false);
+};
+document.getElementById('exportLocalDbBtn').onclick = ()=>{
+  try{
+    const count = Object.values(wordDB).reduce((n,list)=>n+list.length, 0);
+    const payload = { app:'wlWortliste', exportedAt:new Date().toISOString(), count, wordDB };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `wortliste-datenbank-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showLocalDbIoMsg(`${count} Wörter exportiert.`, false);
+  }catch(e){ showLocalDbIoMsg('Export fehlgeschlagen.', true); }
+};
+document.getElementById('importLocalDbBtn').onclick = ()=> document.getElementById('importLocalDbInput').click();
+document.getElementById('importLocalDbInput').addEventListener('change', async (e)=>{
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const imported = (data && typeof data.wordDB === 'object') ? data.wordDB : (typeof data === 'object' ? data : null);
+    if (!imported) throw new Error('Ungültiges Format');
+    Object.keys(imported).forEach(cat=>{
+      if (!wordDB[cat]) wordDB[cat] = [];
+      wordDB[cat] = wordDB[cat].concat(imported[cat]);
+    });
+    saveDB(); renderWordlistPanel(); renderDiscoverStrip();
+    const count = Object.values(imported).reduce((n,list)=>n+list.length, 0);
+    showLocalDbIoMsg(`${count} Wörter importiert.`, false);
+  }catch(err){ showLocalDbIoMsg('Import fehlgeschlagen: ungültige Datei.', true); }
+});
+
+/* ---------- sql.js loader (local-first, CDN fallback) ----------
+   Same pattern as KI_WÖRTERBUCH.html: tries the bundled offline copy
+   first (lib/sqljs/), only reaches out to the CDN if that's missing.
+   Needed so this app can also read a REAL SQLite master-database (the
+   .db produced by KI_WÖRTERBUCH's export / Db5), on top of its own
+   native JSON-envelope ".db" format below. */
+let sqlJsPromise = null;
+function loadSqlJs(){
+  if (sqlJsPromise) return sqlJsPromise;
+  const LOCAL_BASE = '/lib/sqljs/v1.10.3/';
+  const CDN_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/';
+  function loadScript(src){
+    return new Promise((resolve, reject)=>{
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = ()=>resolve();
+      script.onerror = ()=>reject(new Error('load-failed:'+src));
+      document.head.appendChild(script);
+    });
+  }
+  sqlJsPromise = (window.initSqlJs
+    ? Promise.resolve(LOCAL_BASE)
+    : loadScript(LOCAL_BASE+'sql-wasm.js').then(()=>LOCAL_BASE)
+        .catch(()=>loadScript(CDN_BASE+'sql-wasm.js').then(()=>CDN_BASE))
+  ).then(base=>window.initSqlJs({ locateFile: f=>base+f }))
+   .catch(()=>{ throw new Error('sql.js konnte nicht geladen werden (weder lokal noch über CDN — Internet nötig oder lib/sqljs/ fehlt).'); });
+  return sqlJsPromise;
+}
+
+
+function capitalizeWord(w){ return w ? w.charAt(0).toUpperCase()+w.slice(1) : w; }
+function masterRowToEntry(row){
+  let data = {};
+  try { data = JSON.parse(row.data || '{}'); } catch(e){ data = {}; }
+  const levels = data.levels && typeof data.levels === 'object' ? data.levels : {};
+  const firstLevel = levels['A1/A2'] || levels[Object.keys(levels)[0]] || {};
+  const genus = data.genus && data.genus !== 'null' ? data.genus : null;
+  const plural = firstLevel.plural && firstLevel.plural !== '—' ? firstLevel.plural : undefined;
+  const domain = (data.knowledgeField || row.knowledgeField || 'Allgemein').trim();
+  const category = domain.toUpperCase() || 'ALLGEMEIN';
+  const token = data.correctedWord || capitalizeWord((row.word||'').trim());
+  const entry = {
+    token: token,
+    genus: genus,
+    plural: plural,
+    domains: [domain],
+    defs: { [domain]: firstLevel.definitionPrimaryDe || data.definitionPrimaryDe || '' },
+    icon: { type:'svg', value: SVG_ICONS.default },
+    translations: {}
+  };
+  return { category, entry };
+}
+async function importSqliteMasterDb(buf){
+  const initSqlJs = await loadSqlJs();
+  const db = new initSqlJs.Database(new Uint8Array(buf));
+  let result;
+  try {
+    result = db.exec("SELECT word, dictMode, knowledgeField, source, updatedAt, data FROM words");
+  } catch(e){
+    db.close();
+    throw new Error('Keine gültige „words"-Tabelle in dieser Datei gefunden.');
+  }
+  db.close();
+  if (!result.length || !result[0].values.length) throw new Error('Die Datenbank enthält keine Wörter.');
+  const cols = result[0].columns;
+  const rows = result[0].values.map(v=>{ const o={}; cols.forEach((c,i)=>{ o[c]=v[i]; }); return o; });
+  let count = 0;
+  rows.forEach(row=>{
+    const { category, entry } = masterRowToEntry(row);
+    if (!entry.token) return;
+    if (!wordDB[category]) wordDB[category] = [];
+    wordDB[category].push(entry);
+    count++;
+  });
+  saveDB();
+  return count;
+}
+
+/* ---------- .db import/extract ----------
+   This is a portable JSON envelope saved/read with a ".db" extension —
+   the same structure as the JSON export above — so a wordlist can be
+   shared as a single "database file" the way KI_sample's Master-DB
+   upload flow expects, without pulling in a SQLite-WASM dependency. */
+function buildDbPayload(){
+  const count = Object.values(wordDB).reduce((n,list)=>n+list.length, 0);
+  return { app:'wlWortliste', format:'osiris-wordlist-db-v1', exportedAt:new Date().toISOString(), count, wordDB };
+}
+function extractDb(){
+  const payload = buildDbPayload();
+  const blob = new Blob([JSON.stringify(payload)], { type:'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `wortliste-datenbank-${new Date().toISOString().slice(0,10)}.db`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  return payload.count;
+}
+async function importDbFile(file){
+  const buf = await file.arrayBuffer();
+
+  let text = null;
+  try { text = new TextDecoder('utf-8', { fatal:true }).decode(buf); } catch(e) { text = null; }
+  if (text !== null) {
+    try {
+      const data = JSON.parse(text);
+      const imported = (data && typeof data.wordDB === 'object') ? data.wordDB : (typeof data === 'object' ? data : null);
+      if (imported) {
+        Object.keys(imported).forEach(cat=>{
+          if (!wordDB[cat]) wordDB[cat] = [];
+          wordDB[cat] = wordDB[cat].concat(imported[cat]);
+        });
+        saveDB();
+        return Object.values(imported).reduce((n,list)=>n+list.length, 0);
+      }
+    } catch(e) { /* not this app's JSON format — fall through to SQLite below */ }
+  }
+
+  return await importSqliteMasterDb(buf);
+}
+document.getElementById('extractDbBtn').onclick = ()=>{
+  try{
+    const count = extractDb();
+    showLocalDbIoMsg(`${count} Wörter als .db extrahiert.`, false);
+  }catch(e){ showLocalDbIoMsg('Extraktion fehlgeschlagen.', true); }
+};
+document.getElementById('importDbBtn').onclick = ()=> document.getElementById('importDbInput').click();
+document.getElementById('importDbInput').addEventListener('change', async (e)=>{
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try{
+    const count = await importDbFile(file);
+    renderWordlistPanel(); renderDiscoverStrip();
+    showLocalDbIoMsg(`${count} Wörter aus .db importiert.`, false);
+  }catch(err){ showLocalDbIoMsg('Import fehlgeschlagen: ungültige .db-Datei.', true); }
+});
+
+/* ---------- Startup .db welcome modal ----------
+   Shown once automatically (like KI_sample's Master-DB modal), but with
+   NO "Nicht mehr anzeigen" checkbox: skipping or importing simply marks
+   it dismissed for this browser. It can always be reopened manually via
+   "Willkommens-Import erneut öffnen" in Settings. */
+async function openDbUploadModal(){
+  document.getElementById('dbUploadStatusMsg').textContent = '';
+  document.getElementById('dbUploadStatusMsg').style.color = 'var(--text-dim)';
+  document.getElementById('dbFileInput').value = '';
+  document.getElementById('dbUploadModalScrim').classList.add('show');
+  
+  let dbToLoad = 'fachwoerterbuch_default.db';
+  try {
+    const manifestRes = await fetch('../db/manifest.json');
+    if (manifestRes.ok) {
+      const files = await manifestRes.json();
+      const dictFile = files.find(f => /fach/i.test(f) || /woerterbuch/i.test(f));
+      if (dictFile) dbToLoad = dictFile;
+    }
+  } catch(e) {}
+
+  fetch('../db/' + dbToLoad, {method: 'HEAD'})
+    .then(res => {
+      const btn = document.getElementById('importDefaultDbBtn');
+      if (res.ok && btn) {
+        btn.style.display = 'block';
+        btn.textContent = 'Auto-Catch DB: ' + dbToLoad;
+        btn.dataset.autoDb = dbToLoad;
+      }
+    })
+    .catch(()=>{});
+}
+function closeDbUploadModal(){
+  document.getElementById('dbUploadModalScrim').classList.remove('show');
+}
+function checkDbUploadOnStart(){
+  if (!localStorage.getItem('wl_db_modal_dismissed')) openDbUploadModal();
+}
+document.getElementById('processDbBtn').onclick = async ()=>{
+  const file = document.getElementById('dbFileInput').files[0];
+  const statusMsg = document.getElementById('dbUploadStatusMsg');
+  if (!file){
+    statusMsg.style.color = '#e05252';
+    statusMsg.textContent = 'Bitte zuerst eine .db-Datei auswählen.';
+    return;
+  }
+  statusMsg.style.color = 'var(--text-dim)';
+  statusMsg.textContent = 'Extrahiere...';
+  try{
+    const count = await importDbFile(file);
+    localStorage.setItem('wl_db_modal_dismissed', 'true');
+    renderWordlistPanel(); renderDiscoverStrip();
+    statusMsg.style.color = 'var(--accent-green)';
+    statusMsg.textContent = `${count} Wörter importiert. Wörterbuch ist bereit.`;
+    setTimeout(closeDbUploadModal, 1400);
+  }catch(err){
+    statusMsg.style.color = '#e05252';
+    statusMsg.textContent = 'Fehler beim Extrahieren. Bitte eine gültige .db-Datei wählen.';
+  }
+};
+
+document.getElementById('importDefaultDbBtn').onclick = async (e)=>{
+  const statusMsg = document.getElementById('dbUploadStatusMsg');
+  const targetDb = e.target.dataset.autoDb || 'fachwoerterbuch_default.db';
+  statusMsg.style.color = 'var(--text-dim)';
+  statusMsg.textContent = `Lade ${targetDb}...`;
+  try {
+    const res = await fetch('../db/' + targetDb);
+    if (!res.ok) throw new Error('Nicht gefunden.');
+    const buf = await res.arrayBuffer();
+    const fakeFile = { arrayBuffer: async () => buf };
+    const count = await importDbFile(fakeFile);
+    localStorage.setItem('wl_db_modal_dismissed', 'true');
+    renderWordlistPanel(); renderDiscoverStrip();
+    statusMsg.style.color = 'var(--accent-green)';
+    statusMsg.textContent = `${count} Wörter importiert. Wörterbuch ist bereit.`;
+    setTimeout(closeDbUploadModal, 1400);
+  } catch(err) {
+    statusMsg.style.color = '#e05252';
+    statusMsg.textContent = 'Fehler beim Laden: ' + err.message;
+  }
+};
+document.getElementById('skipDbUploadBtn').onclick = ()=>{
+  localStorage.setItem('wl_db_modal_dismissed', 'true');
+  closeDbUploadModal();
+};
+document.getElementById('reopenDbUploadBtn').onclick = ()=>{
+  settingsModal.classList.remove('show');
+  openDbUploadModal();
+};
+
+/* ---------- Big loading-circle overlay (same as KI_sample) ---------- */
+function showBigLoader(){ document.getElementById('bigLoader').classList.add('show'); }
+function hideBigLoader(){ document.getElementById('bigLoader').classList.remove('show'); }
+
+
+const wlPanel = document.getElementById('wlPanel');
+const scrim = document.getElementById('scrim');
+document.getElementById('wlOpenBtn').onclick = ()=>{ wlPanel.classList.add('open'); scrim.classList.add('show'); };
+document.getElementById('wlClose').onclick = closeWlPanel;
+scrim.onclick = closeWlPanel;
+function closeWlPanel(){ wlPanel.classList.remove('open'); scrim.classList.remove('show'); }
+
+function renderWordlistPanel(){
+  const body = document.getElementById('wlBody');
+  body.innerHTML = '';
+  Object.keys(wordDB).forEach(cat=>{
+    const catWrap = document.createElement('div');
+    catWrap.className = 'wl-cat';
+    const title = document.createElement('div');
+    title.className = 'wl-cat-title';
+    title.textContent = cat;
+    catWrap.appendChild(title);
+    wordDB[cat].forEach(w=>{
+      const row = document.createElement('div');
+      row.className = 'wl-word' + (selectedWord && selectedWord.token===w.token ? ' selected' : '');
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'wl-icon';
+      if (w.icon && w.icon.type==='img') { const img=document.createElement('img'); img.src=w.icon.value; iconWrap.appendChild(img); }
+      else {
+        let iv = (w.icon && w.icon.value) || pickBuiltinIcon(w.domains);
+        if (iv.trim().startsWith('<svg')) {
+            iv = `<img src="data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(iv)))}" style="width:100%;height:100%;object-fit:contain;">`;
+        } else if (!iv.startsWith('<img') && iv.includes('<')) {
+            iv = escapeHtml(iv);
+        }
+        iconWrap.innerHTML = iv;
+      }
+      const chk = document.createElement('input');
+      chk.type='checkbox'; chk.title='In globales "Alles vorlesen" einbeziehen';
+      chk.checked = w._included !== false;
+      chk.onclick = (e)=>{ e.stopPropagation(); w._included = chk.checked; saveDB(); };
+      const name = document.createElement('div');
+      name.className='wl-word-name'; name.textContent = w.token;
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'wl-del-btn';
+      delBtn.title = 'Wort löschen';
+      delBtn.textContent = '✕';
+      delBtn.onclick = (e)=>{
+        e.stopPropagation();
+        if (!confirm(`"${w.token}" endgültig aus der Wortliste löschen?`)) return;
+        const idx = wordDB[cat].indexOf(w);
+        if (idx > -1) wordDB[cat].splice(idx, 1);
+        if (wordDB[cat].length === 0) delete wordDB[cat];
+        if (selectedWord === w){
+          selectedWord = null;
+          document.getElementById('wordCard').classList.remove('show');
+          document.getElementById('searchStatus').textContent = '';
+        }
+        saveDB();
+        renderWordlistPanel();
+        renderDiscoverStrip();
+      };
+      row.appendChild(iconWrap); row.appendChild(name); row.appendChild(delBtn); row.appendChild(chk);
+      row.onclick = ()=>{ document.getElementById('searchInput').value = w.token; loadWord(w); closeWlPanel(); };
+      catWrap.appendChild(row);
+    });
+    body.appendChild(catWrap);
+  });
+}
+
+/* SVG update: generate a small icon (Pollinations image) for any word in
+   the DB that doesn't have a dedicated icon yet. Pollinations now requires
+   its own API key for generation requests, passed as a ?key= query param
+   since <img> requests can't carry an Authorization header. Falls back to
+   asking the user for a PNG if generation fails (e.g. no Pollinations key
+   stored). */
+document.getElementById('updateSvgBtn').onclick = async ()=>{
+  const t = I18N[uiLang];
+  const status = document.getElementById('wlStatus');
+  status.textContent = t.genIcons;
+  showBigLoader();
+  const jobs = [];
+  Object.values(wordDB).forEach(list=>list.forEach(w=>{
+    if (!w.icon || !w.icon._custom) jobs.push(w);
+  }));
+  const pollinationsKey = menuState.apiKeys.pollinations || '';
+  for (const w of jobs){
+    try{
+      const prompt = encodeURIComponent(`simple flat line icon, ${w.token}, minimal, monochrome, vector style`);
+      const keyParam = pollinationsKey ? `&key=${encodeURIComponent(pollinationsKey)}` : '';
+      const url = `https://gen.pollinations.ai/image/${prompt}?width=128&height=128&nologo=true${keyParam}`;
+
+      await new Promise((res,rej)=>{
+        const img = new Image();
+        img.onload = ()=>{ w.icon = {type:'img', value:url, _custom:true}; res(); };
+        img.onerror = rej;
+        img.src = url;
+      });
+    }catch(e){
+      w.icon = w.icon || {type:'svg', value:pickBuiltinIcon(w.domains)};
+    }
+  }
+  hideBigLoader();
+  saveDB(); renderWordlistPanel();
+  status.textContent = t.done;
+  setTimeout(()=>status.textContent='', 2500);
+};
+
+/* ---------- Search ---------- */
+document.getElementById('btnSearch').onclick = ()=> triggerSearch();
+document.getElementById('searchInput').addEventListener('keydown', e=>{ if (e.key==='Enter') triggerSearch(); });
+document.getElementById('btnReload').onclick = ()=>{ if (selectedWord) loadWord(selectedWord, true); };
+document.getElementById('btnClear').onclick = ()=>{
+  document.getElementById('searchInput').value='';
+  document.getElementById('wordCard').classList.remove('show');
+  document.getElementById('searchStatus').textContent='';
+  selectedWord = null;
+};
+
+function findWordByToken(token){
+  token = token.trim().toLowerCase();
+  for (const cat of Object.keys(wordDB)){
+    const hit = wordDB[cat].find(w=>w.token.toLowerCase()===token);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+let pendingGeneratedWord = null;
+let currentSearchController = null;
+
+async function triggerSearch(){
+  const token = document.getElementById('searchInput').value.trim();
+  const t = I18N[uiLang];
+  if (!token) return;
+  const status = document.getElementById('searchStatus');
+  const existing = findWordByToken(token);
+  if (existing){ status.textContent=''; loadWord(existing); renderDiscoverStrip(); return; }
+  status.textContent = t.notFound;
+  showBigLoader();
+  currentSearchController = new AbortController();
+  const generated = await generateWordEntry(token, currentSearchController.signal);
+  hideBigLoader();
+  currentSearchController = null;
+  if (generated === 'ABORTED'){
+    status.textContent = uiLang==='de' ? 'Suche abgebrochen.' : (uiLang==='fr' ? 'Recherche annulée.' : 'Search cancelled.');
+    return;
+  }
+  status.textContent = '';
+  if (generated){
+    openNewWordModal(generated);
+  } else {
+    status.textContent = uiLang==='de' ? 'Keine Definition generiert.' : (uiLang==='fr' ? 'Aucune définition générée.' : 'No definition generated.');
+  }
+}
+document.getElementById('bigLoaderCancel').onclick = ()=>{
+  if (currentSearchController) currentSearchController.abort();
+  hideBigLoader();
+};
+
+/* New-word popup: shown automatically once the KI has generated an entry
+   for a word that wasn't already in the local wordlist, so the user can
+   review/adjust it before it's saved permanently (mirrors KI_sample's
+   "im permanenten Vokabelbuch speichern" confirmation step). */
+function openNewWordModal(generated){
+  pendingGeneratedWord = generated;
+  document.getElementById('nwCategory').value = 'GENERIERT';
+  document.getElementById('nwWord').value = generated.token;
+  document.getElementById('nwGenus').value = generated.genus || '';
+  document.getElementById('nwPlural').value = generated.plural || '';
+  document.getElementById('nwDomains').value = (generated.domains || []).join(', ');
+  document.getElementById('newWordModalScrim').classList.add('show');
+
+  renderWordCard(generated);
+}
+document.getElementById('cancelNewWord').onclick = ()=>{
+  document.getElementById('newWordModalScrim').classList.remove('show');
+  pendingGeneratedWord = null;
+};
+document.getElementById('confirmNewWord').onclick = ()=>{
+  if (!pendingGeneratedWord) return;
+  const cat = document.getElementById('nwCategory').value.trim() || 'GENERIERT';
+  const domains = document.getElementById('nwDomains').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const w = {
+    ...pendingGeneratedWord,
+    genus: document.getElementById('nwGenus').value || null,
+    plural: document.getElementById('nwPlural').value.trim(),
+    domains: domains.length ? domains : pendingGeneratedWord.domains
+  };
+  if (!wordDB[cat]) wordDB[cat] = [];
+  wordDB[cat].push(w);
+  saveDB(); renderWordlistPanel(); renderDiscoverStrip();
+  loadWord(w);
+  document.getElementById('newWordModalScrim').classList.remove('show');
+  pendingGeneratedWord = null;
+};
+
+/* AI generation of a new word entry (domains + per-domain definitions)
+   using the configured provider. */
+
+/* ---------- Free API auto-switching ----------
+   The provider selected in Settings is tried first; if it errors out
+   (missing/invalid key, rate limit, provider outage, timeout, ...) the
+   app automatically retries the same prompt against the next usable
+   provider in the background — no extra action needed from the user.
+   Pollinations now also requires its own free key (sk_/pk_ from
+   enter.pollinations.ai), so — like every other provider here — it's
+   only part of the chain once a key has been entered for it. */
+const PROVIDER_FAILOVER_ORDER = ['cerebras','groq','google','nvidia','github','cloudflare','openrouter','huggingface','pollinations'];
+const PROVIDER_ENDPOINTS = {
+  cerebras:'https://api.cerebras.ai/v1/chat/completions',
+  openrouter:'https://openrouter.ai/api/v1/chat/completions',
+  groq:'https://api.groq.com/openai/v1/chat/completions',
+  google:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+  nvidia:'https://integrate.api.nvidia.com/v1/chat/completions',
+  github:'https://models.github.ai/inference/chat/completions',
+  huggingface:'https://router.huggingface.co/v1/chat/completions',
+  pollinations:'https://gen.pollinations.ai/v1/chat/completions'
+
+};
+
+
+const DEFAULT_MODELS = {
+  cerebras: 'llama-3.3-70b',
+  groq: 'llama3-70b-8192',
+  google: 'gemini-1.5-flash',
+  nvidia: 'deepseek-ai/deepseek-r1',
+  github: 'gpt-4o-mini',
+  cloudflare: '@cf/meta/llama-3.1-8b-instruct',
+  openrouter: 'meta-llama/llama-3-8b-instruct:free',
+  huggingface: 'meta-llama/Llama-3.1-8B-Instruct',
+  pollinations: 'openai'
+};
+
+
+function availableProvidersInOrder(){
+  const selected = menuState.provider;
+  const ordered = [selected, ...PROVIDER_FAILOVER_ORDER.filter(p => p !== selected)];
+  return ordered.filter(p => (menuState.apiKeys[p] || '').trim());
+}
+async function callProviderRaw(provider, sys, userMsg, signal){
+  if (provider === 'pollinations'){
+    const apiKey = menuState.apiKeys[provider] || '';
+    const r = await fetch(PROVIDER_ENDPOINTS.pollinations, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body: JSON.stringify({ model: DEFAULT_MODELS.pollinations, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
+      signal
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    if (!text) throw new Error('Leere Antwort vom Anbieter.');
+    return text;
+  }
+  if (provider === 'cloudflare'){
+
+    const raw = menuState.apiKeys[provider] || '';
+    const [accountId, token] = raw.split(':');
+    if (!accountId || !token) throw new Error('Cloudflare-Schlüssel muss im Format "AccountID:APIToken" vorliegen.');
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ model: DEFAULT_MODELS.cloudflare, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
+      signal
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    if (!text) throw new Error('Leere Antwort vom Anbieter.');
+    return text;
+  }
+  const endpoint = PROVIDER_ENDPOINTS[provider];
+  if (!endpoint) throw new Error('Unbekannter API-Anbieter.');
+  const r = await fetch(endpoint, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+(menuState.apiKeys[provider] || '')},
+    body: JSON.stringify({ model: DEFAULT_MODELS[provider], messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
+    signal
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const data = await r.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) throw new Error('Leere Antwort vom Anbieter.');
+  return text;
+}
+
+
+async function callWithProviderFailover(sys, userMsg, onSwitch, signal){
+  const providers = availableProvidersInOrder();
+  if (!providers.length) throw new Error('Kein nutzbarer API-Anbieter konfiguriert.');
+  let lastErr = null;
+  for (let i = 0; i < providers.length; i++){
+    const provider = providers[i];
+    try{
+      const rawText = await callProviderRaw(provider, sys, userMsg, signal);
+      return { rawText, provider };
+    }catch(err){
+      if (err.name === 'AbortError') throw err;
+      lastErr = err;
+      console.warn(`Anbieter „${provider}" fehlgeschlagen — wechsle automatisch:`, err);
+      if (typeof onSwitch === 'function' && i < providers.length - 1) onSwitch(provider, providers[i+1], err);
+    }
+  }
+  throw lastErr || new Error('Alle API-Anbieter fehlgeschlagen.');
+}
+
+
+async function generateWordEntry(token, signal){
+  const sys = `Du bist ein deutsches Fachwörterbuch. Der gesuchte Begriff "${token}" ist als deutsches Wort zu behandeln — antworte ausschließlich auf Deutsch, auch wenn der Begriff wie ein Fremdwort aussieht. Bestimme das grammatische Geschlecht (Genus: "der", "die" oder "das"; falls kein Substantiv, dann null), 1 bis 3 relevante Wissensbereiche (z.B. KI, Cybersicherheit, Medizin, Finanzen...), eine kurze Definition (1-2 Sätze) je Bereich sowie die Pluralform des Begriffs OHNE Artikel (z.B. "Stethoskope", nicht "die Stethoskope"). Antworte AUSSCHLIESSLICH mit striktem JSON im Format: {"genus":"der|die|das|null","domains":["..."],"defs":{"Bereich":"Definition"},"plural":"..."}`;
+  try{
+    const status = document.getElementById('searchStatus');
+    const { rawText } = await callWithProviderFailover(sys, 'Begriff: '+token, (failed, next)=>{
+      if (status) status.textContent = `Anbieter „${failed}" nicht erreichbar — wechsle automatisch zu „${next}" …`;
+    }, signal);
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!parsed.domains || !parsed.defs) return null;
+    const genus = ['der','die','das'].includes(parsed.genus) ? parsed.genus : null;
+    return { token, genus, plural:parsed.plural||'', domains:parsed.domains, defs:parsed.defs, icon:{type:'svg', value:pickBuiltinIcon(parsed.domains)}, translations:{} };
+  }catch(e){
+    if (e.name === 'AbortError') return 'ABORTED';
+    console.error('generateWordEntry failed', e);
+    return null;
+  }
+}
+
+/* ---------- Word card rendering ---------- */
+function loadWord(w, forceReload){
+  stopSpeech();
+  resetReadAllButton();
+  selectedWord = w;
+  document.getElementById('searchInput').value = w.token;
+  renderWordCard(w);
+  renderWordlistPanel();
+}
+
+function renderWordCard(w){
+  const card = document.getElementById('wordCard');
+  card.classList.add('show');
+  const svgData = w.icon.type === 'svg' ? 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(w.icon.value))) : w.icon.value;
+  document.getElementById('wordIcon').innerHTML = `<img src="${svgData}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;">`;
+  document.getElementById('wordTitle').textContent = w.token;
+
+  const domainRow = document.getElementById('domainRow');
+  domainRow.innerHTML = '';
+  w.domains.forEach(d=>{
+    const chip = document.createElement('span');
+    chip.className='domain-chip'; chip.textContent=d;
+    domainRow.appendChild(chip);
+  });
+
+  document.getElementById('wordArticleValue').textContent = formatWordWithArticle(w) || I18N[uiLang].noPlural || '—';
+  document.getElementById('pluralValue').textContent = formatPluralWithArticle(w) || I18N[uiLang].noPlural || '—';
+
+  const oldNote = card.querySelector('.no-icon-note'); if (oldNote) oldNote.remove();
+  if (!w.icon || (w.icon.type==='svg' && w.icon.value===SVG_ICONS.default)){
+    const note = document.createElement('div');
+    note.className = 'no-icon-note';
+    note.innerHTML = `<span>${I18N[uiLang].noIcon}</span>`;
+    const label = document.createElement('label');
+    label.textContent = I18N[uiLang].addPng; label.style.cursor='pointer';
+    const input = document.createElement('input');
+    input.type='file'; input.accept='image/png,image/jpeg';
+    input.onchange = (e)=>{
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{ w.icon = {type:'img', value:reader.result, _custom:true}; saveDB(); renderWordCard(w); renderWordlistPanel(); };
+      reader.readAsDataURL(file);
+    };
+    label.appendChild(input);
+    note.appendChild(label);
+    card.querySelector('.word-title-row').insertAdjacentElement('afterend', note);
+  }
+
+  renderDefinitions(w);
+}
+
+function renderDefinitions(w){
+  const list = document.getElementById('defList');
+  list.innerHTML = '';
+  w.domains.forEach(domain=>{
+    const row = document.createElement('div');
+    row.className = 'def-row';
+    const head = document.createElement('div');
+    head.className = 'def-head';
+    const label = document.createElement('div');
+    label.className = 'def-domain'; label.textContent = domain;
+    const actions = document.createElement('div');
+    actions.className = 'def-actions';
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'mini-btn'; previewBtn.textContent = I18N[uiLang].preview;
+    previewBtn.onclick = ()=> previewDefinition(w, domain, previewBox);
+    const readWrap = document.createElement('span');
+    readWrap.className = 'read-btn-wrap';
+    const readBtn = document.createElement('button');
+    readBtn.className = 'mini-btn'; readBtn.textContent = '🔊';
+    readBtn.onclick = ()=> readSingleDefinition(w, domain, readBtn);
+    const resetBtn = document.createElement('button');
+    resetBtn.type = 'button';
+    resetBtn.className = 'mini-btn read-reset'; resetBtn.textContent = '↺';
+    resetBtn.title = uiLang==='de' ? 'Neu starten' : (uiLang==='fr' ? 'Recommencer' : 'Restart');
+    resetBtn.onclick = (e)=>{ e.stopPropagation(); restartSingleDefinition(w, domain, readBtn); };
+    readBtn._resetBtn = resetBtn;
+    readWrap.appendChild(readBtn); readWrap.appendChild(resetBtn);
+    actions.appendChild(previewBtn); actions.appendChild(readWrap);
+    head.appendChild(label); head.appendChild(actions);
+
+    const text = document.createElement('div');
+    text.className = 'def-text';
+    text.textContent = w.defs[domain] || '—';
+
+    const previewBox = document.createElement('div');
+    previewBox.className = 'def-preview';
+    previewBox.dataset.domain = domain;
+
+    row.appendChild(head); row.appendChild(text); row.appendChild(previewBox);
+    list.appendChild(row);
+  });
+}
+
+/* Preview: shows the (translated) definition, plus a generated PNG image
+   illustrating the definition, just under the row's preview button.
+   Clicking another preview button overwrites/replaces the previously open
+   preview instead of stacking. */
+async function previewDefinition(w, domain, box){
+  document.querySelectorAll('.def-preview.show').forEach(el=>{
+    if (el !== box){ el.classList.remove('show'); el.innerHTML=''; }
+  });
+  const targetLang = getTargetLangCode();
+  box.classList.add('show');
+  box.innerHTML = '';
+  const textEl = document.createElement('div');
+  textEl.textContent = I18N[uiLang].translating;
+  box.appendChild(textEl);
+
+  const defText = w.defs[domain] || '';
+  const [translated] = await Promise.all([
+    translateText(defText, targetLang),
+
+  ]);
+  textEl.textContent = translated;
+
+  const img = document.createElement('img');
+  img.className = 'def-preview-img';
+  img.alt = domain + ' — ' + w.token;
+  img.src = buildDefinitionImageUrl(w.token, domain, defText);
+  box.appendChild(img);
+}
+
+/* PNG image generated from the definition text itself (same authenticated
+   Pollinations image endpoint used for icon generation), so the preview
+   illustrates the actual meaning of the definition rather than just the
+   bare word. Requires a stored Pollinations key, passed as ?key= since
+   <img> requests can't carry an Authorization header. */
+function buildDefinitionImageUrl(token, domain, defText){
+  const prompt = encodeURIComponent(
+    `illustration for a dictionary definition, ${token} (${domain}): ${(defText||'').slice(0,200)}, simple flat style`
+  );
+  const pollinationsKey = menuState.apiKeys.pollinations || '';
+  const keyParam = pollinationsKey ? `&key=${encodeURIComponent(pollinationsKey)}` : '';
+  return `https://gen.pollinations.ai/image/${prompt}?width=384&height=256&nologo=true${keyParam}`;
+}
+
+/* ---------- Translation (Google Translate, full-language keyless bridge, same endpoint as KI_sample) ---------- */
+async function translateText(text, targetLang){
+  if (!text) return '';
+  try{
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    return data[0].map(seg=>seg[0]).join('');
+  }catch(e){
+    console.error('translateText failed', e);
+    return text + ' (Übersetzung nicht verfügbar)';
+  }
+}
+
+/* ---------- Read-aloud ---------- */
+let ttsActiveButton = null, ttsPaused = false, ttsSession = 0, ttsPendingCount = 0;
+
+
+const GERMAN_VOICE_HINTS = {
+  female: ['katja','anna','petra','marlene','vicki','helena','ingrid','martha'],
+  male: ['conrad','stefan','markus','yannick','hans','klaus','daniel'],
+  child: ['kind','child','junior','kids'],
+  senior: ['senior','opa','oma','greta','gustav','old']
+};
+const PROFILE_TUNING = {
+  female: { pitch:1.1, rate:1 },
+  male: { pitch:0.85, rate:1 },
+  child: { pitch:1.6, rate:1.15 },
+  senior: { pitch:0.72, rate:0.85 }
+};
+function pickGermanVoice(profile){
+  if (!('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith('de'));
+  if (!voices.length) return null;
+  const hints = GERMAN_VOICE_HINTS[profile] || [];
+  const match = voices.find(v=>hints.some(h=>v.name.toLowerCase().includes(h)));
+  return match || voices[0];
+}
+
+function speak(text, lang){
+  if (!('speechSynthesis' in window)) { alert('Sprachausgabe wird in diesem Browser nicht unterstützt.'); return; }
+  const session = ttsSession; ttsPendingCount++;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang || 'de-DE';
+  const profile = menuState.voiceProfile || 'female';
+  if (u.lang.toLowerCase().startsWith('de')){
+    const voice = pickGermanVoice(profile);
+    if (voice) u.voice = voice;
+  }
+  const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
+  u.pitch = tuning.pitch; u.rate = tuning.rate;
+  u.onend = u.onerror = ()=>{
+    if (session !== ttsSession) return;
+    ttsPendingCount = Math.max(0, ttsPendingCount-1);
+    if (ttsPendingCount===0) resetActiveReadButton();
+  };
+  window.speechSynthesis.speak(u);
+}
+function stopSpeech(){
+  ttsSession++; ttsPendingCount=0;
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  resetActiveReadButton();
+}
+const ICON_PLAY = `<path d="M8 5v14l11-7z"/>`;
+const ICON_PAUSE = `<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>`;
+
+function resetReadAllButton(){
+  const btn = document.getElementById('btnReadAll');
+  btn.classList.remove('paused');
+  document.getElementById('readAllIcon').innerHTML = ICON_PLAY;
+  document.getElementById('readAllLabel').textContent = I18N[uiLang].readAll;
+  ttsActiveButton = null; ttsPaused = false;
+}
+
+/* A single button carries play / pause-resume / reset for its own row: a
+   2nd click while it's the active reader pauses it, a 3rd click resumes
+   it, and clicking any OTHER read button resets/stops this one first.
+   A small ↺ icon embedded next to it appears while this row is reading
+   or paused, letting the user restart the same definition from the
+   beginning without having to pause/resume through it. */
+function setDefReadButtonState(btn, state){
+  if (!btn) return;
+  if (btn.dataset.origLabel === undefined) btn.dataset.origLabel = btn.textContent;
+  btn.classList.remove('reading','paused');
+  if (state === 'reading'){ btn.classList.add('reading'); btn.textContent = '⏸'; }
+  else if (state === 'paused'){ btn.classList.add('paused'); btn.textContent = '▶'; }
+  else { btn.textContent = btn.dataset.origLabel; }
+  if (btn._resetBtn) btn._resetBtn.classList.toggle('show', state === 'reading' || state === 'paused');
+}
+
+
+function resetActiveReadButton(){
+  const allBtn = document.getElementById('btnReadAll');
+  if (ttsActiveButton === allBtn){
+    resetReadAllButton();
+  } else if (ttsActiveButton){
+    setDefReadButtonState(ttsActiveButton, 'idle');
+    ttsActiveButton = null; ttsPaused = false;
+  } else {
+    ttsActiveButton = null; ttsPaused = false;
+  }
+}
+
+
+function readSingleDefinition(w, domain, btn){
+  if (ttsActiveButton === btn){
+    if (ttsPaused){
+      window.speechSynthesis.resume(); ttsPaused = false;
+      setDefReadButtonState(btn, 'reading');
+    } else {
+      window.speechSynthesis.pause(); ttsPaused = true;
+      setDefReadButtonState(btn, 'paused');
+    }
+    return;
+  }
+  stopSpeech();
+  const text = w.defs[domain] || '';
+  if (!text) return;
+  speak(domain + '. ' + text, 'de-DE');
+  ttsActiveButton = btn;
+  ttsPaused = false;
+  setDefReadButtonState(btn, 'reading');
+}
+
+
+function restartSingleDefinition(w, domain, btn){
+  stopSpeech();
+  const text = w.defs[domain] || '';
+  if (!text) return;
+  speak(domain + '. ' + text, 'de-DE');
+  ttsActiveButton = btn;
+  ttsPaused = false;
+  setDefReadButtonState(btn, 'reading');
+}
+
+document.getElementById('btnReadPlural').onclick = ()=>{
+  if (!selectedWord) return;
+  stopSpeech();
+  const wordText = formatWordWithArticle(selectedWord);
+  const pluralText = formatPluralWithArticle(selectedWord);
+  const parts = [wordText, pluralText].filter(Boolean);
+  if (!parts.length) return;
+  speak(parts.join('. Plural: '), 'de-DE');
+};
+
+document.getElementById('btnReadAll').onclick = async ()=>{
+  const btn = document.getElementById('btnReadAll');
+  const icon = document.getElementById('readAllIcon');
+  const label = document.getElementById('readAllLabel');
+  if (!selectedWord) return;
+
+  if (ttsActiveButton === btn){
+    if (!ttsPaused){
+      window.speechSynthesis.pause(); ttsPaused=true;
+      btn.classList.add('paused'); icon.innerHTML = ICON_PLAY; label.textContent = I18N[uiLang].resume;
+    } else {
+      window.speechSynthesis.resume(); ttsPaused=false;
+      btn.classList.remove('paused'); icon.innerHTML = ICON_PAUSE; label.textContent = I18N[uiLang].readAll;
+    }
+    return;
+  }
+  stopSpeech();
+  ttsActiveButton = btn; ttsPaused = false;
+  btn.classList.remove('paused'); icon.innerHTML = ICON_PAUSE; label.textContent = I18N[uiLang].readAll;
+  for (const domain of selectedWord.domains){
+    if (ttsActiveButton !== btn) return; // stopped/cleared mid-loop
+    const text = selectedWord.defs[domain] || '';
+    if (!text) continue;
+    await new Promise(res=>{
+      const session = ttsSession;
+      const u = new SpeechSynthesisUtterance(domain + '. ' + text);
+      u.lang = 'de-DE';
+      const profile = menuState.voiceProfile || 'female';
+      const voice = pickGermanVoice(profile);
+      if (voice) u.voice = voice;
+      const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
+      u.pitch = tuning.pitch; u.rate = tuning.rate;
+      u.onend = u.onerror = ()=> res();
+      window.speechSynthesis.speak(u);
+    });
+  }
+  resetReadAllButton();
+};
+
+/* ---------- Target-language picker (full Google Translate list, searchable) ---------- */
+const langScrim = document.getElementById('langScrim');
+const langModal = document.getElementById('langModal');
+function closeLangModal(){ langModal.classList.remove('show'); langScrim.classList.remove('show'); }
+function renderLangList(filter){
+  const listEl = document.getElementById('langList');
+  listEl.innerHTML = '';
+  const f = (filter||'').trim().toLowerCase();
+  Object.keys(LANG_META).filter(name => !f || name.toLowerCase().includes(f)).forEach(name=>{
+    const btn = document.createElement('button');
+    btn.className = 'lang-item' + (name === menuState.targetLanguage ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = ()=>{
+      menuState.targetLanguage = name;
+      saveMenu();
+      document.getElementById('targetLangTriggerLabel').textContent = name;
+      document.querySelectorAll('.def-preview.show').forEach(el=>{ el.classList.remove('show'); el.innerHTML=''; });
+      closeLangModal();
+    };
+    listEl.appendChild(btn);
+  });
+}
+document.getElementById('targetLangTrigger').onclick = ()=>{
+  document.getElementById('langSearchInput').value = '';
+  renderLangList('');
+  langModal.classList.add('show'); langScrim.classList.add('show');
+};
+document.getElementById('closeLangModal').onclick = closeLangModal;
+langScrim.onclick = closeLangModal;
+document.getElementById('langSearchInput').addEventListener('input', (e)=> renderLangList(e.target.value));
+
+/* ---------- Discover strip: AI-generated related domain words, horizontally scrollable ---------- */
+async function renderDiscoverStrip(){
+  const strip = document.getElementById('discoverStrip');
+  strip.innerHTML = '';
+  const seedWords = Object.values(wordDB).flat().map(w=>w.token).slice(0,5).join(', ') || 'KI, Cybersicherheit';
+  const sys = `Schlage 8 kurze Fachbegriffe vor, die zu folgenden Bereichen oder bereits bekannten Wörtern passen (${seedWords}). Antworte auf Deutsch. Antworte AUSSCHLIESSLICH mit JSON: {"items":[{"token":"...","domain":"..."}]}`;
+  try{
+
+
+    const { rawText } = await callWithProviderFailover(sys, 'Vorschläge bitte.');
+    const match = rawText.match(/\{[\s\S]*\}/);
+    const parsed = match ? JSON.parse(match[0]) : null;
+    const items = parsed?.items || [];
+    items.forEach(it=>{
+      const card = document.createElement('div');
+      card.className='discover-card';
+      card.innerHTML = `<div class="dc-token">${escapeHtml(it.token)}</div><div class="dc-domain">${escapeHtml(it.domain||'')}</div>`;
+      card.onclick = ()=>{ document.getElementById('searchInput').value = it.token; triggerSearch(); };
+      strip.appendChild(card);
+    });
+  }catch(e){
+    console.error('renderDiscoverStrip failed', e);
+  }
+  startDiscoverAutoScroll();
+}
+
+/* ---------- Bottom discover strip: slow continuous horizontal auto-scroll ----------
+   Scrolls the card strip sideways on its own at a slow, steady pace and
+   loops back to the start once it reaches the end. Pauses while the user
+   is hovering/touching it so manual browsing still works normally. */
+let discoverScrollTimer = null;
+let discoverScrollPaused = false;
+function startDiscoverAutoScroll(){
+  const strip = document.getElementById('discoverStrip');
+  if (!strip) return;
+  if (discoverScrollTimer) clearInterval(discoverScrollTimer);
+  discoverScrollTimer = setInterval(()=>{
+    if (discoverScrollPaused) return;
+    if (strip.scrollWidth <= strip.clientWidth) return;
+    if (strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1){
+      strip.scrollLeft = 0; // loop back to the start
+    } else {
+      strip.scrollLeft += 1;
+    }
+  }, 45);
+}
+(function initDiscoverAutoScrollPause(){
+  const strip = document.getElementById('discoverStrip');
+  if (!strip) return;
+  strip.addEventListener('mouseenter', ()=>{ discoverScrollPaused = true; });
+  strip.addEventListener('mouseleave', ()=>{ discoverScrollPaused = false; });
+  strip.addEventListener('touchstart', ()=>{ discoverScrollPaused = true; }, {passive:true});
+  strip.addEventListener('touchend', ()=>{ discoverScrollPaused = false; }, {passive:true});
+})();
+
+
+(async function bootstrapApp(){
+  const vaultWasLoaded = await loadApiKeyVault();
+  await migrateLegacyPlaintextKeys(vaultWasLoaded);
+  init();
+})();
+</script>
+</body>
+</html>
