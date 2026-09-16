@@ -3369,7 +3369,7 @@ browseFontLibBtn.addEventListener('click', async () => {
     return;
   }
   try {
-    const res = await fetch('/fonts/manifest.json');
+    const res = await fetch('../fonts/manifest.json');
     if (!res.ok) throw new Error('Manifest not found');
     const files = await res.json();
     fontLibList.innerHTML = '';

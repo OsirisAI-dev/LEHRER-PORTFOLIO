@@ -1368,7 +1368,7 @@
     </div>
 
 <!-- Chart.js loading (local file with fallback to CDN) -->
-<script src="/lib/chart/v4.5.1/chart.umd.min.js"></script>
+<script src="../lib/chart/v4.5.1/chart.umd.min.js"></script>
 <script>if(typeof Chart==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"><\/script>');}</script>
 <!-- Shared Osiris library storage + PDF/EPUB extraction, same files the
      shelves already load — this assumes DASHBOARD.html sits in the same
@@ -1376,9 +1376,9 @@
      existing "Ma bibliothèque" link above, which uses a plain relative
      path with no folder prefix). Adjust the two "shelves/libs/..." paths
      below if your actual folder layout differs. -->
-<script src="/lib/jszip/v1/jszip.min.js"></script>
-<script src="/lib/pdf/v1/pdf.min.js"></script>
-<script src="/js/core/osiris-core.js"></script>
+<script src="../lib/jszip/v1/jszip.min.js"></script>
+<script src="../lib/pdf/v1/pdf.min.js"></script>
+<script src="../js/core/osiris-core.js"></script>
 
 <script>
     console.assert(typeof Chart === 'function', 'Chart.js n\'est pas disponible.');

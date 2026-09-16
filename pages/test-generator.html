@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klassenarbeit Editor</title>
     
-    <script src="/lib/htmldocx/v1/html-docx.js"></script>
-    <script src="/js/core/osiris-educore.js"></script>
-    <script src="/lib/mammoth/v1/mammoth.browser.js"></script>
+    <script src="../lib/htmldocx/v1/html-docx.js"></script>
+    <script src="../js/core/osiris-educore.js"></script>
+    <script src="../lib/mammoth/v1/mammoth.browser.js"></script>
     <script>
 
 
@@ -481,7 +481,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
                 <option value="50">50 lignes</option>
             </select>
 
-            <button id="ai-generate-btn" onclick="generateText()" style="width: 100%; background: var(--primary); margin-bottom: 4px;"><img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Générer</button>
+            <button id="ai-generate-btn" onclick="generateText()" style="width: 100%; background: var(--primary); margin-bottom: 4px;"><img src="../icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Générer</button>
             <button id="ai-stop-btn" onclick="stopGeneration()" disabled style="width: 100%; background: var(--danger);">? Stop</button>
         </div>
 
@@ -577,7 +577,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
 
         
         <button id="ai-exercises-only-btn" onclick="generateExercisesOnly()">
-            <span data-i18n="genExOnlyBtn"><img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Générer les exercices (à partir du texte actuel)</span>
+            <span data-i18n="genExOnlyBtn"><img src="../icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Générer les exercices (à partir du texte actuel)</span>
         </button>
     </div>
 </div>
@@ -1742,7 +1742,7 @@ function setLanguage(l) {
 
     const box = document.getElementById('ai-model-display');
     if (box && box.textContent.includes('?')) {
-        box.textContent = translations[l]['aiModelWarning'] || '<img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Choisissez un modèle IA dans le Vault du Hub.';
+        box.textContent = translations[l]['aiModelWarning'] || '<img src="../icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Choisissez un modèle IA dans le Vault du Hub.';
     }
 }
 
@@ -1774,7 +1774,7 @@ function updateAiModelDisplay(provider, id, name) {
         const lang = localStorage.getItem('lang') || 'fr';
         box.textContent = (translations[lang] && translations[lang]['aiModelWarning']) 
             ? translations[lang]['aiModelWarning'] 
-            : '<img src="/icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Choisissez un modèle IA dans le Vault du Hub.';
+            : '<img src="../icons/brainstorm-svgrepo-com.svg" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"> Choisissez un modèle IA dans le Vault du Hub.';
         box.style.opacity = '0.85';
     } else {
         box.textContent = '🤖 ' + (name || id) + (provider ? ' (' + provider + ')' : '');
