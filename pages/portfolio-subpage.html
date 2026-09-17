@@ -697,6 +697,45 @@
     }
   }
 
+  /* --- Rail deploy button (base styles, hidden on desktop) --- */
+  .rail-deploy-btn {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 199;
+    width: 28px;
+    height: 52px;
+    border: none;
+    border-radius: 0 10px 10px 0;
+    background: rgba(28, 28, 30, 0.55);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.2s ease, left 0.3s cubic-bezier(.4, 0, .2, 1);
+    padding: 0;
+  }
+  .rail-deploy-btn:hover { background: rgba(28, 28, 30, 0.75); }
+  .rail-deploy-btn svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+  .rail-deploy-btn.open { left: 260px; }
+  .rail-deploy-btn.open svg { transform: rotate(180deg); }
+
+  /* --- Rail backdrop overlay (base styles) --- */
+  .rail-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 150;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+  }
+
   @media (max-width: 640px) {
     /* --- Topbar: keep horizontal, compact --- */
     .topbar { flex-wrap: nowrap; gap: 4px; }
@@ -781,45 +820,6 @@
 
     /* --- Content area adjusts --- */
     .content { padding: 20px 16px; }
-  }
-
-  /* --- Rail deploy button (base styles, hidden on desktop) --- */
-  .rail-deploy-btn {
-    display: none;
-    position: fixed;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 199;
-    width: 28px;
-    height: 52px;
-    border: none;
-    border-radius: 0 10px 10px 0;
-    background: rgba(28, 28, 30, 0.55);
-    color: #fff;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
-    transition: background 0.2s ease, left 0.3s cubic-bezier(.4, 0, .2, 1);
-    padding: 0;
-  }
-  .rail-deploy-btn:hover { background: rgba(28, 28, 30, 0.75); }
-  .rail-deploy-btn svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
-  .rail-deploy-btn.open { left: 260px; }
-  .rail-deploy-btn.open svg { transform: rotate(180deg); }
-
-  /* --- Rail backdrop overlay (base styles) --- */
-  .rail-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 150;
-    backdrop-filter: blur(1px);
-    -webkit-backdrop-filter: blur(1px);
   }
 
   /* ===== Sticker-Popup "Verknüpfung hinzufügen" — ausgelöst vom
