@@ -698,36 +698,128 @@
   }
 
   @media (max-width: 640px) {
-    .topbar { flex-wrap: wrap; }
+    /* --- Topbar: keep horizontal, compact --- */
+    .topbar { flex-wrap: nowrap; gap: 4px; }
+
+    /* --- Tabs: horizontal scrollable row (NOT vertical stack) --- */
     .tab-group-wrap::before,
     .tab-group-wrap::after { display: none; }
     .tab-group {
-      order: 3;
-      width: 100%;
-      max-width: 100%;
-      margin-top: 8px;
-      flex-direction: column;
-      align-items: stretch;
-      overflow-x: visible;
+      flex-direction: row;
+      align-items: flex-end;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-left: 6px;
+      padding-right: 6px;
     }
-    .page-tab { flex: 1 1 auto; width: 100%; max-width: 100%; min-width: 0; padding: 10px 12px; font-size: 13px; text-align: left; border-radius: 8px; }
-    /* Gestapeltes Layout: Eckausschnitt/Anheben passt hier nicht mehr,
-       Tabs verhalten sich wie normale Listenzeilen */
+    .tab-group::-webkit-scrollbar { display: none; }
+    .page-tab {
+      flex: 0 0 auto;
+      min-width: 0;
+      max-width: 160px;
+      padding: 8px 10px;
+      font-size: 12px;
+      border-radius: 8px 8px 0 0;
+    }
+    .page-tab .tab-icon { width: 14px; height: 14px; }
+    .page-tab .tab-label { max-width: 80px; }
+
+    /* Portfolio-style clips still work at small size */
     .tab-group.nav-portefolio .page-tab {
-      clip-path: none;
-      transform: none;
-      filter: none;
-      border-radius: 8px;
+      clip-path: polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px);
+      transform: translateY(4px);
     }
+    .tab-group.nav-portefolio .page-tab.active { transform: translateY(0); }
+
+    /* --- Panel: stack vertically, full width --- */
     .panel { border-radius: 16px; flex-direction: column; }
-    .rail { width: 100%; flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid #eee; padding: 8px 12px; }
-    .rail.expanded { width: 100%; }
-    .subpage-list { flex-direction: row; padding: 0; overflow-x: auto; }
+
+    /* --- Rail: hidden off-screen left drawer --- */
+    .rail {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100vh; height: 100dvh;
+      transform: translateX(-100%);
+      flex-direction: column;
+      border-right: 1px solid var(--border-color);
+      border-bottom: none;
+      background: var(--panel-bg);
+      z-index: 200;
+      padding: 16px 0;
+      transition: transform 0.3s cubic-bezier(.4, 0, .2, 1);
+      box-shadow: none;
+      overflow-y: auto;
+    }
+    .rail.mobile-open {
+      transform: translateX(0);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+    }
+
+    /* Keep rail vertical layout when deployed */
+    .subpage-list { flex-direction: column; padding: 0 10px; overflow-x: visible; }
+    .subpage-item { flex-shrink: initial; }
+    .subpage-item .label { opacity: 1; max-width: none; }
     .rail-toggle { display: none; }
-    .subpage-item { flex-shrink: 0; }
-    .subpage-item .label { opacity: 1; max-width: 110px; }
-    .rail-group-label { display: none; }
-    .content { padding: 28px 24px; }
+    .rail-group-label { opacity: 1; display: block; }
+    .rail-edit-lock { display: flex; }
+    .rail-add-btn { margin-top: auto; }
+
+    /* --- Deploy arrow button (floating, overlapping content) --- */
+    .rail-deploy-btn {
+      display: flex;
+    }
+
+    /* --- Backdrop overlay --- */
+    .rail-backdrop {
+      display: none;
+    }
+    .rail-backdrop.active {
+      display: block;
+    }
+
+    /* --- Content area adjusts --- */
+    .content { padding: 20px 16px; }
+  }
+
+  /* --- Rail deploy button (base styles, hidden on desktop) --- */
+  .rail-deploy-btn {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 199;
+    width: 28px;
+    height: 52px;
+    border: none;
+    border-radius: 0 10px 10px 0;
+    background: rgba(28, 28, 30, 0.55);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.2s ease, left 0.3s cubic-bezier(.4, 0, .2, 1);
+    padding: 0;
+  }
+  .rail-deploy-btn:hover { background: rgba(28, 28, 30, 0.75); }
+  .rail-deploy-btn svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+  .rail-deploy-btn.open { left: 260px; }
+  .rail-deploy-btn.open svg { transform: rotate(180deg); }
+
+  /* --- Rail backdrop overlay (base styles) --- */
+  .rail-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 150;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
   }
 
   /* ===== Sticker-Popup "Verknüpfung hinzufügen" — ausgelöst vom
@@ -1541,6 +1633,14 @@
 
     <div class="content" id="content"></div>
   </div>
+
+  <!-- Mobile: deploy arrow for side-drawer rail (hidden on desktop) -->
+  <button class="rail-deploy-btn" id="railDeployBtn" title="Verknüpfungen öffnen" aria-label="Verknüpfungen öffnen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+
+  <!-- Mobile: backdrop overlay when rail drawer is open -->
+  <div class="rail-backdrop" id="railBackdrop"></div>
 
   <!-- ===== Vault-FAB — erscheint nur auf Verknüpfungen, die im
        Bearbeiten-Popup als "API-Seite" markiert wurden, und nur wenn
@@ -3594,6 +3694,57 @@ stickyReset.addEventListener('click', () => {
 });
 
 render();
+
+/* ===== Mobile rail drawer toggle ===== */
+(function () {
+  const rail = document.getElementById('rail');
+  const deployBtn = document.getElementById('railDeployBtn');
+  const backdrop = document.getElementById('railBackdrop');
+  if (!rail || !deployBtn || !backdrop) return;
+
+  function isMobile() {
+    return window.matchMedia('(max-width: 640px)').matches;
+  }
+
+  function openDrawer() {
+    rail.classList.add('mobile-open');
+    deployBtn.classList.add('open');
+    backdrop.classList.add('active');
+  }
+
+  function closeDrawer() {
+    rail.classList.remove('mobile-open');
+    deployBtn.classList.remove('open');
+    backdrop.classList.remove('active');
+  }
+
+  function toggleDrawer() {
+    if (!isMobile()) return;
+    if (rail.classList.contains('mobile-open')) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  }
+
+  deployBtn.addEventListener('click', toggleDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+
+  /* Auto-close when user taps a shortcut item */
+  rail.addEventListener('click', function (e) {
+    if (!isMobile()) return;
+    const item = e.target.closest('.subpage-item');
+    if (item) {
+      /* Small delay so the navigation visually registers before closing */
+      setTimeout(closeDrawer, 180);
+    }
+  });
+
+  /* Clean up drawer state if viewport resizes past breakpoint */
+  window.matchMedia('(max-width: 640px)').addEventListener('change', function (e) {
+    if (!e.matches) closeDrawer();
+  });
+})();
 </script>
 
 <script>

@@ -977,8 +977,28 @@
             .navbar-title { font-size: 1rem; letter-spacing: 0.5px; }
             .navbar-controls { gap: 6px; }
             .ctrl-btn { padding: 5px 8px; font-size: 0.75rem; }
-            .school-bar, .sub-navbar { padding: 8px 12px; }
-            .school-pill, .class-chip { padding: 5px 10px; }
+
+            /* Horizontal scrollable navbar rows — no wrapping */
+            .school-bar, .sub-navbar {
+                padding: 6px 12px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;          /* Firefox */
+            }
+            .school-bar::-webkit-scrollbar,
+            .sub-navbar::-webkit-scrollbar { display: none; }
+
+            #schoolPillsContainer,
+            #classChipsContainer {
+                flex-wrap: nowrap !important;
+            }
+
+            .school-pill, .class-chip {
+                padding: 5px 10px;
+                flex-shrink: 0;                 /* prevent pills from squishing */
+            }
+
             .editable-input { font-size: 0.85rem; }
             .main-container { padding: 12px; width: 100%; }
             .class-header { font-size: 1.1rem; }
