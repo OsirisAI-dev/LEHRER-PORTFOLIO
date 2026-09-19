@@ -326,7 +326,7 @@
       return Object.assign(defaults, saved);
     } catch (e) { return defaults; }
   }
-  function savePrefs() { localStorage.setItem('osiris_hub_prefs', JSON.stringify(appState)); }
+  function savePrefs() { var _saved = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); localStorage.setItem('osiris_hub_prefs', JSON.stringify(Object.assign({}, _saved, appState))); }
 
   var appState = loadPrefs();
   // Defensive: a preference saved before this pass could still say

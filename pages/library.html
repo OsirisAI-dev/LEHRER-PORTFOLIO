@@ -645,7 +645,7 @@
   }
 
   function savePrefs() {
-    localStorage.setItem('osiris_hub_prefs', JSON.stringify(appState));
+    var _saved = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); localStorage.setItem('osiris_hub_prefs', JSON.stringify(Object.assign({}, _saved, appState)));
   }
 
   function switchShelf(key) {
