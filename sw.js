@@ -18,7 +18,7 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v27';
+const CACHE_VERSION = 'v29';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
@@ -39,8 +39,8 @@ const PRECACHE_URLS = [
   './index.html',
   './offline.html',
   './manifest.json', 
-  './OSIRIS_Tutoriel_PWA_DE.pdf',
-  './OSIRIS_Tutoriel_PWA_FR.pdf',
+  './data/LEHRERPORTFOLIO_Tutoriel_PWA_DE.pdf',
+  './data/LEHRERPORTFOLIO_Tutoriel_PWA_FR.pdf',
   './db/default_woerterbuch.json',
   './db/default_fachwoerterbuch.json',
   './db/default_testbank.json',
@@ -233,7 +233,8 @@ async function networkWithCacheFallback(request) {
 
 /** Return the pre-cached offline page */
 async function offlineFallback() {
-  const cached = await caches.match('/offline.html');
+  const offlineUrl = new URL('offline.html', self.location).href;
+  const cached = await caches.match(offlineUrl);
   return cached || new Response(
     '<h1>Offline</h1><p>Die App ist offline und die Seite wurde noch nicht gecacht.</p>',
     { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }
