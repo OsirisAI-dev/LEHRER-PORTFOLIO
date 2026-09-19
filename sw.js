@@ -39,6 +39,8 @@ const PRECACHE_URLS = [
   './index.html',
   './offline.html',
   './manifest.json', 
+  './OSIRIS_Tutoriel_PWA_DE.pdf',
+  './OSIRIS_Tutoriel_PWA_FR.pdf',
   './db/default_woerterbuch.json',
   './db/default_fachwoerterbuch.json',
   './db/default_testbank.json',
@@ -53,7 +55,6 @@ const PRECACHE_URLS = [
   './pages/woerterbuch.html',
   './pages/fachwoerterbuch.html',
   './pages/portfolio-subpage.html',
-
   './pages/lehrskizze-editor.html',
 
   './js/core/config.js',
