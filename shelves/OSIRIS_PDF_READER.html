@@ -524,9 +524,10 @@ const MAX_CANVAS_DIM = 4096;
 async function renderPageInto(n, pw) {
   if (rendering.has(n)) return;
   rendering.add(n);
+  const targetScale = scale;
   try {
     const page     = await pdfDoc.getPage(n);
-    const vp       = page.getViewport({ scale });
+    const vp       = page.getViewport({ scale: targetScale });
     const W        = Math.round(vp.width);
     const H        = Math.round(vp.height);
 
@@ -559,6 +560,15 @@ async function renderPageInto(n, pw) {
         if (rt?.promise) await rt.promise;
       }
     } catch(_) { /* scanned PDF — canvas-only */ }
+
+    
+    if (scale !== targetScale) {
+      if (renderObs) {
+        renderObs.unobserve(pw);
+        renderObs.observe(pw);
+      }
+      return;
+    }
 
     /* Inject into wrapper */
     pw.innerHTML = '';
@@ -610,6 +620,10 @@ function setScale(s) {
     pw.style.width  = Math.round(vp.width  * scale) + 'px';
     pw.style.height = Math.round(vp.height * scale) + 'px';
     clearPage(pw);
+      if (renderObs) {
+        renderObs.unobserve(pw);
+        renderObs.observe(pw);
+      }
   });
   viewer.dispatchEvent(new Event('scroll')); // nudge observers
 }
