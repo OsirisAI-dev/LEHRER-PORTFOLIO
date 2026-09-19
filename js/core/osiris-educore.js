@@ -211,7 +211,7 @@
   };
 
 
-  var KEYLESS_PROVIDERS = [];
+  var KEYLESS_PROVIDERS = ['pollinations'];
 
 
   var API_KEY_PATTERNS = {
@@ -453,7 +453,7 @@
     github: "https://models.github.ai/inference/chat/completions",
     openrouter: "https://openrouter.ai/api/v1/chat/completions",
     huggingface: "https://router.huggingface.co/v1/chat/completions",
-    pollinations: "https://gen.pollinations.ai/v1/chat/completions",
+    pollinations: "https://text.pollinations.ai/openai",
     google: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
   };
 
@@ -473,7 +473,7 @@
       }
       for (var i = 0; i < order.length; i++) {
         var p = order[i];
-        if (!keys[p]) continue;
+        if (!keys[p] && KEYLESS_PROVIDERS.indexOf(p) === -1) continue;
         var modelList = FREE_MODELS[p] || [];
         if (!modelList.length) continue;
         var savedId = models[p];
@@ -492,7 +492,7 @@
       if (preferredProvider) {
         order = [preferredProvider].concat(order.filter(function (p) { return p !== preferredProvider; }));
       }
-      var candidates = order.filter(function (p) { return !!keys[p]; });
+      var candidates = order.filter(function (p) { return !!keys[p] || KEYLESS_PROVIDERS.indexOf(p) !== -1; });
       if (!candidates.length) return Promise.reject(new Error("no API key configured for any provider"));
 
       var errors = [];
@@ -596,7 +596,7 @@
   function aiClassifyBatch(entries) {
     return loadManualKeys().then(function (keys) {
       keys = keys || {};
-      var candidates = PROVIDER_FAILOVER_ORDER.filter(function (p) { return !!keys[p]; });
+      var candidates = PROVIDER_FAILOVER_ORDER.filter(function (p) { return !!keys[p] || KEYLESS_PROVIDERS.indexOf(p) !== -1; });
       if (!candidates.length) return Promise.reject(new Error("no API key available"));
 
       var trimmedExcerpts = entries.map(function (e) {

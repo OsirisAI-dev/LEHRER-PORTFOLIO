@@ -22,7 +22,7 @@ const CACHE_VERSION = 'v29';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
-  'gen.pollinations.ai',
+  'text.pollinations.ai',
   'api.cerebras.ai',
   'api.groq.com',
   'generativelanguage.googleapis.com',

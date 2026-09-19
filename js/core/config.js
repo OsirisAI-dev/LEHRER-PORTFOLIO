@@ -25,7 +25,7 @@
 
   const CHAT_ENDPOINTS = {
 
-    pollinations: 'https://gen.pollinations.ai/v1/chat/completions',
+    pollinations: 'https://text.pollinations.ai/openai',
 
     cerebras:     'https://api.cerebras.ai/v1/chat/completions',
     groq:         'https://api.groq.com/openai/v1/chat/completions',
