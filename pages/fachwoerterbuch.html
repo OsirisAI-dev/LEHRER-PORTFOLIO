@@ -96,14 +96,14 @@ body.font-mono h1, body.font-mono h2, body.font-mono h3{font-family:'Courier New
 .wl-btn.primary{border-color:var(--accent-blue); color:var(--accent-blue);}
 
 /* Main */
-main{padding:20px clamp(16px,4vw,60px); max-width:900px; margin:0 auto;}
+main{padding:20px clamp(16px,4vw,60px);}
 
 .search-card{background:var(--bg-panel); border:1px solid var(--border-dim); border-radius:16px; padding:18px; margin-bottom:16px;}
 .search-card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
 .search-label{font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--accent-gold); font-weight:700; font-family:var(--font-hand);}
-.search-row{display:flex; align-items:center; gap:8px; background:var(--bg-input); border-radius:999px; padding:6px 8px 6px 16px;}
+.search-row{display:flex; align-items:center; gap:8px; background:var(--bg-input); border-radius:999px; padding:6px 8px 6px 16px; width:100%; box-sizing:border-box; overflow:hidden; flex-wrap:nowrap;}
 .search-row input{
-  flex:1; background:transparent; border:none; outline:none; color:var(--text-light); font-size:16px; font-family:var(--font-hand);
+  flex:1 1 0%; min-width:0; background:transparent; box-sizing:border-box; border:none; outline:none; color:var(--text-light); font-size:16px; font-family:var(--font-hand);
 }
 .sq-btn{
   width:34px; height:34px; border-radius:50%; border:none; background:var(--bg-dark); color:var(--text-dim);
