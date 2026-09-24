@@ -47,6 +47,36 @@
             }
         } catch(e) {}
 
+        // Auto-inject Manuels et Guides
+        try {
+            let lib = JSON.parse(global.localStorage.getItem('osiris_library_shelf') || '[]');
+            const manuels = [{"filename": "Allemand 2nd-VF_060825 (1).pdf", "title": "Allemand 2nd VF 060825 (1)"}, {"filename": "Allemand PREMIE\u011aRE-VF_060825 (3).pdf", "title": "Allemand PREMIE\u011aRE VF 060825 (3)"}, {"filename": "Allemand PREMIE\u0300RE 2025_251002_161539.pdf", "title": "Allemand PREMIE\u0300RE 2025 251002 161539"}, {"filename": "ALLEMAND_Manuel 3e du 26092024 Specimen-1.pdf", "title": "ALLEMAND Manuel 3e du 26092024 Specimen 1"}, {"filename": "ARBEITSHEFT.pdf", "title": "ARBEITSHEFT"}, {"filename": "GUIDE Allemand 2nd-1_\u00e0 diffuser_251002_071502.pdf", "title": "GUIDE Allemand 2nd 1 \u00e0 diffuser 251002 071502"}, {"filename": "Guide-Allemand 2-3e-20-09-24.pdf", "title": "Guide Allemand 2 3e 20 09 24"}, {"filename": "Guide-Allemand-4e-20-09-240001.pdf", "title": "Guide Allemand 4e 20 09 240001"}, {"filename": "JD Editions_ALLEMAND-3e.pdf", "title": "JD Editions ALLEMAND 3e"}, {"filename": "JD Editions_ALLEMAND-4e.pdf", "title": "JD Editions ALLEMAND 4e"}, {"filename": "TEXTBUCH 3 REDUIT_125626.pdf", "title": "TEXTBUCH 3 REDUIT 125626"}];
+            let changed = false;
+            let currentLinks = lib.map(b => b.link || "");
+            
+            manuels.forEach(m => {
+                const link = '../data/manuels/' + m.filename;
+                if (!currentLinks.includes(link)) {
+                    lib.push({
+                        id: makeBookId() + Math.floor(Math.random()*1000),
+                        title: m.title,
+                        description: 'Manuel / Guide Officiel',
+                        author: 'Documentation',
+                        cover: '',
+                        type: 'application/pdf',
+                        link: link,
+                        timestamp: Date.now()
+                    });
+                    changed = true;
+                }
+            });
+            if (changed) {
+                global.localStorage.setItem('osiris_library_shelf', JSON.stringify(lib));
+                arr = lib;
+            }
+        } catch(e) {}
+
+
       
       if (!global.localStorage.getItem('osiris_onboarded_pdf_v2')) {
           global.localStorage.setItem('osiris_onboarded_pdf_v2', 'true');
