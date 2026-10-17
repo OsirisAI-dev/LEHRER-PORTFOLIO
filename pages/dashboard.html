@@ -339,7 +339,46 @@
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+        }
+
+        .class-size-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px 28px;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .class-size-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: default;
+        }
+
+        .class-size-input {
+            width: 64px;
+            padding: 4px 8px;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-color);
+            background-color: var(--white);
+            border: 1px solid var(--border-grey);
+            border-radius: 6px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .class-size-input:hover,
+        .class-size-input:focus {
+            border-color: var(--primary-hover);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
         }
 
         /* --- Subject Cards --- */
@@ -969,6 +1008,25 @@
             .progress-bar-fill {
                 background-color: #1a1a1a !important;
             }
+
+            .class-size-input {
+                border: none !important;
+                background: transparent !important;
+                color: #000000 !important;
+                width: auto !important;
+                max-width: 50px !important;
+                padding: 0 2px !important;
+                text-align: left !important;
+                -moz-appearance: textfield;
+            }
+            .class-size-input::-webkit-outer-spin-button,
+            .class-size-input::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            .class-size-input::placeholder {
+                color: transparent !important;
+            }
         }
 
         /* --- Mobile Adaptive Layout --- */
@@ -1001,7 +1059,9 @@
 
             .editable-input { font-size: 0.85rem; }
             .main-container { padding: 12px; width: 100%; }
-            .class-header { font-size: 1.1rem; }
+            .class-header { font-size: 1.1rem; gap: 10px 16px; }
+            .class-size-group { font-size: 0.92rem; gap: 10px 14px; }
+            .class-size-input { width: 52px; font-size: 0.9rem; padding: 3px 6px; }
             .subject-header { padding: 8px 12px; font-size: 1rem; flex-wrap: wrap; gap: 8px; }
             .action-buttons-row { flex-direction: column; }
             .action-btn, .pdf-btn { padding: 12px 16px; font-size: 0.9rem; }
@@ -1212,6 +1272,20 @@
 
         <div class="class-header">
             <span id="classHeaderLabel">Dashboard: Classe</span>
+            <div class="class-size-group" id="classSizeGroup">
+                <label class="class-size-item">
+                    <span id="classEffectifLabel">Effectif :</span>
+                    <input type="number" min="0" id="classEffectifInput" class="class-size-input" placeholder="0" oninput="updateClassSize('effectif', this.value)">
+                </label>
+                <label class="class-size-item">
+                    <span id="classBoysLabel">Garçons :</span>
+                    <input type="number" min="0" id="classBoysInput" class="class-size-input" placeholder="0" oninput="updateClassSize('boys', this.value)">
+                </label>
+                <label class="class-size-item">
+                    <span id="classGirlsLabel">Filles :</span>
+                    <input type="number" min="0" id="classGirlsInput" class="class-size-input" placeholder="0" oninput="updateClassSize('girls', this.value)">
+                </label>
+            </div>
         </div>
 
         <!-- Dynamic Subjects Container -->
@@ -1702,6 +1776,10 @@
                     {
                         id: 'cls_1',
                         name: 'Nouvelle Classe',
+                        effectif: '',
+                        boys: '',
+                        girls: '',
+                        effectifManual: false,
                         showExtInput: true,
                         extListUrl: '',
                         subjects: [],
@@ -1730,6 +1808,9 @@
             title: 'MON TABLEAU DE BORD',
             classes: 'Classes:',
             dashHeader: '',
+            effectifLabel: 'Effectif :',
+            boysLabel: 'Garçons :',
+            girlsLabel: 'Filles :',
             addSubject: '+ Ajouter Matière',
             addBook: '+ Ajouter Livre',
             colBook: 'Livre',
@@ -1841,6 +1922,9 @@
             title: 'MEIN DASHBOARD',
             classes: 'Klassen:',
             dashHeader: '',
+            effectifLabel: 'Schülerzahl :',
+            boysLabel: 'Jungen :',
+            girlsLabel: 'Mädchen :',
             addSubject: '+ Fach hinzufügen',
             addBook: '+ Buch hinzufügen',
             colBook: 'Buch',
@@ -1992,6 +2076,10 @@
                 if (!Array.isArray(cls.evaluations)) cls.evaluations = [];
                 if (typeof cls.extListUrl !== 'string') cls.extListUrl = '';
                 if (typeof cls.showExtInput !== 'boolean') cls.showExtInput = true;
+                if (cls.effectif === undefined || cls.effectif === null) cls.effectif = '';
+                if (cls.boys === undefined || cls.boys === null) cls.boys = '';
+                if (cls.girls === undefined || cls.girls === null) cls.girls = '';
+                if (typeof cls.effectifManual !== 'boolean') cls.effectifManual = false;
                 cls.evaluations.forEach((ev, evIdx) => {
                     if (!ev.pointeurData || typeof ev.pointeurData !== 'object') ev.pointeurData = null;
                     if (typeof ev.id !== 'string' || !ev.id) ev.id = 'ev_' + Date.now() + '_' + evIdx;
@@ -2220,7 +2308,43 @@
         const lang = i18n[appState.lang];
         const activeClass = getActiveClass();
         document.getElementById('classHeaderLabel').textContent = `${lang.dashHeader} ${activeClass ? activeClass.name : ''}`;
+        document.getElementById('classEffectifLabel').textContent = lang.effectifLabel;
+        document.getElementById('classBoysLabel').textContent = lang.boysLabel;
+        document.getElementById('classGirlsLabel').textContent = lang.girlsLabel;
+
+        const effInput = document.getElementById('classEffectifInput');
+        const boysInput = document.getElementById('classBoysInput');
+        const girlsInput = document.getElementById('classGirlsInput');
+        if (activeClass && effInput && boysInput && girlsInput) {
+            effInput.value = activeClass.effectif !== undefined && activeClass.effectif !== null ? activeClass.effectif : '';
+            boysInput.value = activeClass.boys !== undefined && activeClass.boys !== null ? activeClass.boys : '';
+            girlsInput.value = activeClass.girls !== undefined && activeClass.girls !== null ? activeClass.girls : '';
+        }
         renderExtList();
+    }
+
+    function updateClassSize(field, rawValue) {
+        const cls = getActiveClass();
+        if (!cls) return;
+        const parsed = parseInt(rawValue, 10);
+        const cleanVal = (rawValue === '' || isNaN(parsed)) ? '' : Math.max(0, parsed);
+        cls[field] = cleanVal;
+
+        if (field === 'effectif') {
+            cls.effectifManual = (cleanVal !== '');
+        } else if (field === 'boys' || field === 'girls') {
+            const hasBoys = cls.boys !== '' && cls.boys !== undefined && cls.boys !== null;
+            const hasGirls = cls.girls !== '' && cls.girls !== undefined && cls.girls !== null;
+            if ((hasBoys && hasGirls) || !cls.effectifManual) {
+                cls.effectif = (hasBoys || hasGirls)
+                    ? (parseInt(cls.boys, 10) || 0) + (parseInt(cls.girls, 10) || 0)
+                    : '';
+                if (hasBoys && hasGirls) cls.effectifManual = false;
+                const effInput = document.getElementById('classEffectifInput');
+                if (effInput) effInput.value = cls.effectif;
+            }
+        }
+        schedulePersist();
     }
 
     function toggleEditMode() {
@@ -2295,6 +2419,10 @@
             classes: [{
                 id: 'cls_' + Date.now(),
                 name: lang.newClass,
+                effectif: '',
+                boys: '',
+                girls: '',
+                effectifManual: false,
                 showExtInput: true,
                 extListUrl: '',
                 subjects: [],
@@ -2377,6 +2505,10 @@
         school.classes.push({
             id: 'cls_' + Date.now(),
             name: lang.newClass,
+            effectif: '',
+            boys: '',
+            girls: '',
+            effectifManual: false,
             showExtInput: true,
             extListUrl: '',
             subjects: [],

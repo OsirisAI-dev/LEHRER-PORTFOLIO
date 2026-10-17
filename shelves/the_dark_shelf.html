@@ -882,7 +882,7 @@
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', quality || 0.85));
+        resolve(canvas.toDataURL('image/jpeg', quality || 0.65));
       };
       img.onerror = function () { resolve(dataUrl); };
       img.src = dataUrl;
@@ -980,7 +980,7 @@
           const sw = W / scale, sh = H / scale;
           const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
           ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
-          resolve(canvas.toDataURL('image/jpeg', 0.92));
+          resolve(canvas.toDataURL('image/jpeg', 0.65));
         };
         img.onerror = () => reject(new Error('Could not read image'));
         img.src = e.target.result;
@@ -1171,13 +1171,13 @@
       return pdfjsLib.getDocument({ data: buf }).promise;
     }).then(function (pdf) {
       return pdf.getPage(1).then(function (page) {
-        const viewport = page.getViewport({ scale: 1.4 });
+        var baseViewport = page.getViewport({ scale: 1 }); const viewport = page.getViewport({ scale: 140 / baseViewport.width });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
         return page.render({ canvasContext: ctx, viewport }).promise.then(function () {
-          const cover = canvas.toDataURL('image/jpeg', 0.85);
+          const cover = canvas.toDataURL('image/jpeg', 0.65);
           return pdf.getMetadata().then(function (m) {
             const info = (m && m.info) || {};
             return { cover, meta: { title: info.Title || '', author: info.Author || '' } };

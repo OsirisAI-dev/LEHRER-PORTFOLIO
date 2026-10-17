@@ -814,7 +814,7 @@ body {
         var canvas = document.createElement("canvas");
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality || 0.85));
+        resolve(canvas.toDataURL("image/jpeg", quality || 0.65));
       };
       img.onerror = function () { resolve(dataUrl); };
       img.src = dataUrl;
@@ -926,7 +926,7 @@ body {
     if (!f) return;
     var reader = new FileReader();
     reader.onload = function () {
-      compressDataUrl(reader.result, 1600, 0.82).then(function (compressed) {
+      compressDataUrl(reader.result, 1000, 0.65).then(function (compressed) {
         applyBg(compressed);
         try { localStorage.setItem(LS_BG, compressed); }
         catch (err) { /* too large even compressed — still applied this session */ }
@@ -1337,7 +1337,7 @@ body {
       return window.pdfjsLib.getDocument({ data: buf }).promise;
     }).then(function (pdf) {
       var coverP = pdf.getPage(1).then(function (page) {
-        var viewport = page.getViewport({ scale: 1.4 });
+        var baseVp = page.getViewport({ scale: 1 }); var viewport = page.getViewport({ scale: 140 / baseVp.width });
         var canvas = document.createElement("canvas");
         canvas.width = viewport.width;
         canvas.height = viewport.height;

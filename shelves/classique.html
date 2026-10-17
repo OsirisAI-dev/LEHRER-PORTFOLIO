@@ -1175,7 +1175,7 @@
         var canvas = document.createElement("canvas");
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality || 0.85));
+        resolve(canvas.toDataURL("image/jpeg", quality || 0.65));
       };
       img.onerror = function(){ resolve(dataUrl); };
       img.src = dataUrl;
@@ -1204,7 +1204,7 @@
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function(){
-      compressDataUrl(reader.result, 1600, 0.82).then(function(compressed){
+      compressDataUrl(reader.result, 1000, 0.65).then(function(compressed){
         var opacity = Number(bgOpacitySlider.value) || 35;
         setBackground(compressed, opacity);
         try {
@@ -1799,13 +1799,13 @@
             return pdf.getPage(1);
           }).then(function (page) {
             var viewport = page.getViewport({ scale: 1 });
-            var scale = 360 / viewport.width;
+            var scale = 140 / viewport.width;
             var scaledViewport = page.getViewport({ scale: scale });
             var canvas = document.createElement("canvas");
             canvas.width = scaledViewport.width;
             canvas.height = scaledViewport.height;
             return page.render({ canvasContext: canvas.getContext("2d"), viewport: scaledViewport }).promise.then(function () {
-              result.cover = canvas.toDataURL("image/jpeg", 0.85);
+              result.cover = canvas.toDataURL("image/jpeg", 0.65);
               return page.getTextContent();
             });
           }).then(function (textContent) {
