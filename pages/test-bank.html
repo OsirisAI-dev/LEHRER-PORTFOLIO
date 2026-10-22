@@ -29,10 +29,10 @@
       }
 
       window.OSIRIS_LIBS_READY = Promise.all([
-        osirisLoadWithFallback('/lib/mammoth/v1/mammoth.browser.js', 'https://cdn.jsdelivr.net/npm/mammoth@1.7.2/mammoth.browser.min.js', 'mammoth'),
-        osirisLoadWithFallback('/lib/pdf/v1/pdf.min.js', 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', 'pdfjsLib'),
-        osirisLoadWithFallback('/lib/pdf/v1/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 'PDFLib'),
-        osirisLoadWithFallback('/lib/jszip/v1/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', 'JSZip'),
+        osirisLoadWithFallback('../lib/mammoth/v1/mammoth.browser.js', 'https://cdn.jsdelivr.net/npm/mammoth@1.7.2/mammoth.browser.min.js', 'mammoth'),
+        osirisLoadWithFallback('../lib/pdf/v1/pdf.min.js', 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', 'pdfjsLib'),
+        osirisLoadWithFallback('../lib/pdf/v1/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 'PDFLib'),
+        osirisLoadWithFallback('../lib/jszip/v1/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', 'JSZip'),
       ]);
     </script>
     <script>
@@ -986,7 +986,7 @@ try {
         const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
         if (!pdfjsLib) return null;
         const buffer = await file.arrayBuffer();
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdf/v1/pdf.worker.min.js';
+        try { pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('../lib/pdf/v1/pdf.worker.min.js', window.location.href).href; } catch(e) { pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js'; }
         const loadingTask = pdfjsLib.getDocument({ data: buffer });
         const pdf = await loadingTask.promise;
         const metadata = await pdf.getMetadata();
@@ -1608,7 +1608,7 @@ function saveEntry() {
             const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
 
 
-            pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdf/v1/pdf.worker.min.js';
+            try { pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('../lib/pdf/v1/pdf.worker.min.js', window.location.href).href; } catch(e) { pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js'; }
 
             const loadingTask = pdfjsLib.getDocument({data: bytes});
             const pdf = await loadingTask.promise;

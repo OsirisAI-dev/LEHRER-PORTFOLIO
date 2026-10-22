@@ -36,6 +36,15 @@
     }
 
     function extractPdfCoverAndMeta(arrayBuffer) {
+        if (global.pdfjsLib && (!global.pdfjsLib.GlobalWorkerOptions.workerSrc || global.pdfjsLib.GlobalWorkerOptions.workerSrc.indexOf('//') === -1 || global.pdfjsLib.GlobalWorkerOptions.workerSrc.startsWith('/lib/'))) {
+            try {
+                var isSub = typeof window !== 'undefined' && (window.location.pathname.indexOf('/pages/') !== -1 || window.location.pathname.indexOf('/shelves/') !== -1);
+                var rel = isSub ? '../lib/pdf/v1/pdf.worker.min.js' : './lib/pdf/v1/pdf.worker.min.js';
+                global.pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(rel, window.location.href).href;
+            } catch (e) {
+                global.pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+            }
+        }
         return pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdf) {
             return pdf.getPage(1).then(function (page) {
                 const viewport = page.getViewport({ scale: 1.4 });

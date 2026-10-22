@@ -292,6 +292,16 @@
                     return reject(new Error("pdfjsLib non disponible pour extraire le texte PDF."));
                 }
 
+                if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc || window.pdfjsLib.GlobalWorkerOptions.workerSrc.indexOf('//') === -1 || window.pdfjsLib.GlobalWorkerOptions.workerSrc.startsWith('/lib/')) {
+                    try {
+                        var isSub = window.location.pathname.indexOf('/pages/') !== -1 || window.location.pathname.indexOf('/shelves/') !== -1;
+                        var rel = isSub ? '../lib/pdf/v1/pdf.worker.min.js' : './lib/pdf/v1/pdf.worker.min.js';
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(rel, window.location.href).href;
+                    } catch (e) {
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+                    }
+                }
+
                 window.pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdf) {
                     var numPages = pdf.numPages;
                     var pagePromises = [];

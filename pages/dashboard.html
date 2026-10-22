@@ -2055,7 +2055,11 @@
     // within a shelf itself.
     // ============================================================
     if (window.pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/lib/pdf/v1/pdf.worker.min.js';
+        try {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('../lib/pdf/v1/pdf.worker.min.js', window.location.href).href;
+        } catch (e) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+        }
     }
 
     // One-time repair for books extracted here before this shelf's own
