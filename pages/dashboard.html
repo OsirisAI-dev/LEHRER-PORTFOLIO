@@ -353,6 +353,48 @@
             font-weight: 700;
         }
 
+        .roster-import-btn {
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-color, #ffffff);
+            border: 1.5px solid var(--border-color, #bdc3c7);
+            color: var(--text-color, #2c3e50);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .roster-import-btn:hover {
+            border-color: var(--dot-checked, #27ae60);
+            color: var(--dot-checked, #27ae60);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+
+        .ptr-roster-sync-btn {
+            display: inline-flex;
+            align-items: center;
+            background: var(--grid-bg, #fdfdfd);
+            border: 1px solid var(--border-color, #bdc3c7);
+            color: var(--text-color, #2c3e50);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .ptr-roster-sync-btn:hover {
+            border-color: var(--dot-checked, #27ae60);
+            color: var(--dot-checked, #27ae60);
+        }
+
         .class-size-item {
             display: inline-flex;
             align-items: center;
@@ -1700,6 +1742,11 @@
                     <span id="classGirlsLabel">Filles :</span>
                     <input type="number" min="0" id="classGirlsInput" class="class-size-input" placeholder="0" oninput="updateClassSize('girls', this.value)">
                 </label>
+                <button type="button" class="roster-import-btn" id="rosterImportBtn" onclick="triggerRosterImport()" title="Importer la liste des élèves (.csv, .doc, .docx, .pdf)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span id="rosterImportBtnLabel">Importer liste</span>
+                </button>
+                <input type="file" id="rosterFileInput" accept=".csv,.doc,.docx,.html,.txt,.pdf" style="display:none;" onchange="handleRosterFile(event)">
             </div>
         </div>
 
@@ -1803,6 +1850,11 @@
                             <span id="ptrModeNamesLabel">Par noms</span>
                         </label>
                     </div>
+                    <button type="button" class="ptr-roster-sync-btn" id="ptrRosterSyncBtn" onclick="syncPointeurWithRoster(true)" title="Remplir automatiquement avec les élèves de la classe" style="display:none;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                        <span id="ptrRosterSyncLabel">Insérer liste</span>
+                    </button>
+                    <datalist id="ptrStudentDatalist"></datalist>
                 </div>
                 <button class="modal-close-btn" id="ptrCloseBtn" onclick="closePointeurModal()" title="Fermer">&times;</button>
             </div>
@@ -1984,6 +2036,7 @@
 <script src="../lib/jszip/v1/jszip.min.js"></script>
 <script src="../lib/pdf/v1/pdf.min.js"></script>
 <script src="../js/core/osiris-core.js"></script>
+<script src="../js/core/class-roster.js"></script>
 
 <script>
     console.assert(typeof Chart === 'function', 'Chart.js n\'est pas disponible.');
@@ -2456,6 +2509,14 @@
             ptrLockBtnUnlock: 'Notes verrouillées',
             ptrLockTooltipLocked: 'Notes verrouillées pour empêcher toute modification accidentelle. Cliquez pour déverrouiller.',
             ptrLockTooltipUnlocked: 'Cliquez pour verrouiller et protéger les notes contre toute modification accidentelle.',
+            rosterImportBtn: 'Importer liste',
+            rosterImportTitle: 'Importer la liste des élèves (CSV, Word, PDF)',
+            rosterSyncBtn: 'Insérer liste',
+            rosterSyncTitle: 'Remplir automatiquement avec les élèves de la classe',
+            rosterImportSuccess: 'Liste importée avec succès : {count} élèves ({boys} garçons, {girls} filles).',
+            rosterImportEmpty: 'Aucun élève trouvé dans ce fichier. Vérifiez le format (CSV, Word ou PDF).',
+            rosterImportError: 'Erreur lors de l’analyse du fichier : ',
+            rosterNoStudents: 'Aucune liste d’élèves enregistrée pour cette classe. Cliquez sur "Importer liste" dans le bandeau de classe.',
             evalTypeIE: 'IE',
             evalTypeDS: 'DS',
             evalTypeIO: 'IO',
@@ -2602,6 +2663,14 @@
             ptrLockBtnUnlock: 'Noten gesperrt',
             ptrLockTooltipLocked: 'Noten sind gegen versehentliche Änderungen gesperrt. Klicken zum Entsperren.',
             ptrLockTooltipUnlocked: 'Klicken, um Noten gegen versehentliche Änderungen zu sperren.',
+            rosterImportBtn: 'Klassenliste importieren',
+            rosterImportTitle: 'Schülerliste importieren (CSV, Word, PDF)',
+            rosterSyncBtn: 'Liste einfügen',
+            rosterSyncTitle: 'Automatisch mit Schülern dieser Klasse füllen',
+            rosterImportSuccess: 'Liste erfolgreich importiert: {count} Schüler ({boys} Jungen, {girls} Mädchen).',
+            rosterImportEmpty: 'Keine Schüler in dieser Datei gefunden. Bitte Format prüfen (CSV, Word oder PDF).',
+            rosterImportError: 'Fehler beim Analysieren der Datei: ',
+            rosterNoStudents: 'Keine Schülerliste für diese Klasse hinterlegt. Klicken Sie auf "Klassenliste importieren" in der Klassenleiste.',
             evalTypeIE: 'TEST',
             evalTypeDS: 'KA',
             evalTypeIO: 'MP',
@@ -2652,6 +2721,7 @@
                 if (!Array.isArray(cls.evaluations)) cls.evaluations = [];
                 if (typeof cls.extListUrl !== 'string') cls.extListUrl = '';
                 if (typeof cls.showExtInput !== 'boolean') cls.showExtInput = true;
+                if (!Array.isArray(cls.students)) cls.students = [];
                 if (cls.effectif === undefined || cls.effectif === null) cls.effectif = '';
                 if (cls.boys === undefined || cls.boys === null) cls.boys = '';
                 if (cls.girls === undefined || cls.girls === null) cls.girls = '';
@@ -2823,6 +2893,14 @@
         if (impLbl) impLbl.textContent = lang.import; else document.getElementById('importBtn').textContent = lang.import;
         const rstLbl = document.getElementById('resetBtnLabel');
         if (rstLbl) rstLbl.textContent = lang.reset; else document.getElementById('resetBtn').textContent = lang.reset;
+        const rosterImpLbl = document.getElementById('rosterImportBtnLabel');
+        if (rosterImpLbl) rosterImpLbl.textContent = lang.rosterImportBtn;
+        const rosterImpBtn = document.getElementById('rosterImportBtn');
+        if (rosterImpBtn) rosterImpBtn.title = lang.rosterImportTitle;
+        const rosterSyncLbl = document.getElementById('ptrRosterSyncLabel');
+        if (rosterSyncLbl) rosterSyncLbl.textContent = lang.rosterSyncBtn;
+        const rosterSyncBtn = document.getElementById('ptrRosterSyncBtn');
+        if (rosterSyncBtn) rosterSyncBtn.title = lang.rosterSyncTitle;
         document.getElementById('resetBtn').title = lang.confirmReset;
         document.getElementById('addSchoolBtn').title = lang.addSchoolTitle;
         document.getElementById('addClassBtn').title = lang.addClassTitle;
@@ -2927,12 +3005,99 @@
         const effInput = document.getElementById('classEffectifInput');
         const boysInput = document.getElementById('classBoysInput');
         const girlsInput = document.getElementById('classGirlsInput');
+        const rosterImpBtn = document.getElementById('rosterImportBtn');
         if (activeClass && effInput && boysInput && girlsInput) {
             effInput.value = activeClass.effectif !== undefined && activeClass.effectif !== null ? activeClass.effectif : '';
             boysInput.value = activeClass.boys !== undefined && activeClass.boys !== null ? activeClass.boys : '';
             girlsInput.value = activeClass.girls !== undefined && activeClass.girls !== null ? activeClass.girls : '';
+            if (rosterImpBtn) {
+                if (Array.isArray(activeClass.students) && activeClass.students.length > 0) {
+                    rosterImpBtn.style.borderColor = 'var(--dot-checked)';
+                    rosterImpBtn.style.color = 'var(--dot-checked)';
+                } else {
+                    rosterImpBtn.style.borderColor = '';
+                    rosterImpBtn.style.color = '';
+                }
+            }
         }
         renderExtList();
+    }
+
+    function triggerRosterImport() {
+        const fileInput = document.getElementById('rosterFileInput');
+        if (fileInput) {
+            fileInput.value = '';
+            fileInput.click();
+        }
+    }
+
+    function handleRosterFile(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const cls = getActiveClass();
+        const lang = i18n[appState.lang];
+        if (!cls) {
+            alert(lang.noActiveClass || "Veuillez d'abord sélectionner une classe.");
+            return;
+        }
+
+        if (typeof ClassRoster === 'undefined') {
+            alert("Module ClassRoster introuvable.");
+            return;
+        }
+
+        ClassRoster.parseFile(file).then(function(result) {
+            if (!result || !result.students || result.students.length === 0) {
+                alert(lang.rosterImportEmpty);
+                return;
+            }
+
+            ClassRoster.applyToClass(cls, result);
+            persistState();
+            renderClassHeader();
+
+            const effInput = document.getElementById('classEffectifInput');
+            const boysInput = document.getElementById('classBoysInput');
+            const girlsInput = document.getElementById('classGirlsInput');
+            if (effInput) effInput.value = cls.effectif || '';
+            if (boysInput) boysInput.value = cls.boys || '';
+            if (girlsInput) girlsInput.value = cls.girls || '';
+
+            const msg = (lang.rosterImportSuccess || "Liste importée avec succès : {count} élèves ({boys} garçons, {girls} filles).")
+                .replace('{count}', result.students.length)
+                .replace('{boys}', result.stats ? result.stats.boys : 0)
+                .replace('{girls}', result.stats ? result.stats.girls : 0);
+            alert(msg);
+        }).catch(function(err) {
+            console.error("Erreur import liste élève:", err);
+            alert((lang.rosterImportError || "Erreur lors de l'analyse du fichier : ") + (err ? err.message : err));
+        });
+    }
+
+    function syncPointeurWithRoster(force) {
+        const cls = getActiveClass();
+        const lang = i18n[appState.lang];
+        if (!cls || !Array.isArray(cls.students) || cls.students.length === 0) {
+            alert(lang.rosterNoStudents);
+            return;
+        }
+
+        const totalInput = document.getElementById('h_total_papers');
+        const curTotal = parseInt(totalInput.value) || 0;
+        if (curTotal < cls.students.length) {
+            totalInput.value = cls.students.length;
+            ptrSaveHeaderData();
+        }
+
+        cls.students.forEach((s, idx) => {
+            if (force || !namesState[idx]) {
+                namesState[idx] = s.fullName;
+            }
+        });
+
+        ptrSetDirty();
+        updateCodes();
     }
 
     function updateClassSize(field, rawValue) {
@@ -3961,6 +4126,23 @@
         if (ptrMode === mode) return;
         ptrMode = mode;
         ptrSetDirty();
+
+        const syncBtn = document.getElementById('ptrRosterSyncBtn');
+        if (syncBtn) {
+            syncBtn.style.display = (ptrMode === 'names') ? 'inline-flex' : 'none';
+        }
+
+        // Autofill from class roster if empty
+        if (ptrMode === 'names') {
+            const cls = getActiveClass();
+            if (cls && Array.isArray(cls.students) && cls.students.length > 0) {
+                let hasNames = Object.values(namesState).some(n => n && n.trim());
+                if (!hasNames) {
+                    syncPointeurWithRoster(false);
+                }
+            }
+        }
+
         updateCodes();
         updatePointeurI18nLabels();
     }
@@ -4032,6 +4214,22 @@
         }
 
         ptrLoadHeaderData();
+        const syncBtn = document.getElementById('ptrRosterSyncBtn');
+        if (syncBtn) {
+            syncBtn.style.display = (ptrMode === 'names') ? 'inline-flex' : 'none';
+        }
+
+        // Autofill if mode is names and names are empty
+        if (ptrMode === 'names') {
+            const cls = getActiveClass();
+            if (cls && Array.isArray(cls.students) && cls.students.length > 0) {
+                let hasNames = Object.values(namesState).some(n => n && n.trim());
+                if (!hasNames) {
+                    syncPointeurWithRoster(false);
+                }
+            }
+        }
+
         updateCodes();
         updatePointeurI18nLabels();
         updatePtrLockUI();
@@ -4110,7 +4308,7 @@
                 leftColHTML = `
                     <div class="copy-name-box">
                         <span class="copy-code-num">${numStr}</span>
-                        <input type="text" class="copy-name-input" placeholder="${placeholder}" value="${currentName}" ${lockReadOnly} oninput="setStudentName(${i}, this.value)">
+                        <input type="text" class="copy-name-input" list="ptrStudentDatalist" placeholder="${placeholder}" value="${currentName}" ${lockReadOnly} oninput="setStudentName(${i}, this.value)">
                     </div>
                 `;
             } else {
@@ -4126,6 +4324,14 @@
         }
 
         document.getElementById('codes-list').innerHTML = codesHTML;
+
+        // Update datalist options for predictive history dictionary
+        const datalistEl = document.getElementById('ptrStudentDatalist');
+        if (datalistEl && typeof ClassRoster !== 'undefined') {
+            const cls = getActiveClass();
+            datalistEl.innerHTML = ClassRoster.buildDatalistOptions(cls);
+        }
+
         updateStatistics();
     }
 
