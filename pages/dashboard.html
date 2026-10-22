@@ -1294,10 +1294,215 @@
             #pointeurModal .copy-name-input { font-size: 0.82em; padding: 3px 6px; }
         }
 
+        /* --- PDF Notes Page & Prompt Modal Styling --- */
+        #ptrPdfNotesPage { display: none; }
+
+        .ptr-prompt-modal-overlay {
+            z-index: 10005 !important;
+        }
+
+        .ptr-prompt-modal-content {
+            max-width: 440px !important;
+            padding: 22px 24px !important;
+            border-radius: 12px !important;
+            text-align: center;
+            background: var(--bg-color, #ffffff) !important;
+            color: var(--text-color, #2c3e50) !important;
+            border: 1px solid var(--border-color, #bdc3c7);
+        }
+
+        .ptr-prompt-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .ptr-prompt-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(39, 174, 96, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dot-checked, #27ae60);
+        }
+
+        .ptr-prompt-question {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color, #2c3e50);
+            margin: 0;
+        }
+
+        .ptr-prompt-help {
+            font-size: 0.88rem;
+            color: var(--text-color, #2c3e50);
+            opacity: 0.75;
+            margin: 0 0 6px 0;
+        }
+
+        .ptr-prompt-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .ptr-prompt-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .ptr-prompt-btn-primary {
+            background: var(--dot-checked, #27ae60);
+            color: #ffffff;
+            border: 2px solid var(--dot-checked, #27ae60);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.28);
+        }
+
+        .ptr-prompt-btn-primary:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        .ptr-prompt-btn-secondary {
+            background: var(--grid-bg, #fdfdfd);
+            color: var(--text-color, #2c3e50);
+            border: 2px solid var(--border-color, #bdc3c7);
+        }
+
+        .ptr-prompt-btn-secondary:hover {
+            background: var(--input-bg, #ffffff);
+            border-color: var(--accent-color, #34495e);
+            transform: translateY(-1px);
+        }
+
+        .ptr-prompt-btn-icon {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ptr-prompt-btn-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .ptr-prompt-btn-text strong {
+            font-size: 0.96rem;
+            font-weight: 700;
+        }
+
+        .ptr-prompt-btn-text span {
+            font-size: 0.78rem;
+            opacity: 0.85;
+        }
+
+        .ptr-prompt-footer {
+            margin-top: 4px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .ptr-prompt-cancel-link {
+            background: none;
+            border: none;
+            color: var(--text-color, #2c3e50);
+            opacity: 0.65;
+            font-size: 0.88rem;
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-family: inherit;
+            transition: opacity 0.2s;
+        }
+
+        .ptr-prompt-cancel-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* Print styles for notes page 2 */
+        .ptr-notes-page-header {
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1.5px solid #000;
+        }
+        .ptr-notes-page-title {
+            font-size: 1.15em;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .ptr-notes-page-sub {
+            font-size: 0.75em;
+            color: #222;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .ptr-print-notes-grid {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .ptr-print-notes-col {
+            flex: 1;
+            min-width: 0;
+        }
+        .ptr-print-notes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5px;
+            line-height: 1.15;
+        }
+        .ptr-print-notes-table th {
+            background: #f0f0f0 !important;
+            border: 1px solid #000;
+            padding: 2.5px 5px;
+            font-weight: bold;
+            font-size: 8.5px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .ptr-print-notes-table td {
+            border: 1px solid #bbb;
+            padding: 2px 5px;
+            vertical-align: middle;
+        }
+        .ptr-print-notes-table tr:nth-child(even) td {
+            background: #f8f9fa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .ptr-print-badge-special {
+            font-weight: bold;
+            color: #000;
+        }
+
         @media print {
             #pointeurModal .stats-header-row { border-bottom: 1px solid black; }
             #pointeurModal .details-btn { display: none !important; }
             #pointeurModal #statsModalOverlay { display: none !important; }
+            #pointeurModal #ptrExportModal { display: none !important; }
+            #pointeurModal #ptrPdfNotesPage { display: none !important; }
             #pointeurModal .pdf-export-timestamp {
                 display: block; text-align: right; font-size: 0.75em; color: #444 !important; margin-bottom: 4px;
             }
@@ -1320,6 +1525,19 @@
             #pointeurModal .pdf-chart-section h4 { margin: 0 0 4px 0; font-size: 0.9em; }
             #pointeurModal .pdf-chart-section canvas {
                 height: 130px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+
+            body.ptr-printing-with-notes #pointeurModal .statistics-panel {
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+
+            body.ptr-printing-with-notes #pointeurModal #ptrPdfNotesPage {
+                display: block !important;
+                page-break-before: always !important;
+                break-before: page !important;
+                padding-top: 3mm !important;
+                margin-top: 0 !important;
             }
         }
     </style>
@@ -1555,6 +1773,70 @@
                     </svg>
                     <span id="ptrExportPdfBtnLabel">EXPORTER EN PDF</span>
                 </button>
+            </div>
+
+            <!-- Print-only notes page (Page 2) -->
+            <div id="ptrPdfNotesPage" class="ptr-pdf-notes-page">
+                <div class="ptr-notes-page-header">
+                    <div class="ptr-notes-page-title" id="ptrNotesPageTitle">Relevé des Notes par Copie</div>
+                    <div class="ptr-notes-page-sub" id="ptrNotesPageMeta"></div>
+                </div>
+                <div class="ptr-print-notes-grid" id="ptrPrintNotesGrid"></div>
+            </div>
+
+            <!-- Modal for PDF export prompt -->
+            <div class="modal-overlay ptr-prompt-modal-overlay" id="ptrExportModal" onclick="if(event.target===this) closeExportPdfModal()">
+                <div class="modal-content ptr-prompt-modal-content">
+                    <div class="modal-header">
+                        <div class="modal-title" id="ptrExportModalTitle">Exporter en PDF</div>
+                        <button class="modal-close-btn" onclick="closeExportPdfModal()" title="Fermer">&times;</button>
+                    </div>
+                    <div class="ptr-prompt-body">
+                        <div class="ptr-prompt-icon">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        <h3 class="ptr-prompt-question" id="ptrExportPromptText">Inclure les notes ?</h3>
+                        <p class="ptr-prompt-help" id="ptrExportPromptSub">Choisissez le format du document PDF :</p>
+
+                        <div class="ptr-prompt-options">
+                            <button type="button" class="ptr-prompt-btn ptr-prompt-btn-primary" onclick="confirmExportPDF(true)">
+                                <div class="ptr-prompt-btn-icon">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="ptr-prompt-btn-text">
+                                    <strong id="ptrChoiceNotesTitle">Inclure les notes</strong>
+                                    <span id="ptrChoiceNotesDesc">PDF 2 pages : Statistiques + Relevé détaillé</span>
+                                </div>
+                            </button>
+
+                            <button type="button" class="ptr-prompt-btn ptr-prompt-btn-secondary" onclick="confirmExportPDF(false)">
+                                <div class="ptr-prompt-btn-icon">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                                    </svg>
+                                </div>
+                                <div class="ptr-prompt-btn-text">
+                                    <strong id="ptrChoiceStatsTitle">Statistiques uniquement</strong>
+                                    <span id="ptrChoiceStatsDesc">PDF 1 page : Tableau récapitulatif & Graphique</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div class="ptr-prompt-footer">
+                            <button type="button" class="ptr-prompt-cancel-link" onclick="closeExportPdfModal()" id="ptrExportCancelBtn">Annuler</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Modal for chart preview -->
@@ -2037,6 +2319,29 @@
             ptrBucketTresBien: 'Très bien (17-20)',
             ptrExportedOn: 'Exporté le',
             ptrClose: 'Fermer',
+            ptrExportModalTitle: 'Exporter en PDF',
+            ptrExportPromptText: 'Inclure les notes ?',
+            ptrExportPromptSub: 'Choisissez le format du document PDF :',
+            ptrExportChoiceNotes: 'Inclure les notes',
+            ptrExportChoiceNotesSub: 'PDF 2 pages : Statistiques + Relevé détaillé',
+            ptrExportChoiceStats: 'Statistiques uniquement',
+            ptrExportChoiceStatsSub: 'PDF 1 page : Tableau récapitulatif & Graphique',
+            ptrExportCancel: 'Annuler',
+            ptrNotesPageTitle: 'Relevé des Notes par Copie',
+            ptrNotesPageMetaDevoir: 'Devoir',
+            ptrNotesPageMetaCorrecteur: 'Correcteur',
+            ptrNotesPageMetaEtablissement: 'Établissement',
+            ptrNotesPageMetaMode: 'Mode',
+            ptrNotesPageMetaTotal: 'Total copies',
+            ptrNotesPageColNum: 'N°',
+            ptrNotesPageColCode: 'Code',
+            ptrNotesPageColName: "Nom de l'élève",
+            ptrNotesPageColGrade: 'Note',
+            ptrNotesPageNoCopies: 'Aucune copie saisie.',
+            ptrNotesPageNoName: 'Sans nom',
+            ptrSpecialAbsent: 'Absent',
+            ptrSpecialDispense: 'Dispensé',
+            ptrSpecialFraude: 'Fraude',
             evalTypeIE: 'IE',
             evalTypeDS: 'DS',
             evalTypeIO: 'IO',
@@ -2156,6 +2461,29 @@
             ptrBucketTresBien: 'Sehr gut (17-20)',
             ptrExportedOn: 'Exportiert am',
             ptrClose: 'Schließen',
+            ptrExportModalTitle: 'PDF Exportieren',
+            ptrExportPromptText: 'Noten einbeziehen?',
+            ptrExportPromptSub: 'Wählen Sie das Format des PDF-Dokuments:',
+            ptrExportChoiceNotes: 'Noten einbeziehen',
+            ptrExportChoiceNotesSub: '2-seitiges PDF: Statistiken + Notenübersicht',
+            ptrExportChoiceStats: 'Nur Statistiken',
+            ptrExportChoiceStatsSub: '1-seitiges PDF: Zusammenfassung & Grafik',
+            ptrExportCancel: 'Abbrechen',
+            ptrNotesPageTitle: 'Notenübersicht nach Arbeit',
+            ptrNotesPageMetaDevoir: 'Arbeit',
+            ptrNotesPageMetaCorrecteur: 'Korrektor',
+            ptrNotesPageMetaEtablissement: 'Schule',
+            ptrNotesPageMetaMode: 'Modus',
+            ptrNotesPageMetaTotal: 'Gesamt',
+            ptrNotesPageColNum: 'Nr.',
+            ptrNotesPageColCode: 'Code',
+            ptrNotesPageColName: 'Schülername',
+            ptrNotesPageColGrade: 'Note',
+            ptrNotesPageNoCopies: 'Keine Arbeiten erfasst.',
+            ptrNotesPageNoName: 'Ohne Name',
+            ptrSpecialAbsent: 'Abwesend',
+            ptrSpecialDispense: 'Befreit',
+            ptrSpecialFraude: 'Täuschung',
             evalTypeIE: 'TEST',
             evalTypeDS: 'KA',
             evalTypeIO: 'MP',
@@ -2421,6 +2749,22 @@
         document.getElementById('ptrExportPdfBtnLabel').textContent = lang.ptrExportPdf;
         document.getElementById('ptrStatsModalTitleEl').textContent = lang.ptrStatsModalTitle;
         document.getElementById('ptrStatsCloseBtn').title = lang.ptrClose;
+        const exportModalTitle = document.getElementById('ptrExportModalTitle');
+        if (exportModalTitle) exportModalTitle.textContent = lang.ptrExportModalTitle;
+        const exportPromptText = document.getElementById('ptrExportPromptText');
+        if (exportPromptText) exportPromptText.textContent = lang.ptrExportPromptText;
+        const exportPromptSub = document.getElementById('ptrExportPromptSub');
+        if (exportPromptSub) exportPromptSub.textContent = lang.ptrExportPromptSub;
+        const choiceNotesTitle = document.getElementById('ptrChoiceNotesTitle');
+        if (choiceNotesTitle) choiceNotesTitle.textContent = lang.ptrExportChoiceNotes;
+        const choiceNotesDesc = document.getElementById('ptrChoiceNotesDesc');
+        if (choiceNotesDesc) choiceNotesDesc.textContent = lang.ptrExportChoiceNotesSub;
+        const choiceStatsTitle = document.getElementById('ptrChoiceStatsTitle');
+        if (choiceStatsTitle) choiceStatsTitle.textContent = lang.ptrExportChoiceStats;
+        const choiceStatsDesc = document.getElementById('ptrChoiceStatsDesc');
+        if (choiceStatsDesc) choiceStatsDesc.textContent = lang.ptrExportChoiceStatsSub;
+        const exportCancelBtn = document.getElementById('ptrExportCancelBtn');
+        if (exportCancelBtn) exportCancelBtn.textContent = lang.ptrExportCancel;
         document.getElementById('chartOptDonut').textContent = lang.statDonut;
         document.getElementById('chartOptPie').textContent = lang.statPie;
         document.getElementById('chartOptBar').textContent = lang.statBar;
@@ -3502,6 +3846,7 @@
         }
         document.getElementById('pointeurModal').classList.remove('active');
         document.getElementById('statsModalOverlay').classList.remove('active');
+        closeExportPdfModal();
         activeEvalId = null;
         tallyState = {};
         namesState = {};
@@ -3684,11 +4029,159 @@
         ptrClearDirty();
     }
 
-    function exportPDF() {
+    function openExportPdfModal() {
+        updateCodes();
+        updatePointeurI18nLabels();
+        const modal = document.getElementById('ptrExportModal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function closeExportPdfModal() {
+        const modal = document.getElementById('ptrExportModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function confirmExportPDF(includeNotes) {
+        closeExportPdfModal();
+        setTimeout(function() {
+            runExportPDF(includeNotes);
+        }, 80);
+    }
+
+    function exportPDF(includeNotes) {
+        if (typeof includeNotes === 'boolean') {
+            runExportPDF(includeNotes);
+            return;
+        }
+        openExportPdfModal();
+    }
+
+    function buildPdfNotesPage(formattedDate) {
+        const lang = i18n[appState.lang];
+        const total = parseInt(document.getElementById('h_total_papers').value) || 0;
+        const devoir = document.getElementById('h_devoir').value.trim() || '—';
+        const correcteur = document.getElementById('h_correcteur').value.trim() || '—';
+        const etablissement = document.getElementById('h_etablissement').value.trim() || '—';
+        const modeLabel = ptrMode === 'names' ? lang.ptrModeNames : lang.ptrModeCodes;
+
+        const titleEl = document.getElementById('ptrNotesPageTitle');
+        if (titleEl) titleEl.textContent = lang.ptrNotesPageTitle;
+
+        const metaEl = document.getElementById('ptrNotesPageMeta');
+        if (metaEl) {
+            metaEl.innerHTML = `
+                <span><strong>${lang.ptrNotesPageMetaDevoir} :</strong> ${ptrEscapeHtml(devoir)}</span>
+                <span><strong>${lang.ptrNotesPageMetaCorrecteur} :</strong> ${ptrEscapeHtml(correcteur)}</span>
+                <span><strong>${lang.ptrNotesPageMetaEtablissement} :</strong> ${ptrEscapeHtml(etablissement)}</span>
+                <span><strong>${lang.ptrNotesPageMetaMode} :</strong> ${modeLabel}</span>
+                <span><strong>${lang.ptrNotesPageMetaTotal} :</strong> ${total}</span>
+                <span style="margin-left:auto;">${lang.ptrExportedOn} ${formattedDate}</span>
+            `;
+        }
+
+        const gridEl = document.getElementById('ptrPrintNotesGrid');
+        if (!gridEl) return;
+
+        if (total === 0) {
+            gridEl.innerHTML = `<div style="text-align:center; padding:20px; font-style:italic; color:#666; width:100%;">${lang.ptrNotesPageNoCopies}</div>`;
+            return;
+        }
+
+        let initials = "";
+        if (correcteur && correcteur !== '—') {
+            const parts = correcteur.split(/\s+/).filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                initials = (parts[0][0] + parts[1][0]).toUpperCase();
+            } else if (parts.length === 1) {
+                initials = parts[0].substring(0, 2).toUpperCase();
+            }
+        }
+
+        const colHeaderIdent = ptrMode === 'names' ? lang.ptrNotesPageColName : lang.ptrNotesPageColCode;
+
+        function renderRows(startIdx, endIdx) {
+            let rowsHtml = '';
+            for (let i = startIdx; i < endIdx; i++) {
+                const currentNum = 1 + i;
+                const numStr = currentNum.toString().padStart(2, '0');
+                const codeText = `${initials}${numStr}`.toUpperCase();
+
+                let identHtml = '';
+                if (ptrMode === 'names') {
+                    const nameVal = namesState[i] ? namesState[i].trim() : '';
+                    if (nameVal) {
+                        identHtml = `<strong>${ptrEscapeHtml(nameVal)}</strong>`;
+                    } else {
+                        identHtml = `<span style="color:#777; font-style:italic;">(${lang.ptrNotesPageNoName})</span>`;
+                    }
+                } else {
+                    identHtml = `<code style="font-family:monospace; font-weight:bold; font-size:1.05em;">${codeText}</code>`;
+                }
+
+                const val = tallyState[i];
+                let gradeHtml = '';
+                if (typeof val === 'number') {
+                    gradeHtml = `<strong>${val}</strong> / 20`;
+                } else if (val === 'A') {
+                    gradeHtml = `<span class="ptr-print-badge-special">A (${lang.ptrSpecialAbsent})</span>`;
+                } else if (val === 'D') {
+                    gradeHtml = `<span class="ptr-print-badge-special">D (${lang.ptrSpecialDispense})</span>`;
+                } else if (val === 'F') {
+                    gradeHtml = `<span class="ptr-print-badge-special">F (${lang.ptrSpecialFraude})</span>`;
+                } else {
+                    gradeHtml = `<span style="color:#999;">—</span>`;
+                }
+
+                rowsHtml += `
+                    <tr>
+                        <td style="text-align:center; font-weight:600; width:26px;">${numStr}</td>
+                        <td>${identHtml}</td>
+                        <td style="text-align:right; white-space:nowrap; width:80px;">${gradeHtml}</td>
+                    </tr>
+                `;
+            }
+            return rowsHtml;
+        }
+
+        const half = Math.ceil(total / 2);
+        const col1Rows = renderRows(0, half);
+        const col2Rows = total > half ? renderRows(half, total) : '';
+
+        gridEl.innerHTML = `
+            <div class="ptr-print-notes-col">
+                <table class="ptr-print-notes-table">
+                    <thead>
+                        <tr>
+                            <th style="width:26px; text-align:center;">${lang.ptrNotesPageColNum}</th>
+                            <th>${colHeaderIdent}</th>
+                            <th style="width:80px; text-align:right;">${lang.ptrNotesPageColGrade}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${col1Rows}</tbody>
+                </table>
+            </div>
+            ${total > half ? `
+            <div class="ptr-print-notes-col">
+                <table class="ptr-print-notes-table">
+                    <thead>
+                        <tr>
+                            <th style="width:26px; text-align:center;">${lang.ptrNotesPageColNum}</th>
+                            <th>${colHeaderIdent}</th>
+                            <th style="width:80px; text-align:right;">${lang.ptrNotesPageColGrade}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${col2Rows}</tbody>
+                </table>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    function runExportPDF(includeNotes) {
         updateCodes();
 
         const now = new Date();
-        const formatted = now.toLocaleString('fr-FR', {
+        const formatted = now.toLocaleString(appState.lang === 'DE' ? 'de-DE' : 'fr-FR', {
             day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
@@ -3702,16 +4195,20 @@
         const type = document.getElementById('chartTypeSelect').value;
         document.getElementById('pdfChartTypeLabel').textContent = chartTypeLabel(type);
 
-        // The chart section is display:none outside of print, so Chart.js would
-        // otherwise draw into a 0x0 canvas and the chart stays blank in the PDF.
-        // Make it briefly visible (with a real width) so Chart.js can measure it.
         const pdfChartSection = document.getElementById('pdfChartSection');
         pdfChartSection.style.display = 'block';
         renderStatChart(document.getElementById('pdfChartCanvas'), type, currentStats);
 
+        const notesPage = document.getElementById('ptrPdfNotesPage');
+        if (includeNotes && notesPage) {
+            buildPdfNotesPage(formatted);
+            document.body.classList.add('ptr-printing-with-notes');
+        }
+
         document.body.classList.add('ptr-printing');
         window.print();
         document.body.classList.remove('ptr-printing');
+        document.body.classList.remove('ptr-printing-with-notes');
         pdfChartSection.style.display = '';
 
         document.title = originalTitle;
