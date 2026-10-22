@@ -142,7 +142,12 @@
 
                 if (!headers) {
                     var lowerHeaders = cols.map(function (c) { return c.toLowerCase(); });
-                    if (lowerHeaders.indexOf("nom") !== -1 || lowerHeaders.indexOf("matricule") !== -1) {
+                    var hasHeaderCue = lowerHeaders.some(function(h) {
+                        return h === "nom" || h === "name" || h === "nachname" || h === "matricule" ||
+                               h === "prénom" || h === "prenom" || h === "vorname" || h === "élève" ||
+                               h === "eleve" || h === "schüler" || h === "schueler";
+                    });
+                    if (hasHeaderCue) {
                         headers = lowerHeaders;
                     }
                     continue;
@@ -155,14 +160,20 @@
                     }
                 }
 
-                var nom = (row["nom"] || "").trim();
-                var prenoms = (row["prenoms"] || row["prénoms"] || "").trim();
-                var fullName = (nom + " " + prenoms).trim();
+                var nom = (row["nom"] || row["nachname"] || row["last name"] || row["lastname"] || "").trim();
+                var prenoms = (row["prenoms"] || row["prénoms"] || row["prenom"] || row["prénom"] || row["vorname"] || row["first name"] || row["firstname"] || "").trim();
+                var fullName = (row["nom complet"] || row["full name"] || row["fullname"] || row["schüler"] || row["schueler"] || row["élève"] || row["eleve"] || "").trim();
+                if (!fullName && nom) {
+                    fullName = (nom + " " + prenoms).trim();
+                } else if (!fullName && prenoms) {
+                    fullName = prenoms;
+                }
                 if (!fullName) continue;
 
-                var sexe = (row["sexe"] || "").trim().toUpperCase();
-                var matricule = (row["matricule"] || "").trim();
-                var cls = (row["classe"] || "").trim();
+                var rawSexe = (row["sexe"] || row["geschlecht"] || row["gender"] || row["sex"] || "").trim().toUpperCase();
+                var sexe = (rawSexe === "W" || rawSexe === "F") ? "F" : ((rawSexe === "M" || rawSexe === "H") ? "M" : rawSexe);
+                var matricule = (row["matricule"] || row["id"] || row["identifiant"] || "").trim();
+                var cls = (row["classe"] || row["klasse"] || row["class"] || "").trim();
                 var lv2 = (row["lv2"] || "").trim().toLowerCase();
 
                 if (cls && !detectedClass) detectedClass = cls;
@@ -178,8 +189,8 @@
                 });
             }
 
-            var boys = students.filter(function (s) { return s.sexe === "M"; }).length;
-            var girls = students.filter(function (s) { return s.sexe === "F"; }).length;
+            var boys = students.filter(function (s) { return s.sexe === "M" || s.sexe === "H"; }).length;
+            var girls = students.filter(function (s) { return s.sexe === "F" || s.sexe === "W"; }).length;
 
             return {
                 success: students.length > 0,
@@ -228,15 +239,17 @@
                     }
 
                     var rowLower = cellTexts.join(" ").toLowerCase();
-                    if (!headerFound && rowLower.indexOf("nom") !== -1 && (rowLower.indexOf("matricule") !== -1 || rowLower.indexOf("prénom") !== -1 || rowLower.indexOf("prenom") !== -1)) {
+                    var hasNomCue = rowLower.indexOf("nom") !== -1 || rowLower.indexOf("nachname") !== -1 || rowLower.indexOf("name") !== -1 || rowLower.indexOf("schüler") !== -1 || rowLower.indexOf("eleve") !== -1;
+                    var hasSubCue = rowLower.indexOf("matricule") !== -1 || rowLower.indexOf("prénom") !== -1 || rowLower.indexOf("prenom") !== -1 || rowLower.indexOf("vorname") !== -1 || rowLower.indexOf("sexe") !== -1 || rowLower.indexOf("geschlecht") !== -1;
+                    if (!headerFound && hasNomCue && (hasSubCue || cellTexts.length >= 2)) {
                         headerFound = true;
                         for (var idx = 0; idx < cellTexts.length; idx++) {
                             var hl = cellTexts[idx].toLowerCase();
-                            if (hl.indexOf("matricule") !== -1) colMap["matricule"] = idx;
-                            else if (hl.indexOf("nom") !== -1 && (hl.indexOf("prénom") !== -1 || hl.indexOf("prenom") !== -1)) colMap["fullName"] = idx;
-                            else if (hl === "nom") colMap["nom"] = idx;
-                            else if (hl.indexOf("prénom") !== -1 || hl.indexOf("prenom") !== -1) colMap["prenoms"] = idx;
-                            else if (hl.indexOf("sexe") !== -1) colMap["sexe"] = idx;
+                            if (hl.indexOf("matricule") !== -1 || hl === "id") colMap["matricule"] = idx;
+                            else if ((hl.indexOf("nom") !== -1 || hl.indexOf("name") !== -1) && (hl.indexOf("prénom") !== -1 || hl.indexOf("prenom") !== -1 || hl.indexOf("vorname") !== -1)) colMap["fullName"] = idx;
+                            else if (hl === "nom" || hl === "nachname" || hl === "last name" || hl === "name") colMap["nom"] = idx;
+                            else if (hl.indexOf("prénom") !== -1 || hl.indexOf("prenom") !== -1 || hl.indexOf("vorname") !== -1 || hl.indexOf("first name") !== -1) colMap["prenoms"] = idx;
+                            else if (hl.indexOf("sexe") !== -1 || hl.indexOf("geschlecht") !== -1 || hl.indexOf("gender") !== -1) colMap["sexe"] = idx;
                         }
                         continue;
                     }
@@ -254,7 +267,8 @@
                         if (!fullName) continue;
 
                         var matricule = (colMap["matricule"] !== undefined && colMap["matricule"] < cellTexts.length) ? cellTexts[colMap["matricule"]] : "";
-                        var sexe = (colMap["sexe"] !== undefined && colMap["sexe"] < cellTexts.length) ? cellTexts[colMap["sexe"]].toUpperCase() : "";
+                        var rawSexe = (colMap["sexe"] !== undefined && colMap["sexe"] < cellTexts.length) ? cellTexts[colMap["sexe"]].toUpperCase() : "";
+                        var sexe = (rawSexe === "W" || rawSexe === "F") ? "F" : ((rawSexe === "M" || rawSexe === "H") ? "M" : rawSexe);
 
                         students.push({
                             num: students.length + 1,
@@ -266,8 +280,8 @@
                 }
             }
 
-            var boys = students.filter(function (s) { return s.sexe === "M"; }).length;
-            var girls = students.filter(function (s) { return s.sexe === "F"; }).length;
+            var boys = students.filter(function (s) { return s.sexe === "M" || s.sexe === "H"; }).length;
+            var girls = students.filter(function (s) { return s.sexe === "F" || s.sexe === "W"; }).length;
 
             return {
                 success: students.length > 0,

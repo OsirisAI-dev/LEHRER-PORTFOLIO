@@ -375,6 +375,66 @@
             transform: translateY(-1px);
         }
 
+        .roster-help-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--bg-color, #ffffff);
+            border: 1.5px solid var(--border-color, #bdc3c7);
+            color: var(--secondary-text, #64748b);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 2px;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .roster-help-btn:hover {
+            border-color: var(--accent, #3498db);
+            color: var(--accent, #3498db);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transform: scale(1.08);
+        }
+
+        .roster-help-modal-content {
+            max-width: 540px !important;
+            width: 92% !important;
+            text-align: left !important;
+            padding: 22px 24px !important;
+        }
+
+        .roster-help-box {
+            background: rgba(52, 152, 219, 0.08);
+            border-left: 4px solid var(--accent, #3498db);
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .roster-help-box.warning {
+            background: rgba(243, 156, 18, 0.1);
+            border-left-color: #f39c12;
+        }
+
+        .roster-help-box.info {
+            background: rgba(39, 174, 96, 0.08);
+            border-left-color: var(--dot-checked, #27ae60);
+        }
+
+        .roster-help-box-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-color, #2c3e50);
+        }
+
         .ptr-roster-sync-btn {
             display: inline-flex;
             align-items: center;
@@ -1743,9 +1803,12 @@
                     <span id="classGirlsLabel">Filles :</span>
                     <input type="number" min="0" id="classGirlsInput" class="class-size-input" placeholder="0" oninput="updateClassSize('girls', this.value)">
                 </label>
-                <button type="button" class="roster-import-btn" id="rosterImportBtn" onclick="triggerRosterImport()" title="Importer la liste des élèves (.csv, .doc, .docx, .pdf)">
+                <button type="button" class="roster-import-btn" id="rosterImportBtn" onclick="triggerRosterImport()" title="Importer la liste des élèves (.csv, .doc, .docx, .pdf, .txt)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     <span id="rosterImportBtnLabel">Importer liste</span>
+                </button>
+                <button type="button" class="roster-help-btn" id="rosterHelpBtn" onclick="openRosterHelpModal()" title="Consignes et formats pour l'importation de la liste">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                 </button>
                 <input type="file" id="rosterFileInput" accept=".csv,.doc,.docx,.html,.txt,.pdf" style="display:none;" onchange="handleRosterFile(event)">
             </div>
@@ -1821,6 +1884,29 @@
             </button>
         </div>
     </main>
+
+    <!-- Roster Help & Guidelines Modal -->
+    <div id="rosterHelpModal" class="modal-overlay" onclick="if(event.target===this) closeRosterHelpModal()">
+        <div class="modal-content roster-help-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="rosterHelpModalTitle" style="display:flex; align-items:center; gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent, #3498db); flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span id="rosterHelpTitleText">Consignes d'importation de la liste</span>
+                </div>
+                <button class="modal-close-btn" onclick="closeRosterHelpModal()" title="Fermer">&times;</button>
+            </div>
+            <div class="modal-body" id="rosterHelpModalBody" style="align-items: stretch; text-align: left; gap: 8px;">
+                <!-- Populated dynamically via renderRosterHelpContent() -->
+            </div>
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-grey, #e2e8f0); display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="ctrl-btn" onclick="closeRosterHelpModal()" id="rosterHelpCloseBtn" style="padding: 7px 16px; font-size: 0.88rem; cursor: pointer;">Fermer</button>
+                <button type="button" class="roster-import-btn" onclick="closeRosterHelpModal(); triggerRosterImport();" id="rosterHelpActionBtn" style="padding: 7px 16px; font-size: 0.88rem; background: var(--dot-checked, #27ae60); color: #ffffff; border-color: var(--dot-checked, #27ae60); cursor: pointer;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span id="rosterHelpActionLabel">Choisir un fichier...</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Popup for Enlarged Diagrams -->
     <div id="chartModal" class="modal-overlay" onclick="closeChartModal(event)">
@@ -2338,7 +2424,10 @@
             ptrLockTooltipLocked: 'Notes verrouillées pour empêcher toute modification accidentelle. Cliquez pour déverrouiller.',
             ptrLockTooltipUnlocked: 'Cliquez pour verrouiller et protéger les notes contre toute modification accidentelle.',
             rosterImportBtn: 'Importer liste',
-            rosterImportTitle: 'Importer la liste des élèves (CSV, Word, PDF)',
+            rosterImportTitle: 'Importer la liste des élèves (CSV, Word, PDF, TXT) — Cliquez sur (?) pour les consignes',
+            rosterHelpBtnTitle: 'Consignes et formats pour l’importation de la liste',
+            rosterParsing: 'Traitement...',
+            rosterParsingPdf: 'Analyse PDF en cours...',
             rosterSyncBtn: 'Insérer liste',
             rosterSyncTitle: 'Remplir automatiquement avec les élèves de la classe',
             rosterImportSuccess: 'Liste importée avec succès : {count} élèves ({boys} garçons, {girls} filles).',
@@ -2492,7 +2581,10 @@
             ptrLockTooltipLocked: 'Noten sind gegen versehentliche Änderungen gesperrt. Klicken zum Entsperren.',
             ptrLockTooltipUnlocked: 'Klicken, um Noten gegen versehentliche Änderungen zu sperren.',
             rosterImportBtn: 'Klassenliste importieren',
-            rosterImportTitle: 'Schülerliste importieren (CSV, Word, PDF)',
+            rosterImportTitle: 'Schülerliste importieren (CSV, Word, PDF, TXT) — Klicken Sie auf (?) für Hinweise',
+            rosterHelpBtnTitle: 'Hinweise und Formate für den Import der Schülerliste',
+            rosterParsing: 'Wird verarbeitet...',
+            rosterParsingPdf: 'PDF wird analysiert...',
             rosterSyncBtn: 'Liste einfügen',
             rosterSyncTitle: 'Automatisch mit Schülern dieser Klasse füllen',
             rosterImportSuccess: 'Liste erfolgreich importiert: {count} Schüler ({boys} Jungen, {girls} Mädchen).',
@@ -2725,6 +2817,8 @@
         if (rosterImpLbl) rosterImpLbl.textContent = lang.rosterImportBtn;
         const rosterImpBtn = document.getElementById('rosterImportBtn');
         if (rosterImpBtn) rosterImpBtn.title = lang.rosterImportTitle;
+        const rosterHlpBtn = document.getElementById('rosterHelpBtn');
+        if (rosterHlpBtn) rosterHlpBtn.title = lang.rosterHelpBtnTitle;
         const rosterSyncLbl = document.getElementById('ptrRosterSyncLabel');
         if (rosterSyncLbl) rosterSyncLbl.textContent = lang.rosterSyncBtn;
         const rosterSyncBtn = document.getElementById('ptrRosterSyncBtn');
@@ -2800,6 +2894,16 @@
             return;
         }
 
+        const rosterImpBtn = document.getElementById('rosterImportBtn');
+        const rosterImpLbl = document.getElementById('rosterImportBtnLabel');
+        const originalLabel = rosterImpLbl ? rosterImpLbl.textContent : '';
+        const isPdf = file.name && file.name.toLowerCase().endsWith('.pdf');
+
+        if (rosterImpBtn && rosterImpLbl) {
+            rosterImpBtn.disabled = true;
+            rosterImpLbl.textContent = isPdf ? (lang.rosterParsingPdf || "Analyse PDF en cours...") : (lang.rosterParsing || "Traitement...");
+        }
+
         ClassRoster.parseFile(file).then(function(result) {
             if (!result || !result.students || result.students.length === 0) {
                 alert(lang.rosterImportEmpty);
@@ -2825,7 +2929,124 @@
         }).catch(function(err) {
             console.error("Erreur import liste élève:", err);
             alert((lang.rosterImportError || "Erreur lors de l'analyse du fichier : ") + (err ? err.message : err));
+        }).finally(function() {
+            if (rosterImpBtn && rosterImpLbl) {
+                rosterImpBtn.disabled = false;
+                rosterImpLbl.textContent = originalLabel || lang.rosterImportBtn;
+            }
         });
+    }
+
+    function renderRosterHelpContent() {
+        const langCode = appState.lang || 'FR';
+        const isDE = langCode === 'DE';
+        const titleEl = document.getElementById('rosterHelpTitleText');
+        const bodyEl = document.getElementById('rosterHelpModalBody');
+        const closeBtn = document.getElementById('rosterHelpCloseBtn');
+        const actionLbl = document.getElementById('rosterHelpActionLabel');
+
+        if (titleEl) {
+            titleEl.textContent = isDE ? "Hinweise zum Importieren der Schülerliste" : "Consignes d'importation de la liste d'élèves";
+        }
+        if (closeBtn) {
+            closeBtn.textContent = isDE ? "Schließen" : "Fermer";
+        }
+        if (actionLbl) {
+            actionLbl.textContent = isDE ? "Datei auswählen..." : "Choisir un fichier...";
+        }
+
+        if (bodyEl) {
+            if (isDE) {
+                bodyEl.innerHTML = `
+                    <div class="roster-help-box">
+                        <div class="roster-help-box-title">
+                            <strong>Unterstützte Formate & Kompatibilität</strong>
+                        </div>
+                        <div>
+                            • <strong>Nicht auf ein bestimmtes Schulportal beschränkt:</strong> Akzeptiert Exporte aus Schulverwaltungssoftware (Ecole Media, ProNote usw.), Excel, LibreOffice oder einfache Textlisten.<br>
+                            • <strong>Erlaubte Dateitypen:</strong> <code>.csv</code> (Trennzeichen Semikolon <code>;</code> oder Komma <code>,</code>), <code>.doc</code> / <code>.docx</code> (als HTML-Tabelle), <code>.pdf</code> (Notenlisten) und <code>.txt</code> (ein Name pro Zeile).
+                        </div>
+                    </div>
+
+                    <div class="roster-help-box warning">
+                        <div class="roster-help-box-title" style="color:#d35400;">
+                            ⚠️ <strong>Wichtig: Spalten für Name, Vorname und Geschlecht</strong>
+                        </div>
+                        <div>
+                            Bei Tabellendateien (CSV, Excel, Word) muss die Kopfzeile Spalten für <strong>Nachname</strong> (z. B. <em>Nom</em>), <strong>Vorname</strong> (<em>Prenom</em> / <em>Prénoms</em>) und <strong>Geschlecht</strong> (<em>Sexe</em>: M / F) enthalten, um Schülernamen und Geschlechterstatistiken korrekt zu erfassen.
+                        </div>
+                    </div>
+
+                    <div class="roster-help-box">
+                        <div class="roster-help-box-title">
+                            ⏱️ <strong>PDF-Dateien (Verarbeitungszeit)</strong>
+                        </div>
+                        <div>
+                            Das Extrahieren von Text aus PDF-Dokumenten erfolgt lokal im Browser und kann je nach Umfang des Dokuments einige Sekunden dauern.
+                        </div>
+                    </div>
+
+                    <div class="roster-help-box info">
+                        <div class="roster-help-box-title" style="color:#27ae60;">
+                            ✏️ <strong>Anpassbare Schülerzahlen bei Abweichungen</strong>
+                        </div>
+                        <div>
+                            Die ermittelten Schülerzahlen (Gesamt, Jungen, Mädchen) werden automatisch eingetragen, bleiben jedoch <strong>jederzeit frei editierbar</strong> direkt in den Eingabefeldern der Klassenleiste.
+                        </div>
+                    </div>
+                `;
+            } else {
+                bodyEl.innerHTML = `
+                    <div class="roster-help-box">
+                        <div class="roster-help-box-title">
+                            <strong>Formats acceptés & Compatibilité</strong>
+                        </div>
+                        <div>
+                            • <strong>Non limité à un logiciel spécifique :</strong> Accepte les exports d'Ecole Media, ProNote, Excel, LibreOffice ou de listes manuelles.<br>
+                            • <strong>Types de fichiers supportés :</strong> <code>.csv</code> (séparateur point-virgule <code>;</code> ou virgule <code>,</code>), <code>.doc</code> / <code>.docx</code> (tableaux HTML), <code>.pdf</code> (relevés de notes) et <code>.txt</code> (un nom par ligne).
+                        </div>
+                    </div>
+
+                    <div class="roster-help-box warning">
+                        <div class="roster-help-box-title" style="color:#d35400;">
+                            ⚠️ <strong>Attention : colonnes Nom, Prénoms et Sexe requises</strong>
+                        </div>
+                        <div>
+                            Pour les fichiers tabulaires (CSV, Excel, Word), assurez-vous que la première ligne d'entêtes comporte bien des colonnes pour le <strong>Nom</strong>, les <strong>Prénoms</strong> (ou <em>Prenom</em>) et le <strong>Sexe</strong> (M / F) afin de permettre la reconnaissance automatique des élèves et des statistiques.
+                        </div>
+                    </div>
+
+                    <div class="roster-help-box">
+                        <div class="roster-help-box-title">
+                            ⏱️ <strong>Fichiers PDF (Temps de traitement)</strong>
+                        </div>
+                        <div>
+                            L'analyse et l'extraction de texte à partir de documents PDF s'effectuent directement dans votre navigateur et peuvent nécessiter quelques secondes selon le volume du document.
+                        </div>
+                    </div>
+
+                    <div class="roster-help-box info">
+                        <div class="roster-help-box-title" style="color:#27ae60;">
+                            ✏️ <strong>Effectifs ajustables en cas d'écart</strong>
+                        </div>
+                        <div>
+                            Les effectifs détectés (Total, Garçons, Filles) sont automatiquement insérés dans le bandeau de classe, mais restent <strong>entièrement modifiables à tout moment</strong> dans les cases de saisie en cas d'écart ou de mise à jour.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function openRosterHelpModal() {
+        renderRosterHelpContent();
+        const m = document.getElementById('rosterHelpModal');
+        if (m) m.classList.add('active');
+    }
+
+    function closeRosterHelpModal() {
+        const m = document.getElementById('rosterHelpModal');
+        if (m) m.classList.remove('active');
     }
 
     // [syncPointeurWithRoster moved to ../js/apps/dashboard-pointeur.js]
