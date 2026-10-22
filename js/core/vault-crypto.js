@@ -171,7 +171,7 @@
                         const raw = localStorage.getItem(this.storageKey);
                         blob = raw ? JSON.parse(raw) : null;
                     } catch (err) { blob = null; }
-                    if (e.source) e.source.postMessage({ type: 'osirisVaultExportData', blob }, e.origin || '*');
+                    if (e.source) e.source.postMessage({ type: 'osirisVaultExportData', blob }, window.location.origin);
                 } else if (e.data.type === 'osirisVaultRestoreBlob' && e.data.blob) {
                     try {
                         localStorage.setItem(this.storageKey, JSON.stringify(e.data.blob));
@@ -195,7 +195,7 @@
                             this.onKeysUpdated(newKeys);
                         }
                     }
-                    if (e.source) e.source.postMessage({ type: 'osirisVaultKeysApplied', count: applied }, e.origin || '*');
+                    if (e.source) e.source.postMessage({ type: 'osirisVaultKeysApplied', count: applied }, window.location.origin);
                 }
             });
         }

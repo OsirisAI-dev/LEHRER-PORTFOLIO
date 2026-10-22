@@ -2189,7 +2189,7 @@ document.getElementById('apply-keys-btn').addEventListener('click', () => {
   const frame = content.querySelector('.page-frame');
   const statusEl = document.getElementById('manage-status');
   if (frame && frame.contentWindow) {
-    frame.contentWindow.postMessage({ type: 'osirisVaultKeys', keys: v.keys }, '*');
+    frame.contentWindow.postMessage({ type: 'osirisVaultKeys', keys: v.keys }, window.location.origin);
     statusEl.textContent = `„${v.name}" gesendet — warte auf Rückmeldung der Seite …`;
     statusEl.className = 'status-msg ok';
   } else {
@@ -2201,6 +2201,7 @@ document.getElementById('apply-keys-btn').addEventListener('click', () => {
 // Rückmeldung der Zielseite, nachdem sie die erhaltenen Schlüssel
 // angewendet hat (siehe KI_WÖRTERBUCH. / KI_SPEZIALISIERTES_WÖRTERBUCH.).
 window.addEventListener('message', (e) => {
+  if (e.origin !== window.location.origin) return;
   if (!e.data || e.data.type !== 'osirisVaultKeysApplied') return;
   const pageFrame = content.querySelector('.page-frame');
   if (!pageFrame || e.source !== pageFrame.contentWindow) return;
@@ -3735,7 +3736,7 @@ render();
 (function() {
     if (!localStorage.getItem('library_opened_once')) {
         const style = document.createElement('style');
-        style.innerHTML = 
+        style.innerHTML = `
             @keyframes pulse-attention {
                 0% { box-shadow: 0 0 0 0 rgba(47, 111, 235, 0.7); }
                 70% { box-shadow: 0 0 0 10px rgba(47, 111, 235, 0); }
@@ -3746,7 +3747,7 @@ render();
                 position: relative;
                 z-index: 10;
             }
-        ;
+        `;
         document.head.appendChild(style);
         
         document.addEventListener('click', function(e) {
