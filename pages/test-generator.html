@@ -439,7 +439,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
 <div id="ai-scrim" onclick="closeAiPanel()"></div>
 <div id="ai-panel">
     <div id="ai-panel-head">
-        <h3>🤖 Générer IA</h3>
+        <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Générer IA</h3>
         <button onclick="closeAiPanel()" style="padding: 4px 9px;">✕</button>
     </div>
     <div id="ai-panel-body">
@@ -605,9 +605,9 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
 </div>
 
 <div class="toolbar no-print">
-    <button id="theme-toggle"><span data-i18n="theme">🎨 Theme</span></button>
-    <button onclick="toggleCenter()">↔️ <span data-i18n="center">Centrer</span></button>
-    <button onclick="exportJSON()">💾 <span data-i18n="save">Exporter</span></button>
+    <button id="theme-toggle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg><span data-i18n="theme">Theme</span></button>
+    <button onclick="toggleCenter()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polyline points="18 8 22 12 18 16"></polyline><polyline points="6 8 2 12 6 16"></polyline><line x1="2" y1="12" x2="22" y2="12"></line></svg><span data-i18n="center">Centrer</span></button>
+    <button onclick="exportJSON()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg><span data-i18n="save">Exporter</span></button>
     
     <div style="display: flex; align-items: center; gap: 5px;">
         <label style="font-size: 11px; cursor: pointer;">
@@ -619,11 +619,11 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
         </select>
     </div>
 
-    <button onclick="document.getElementById('importFile').click()">📂 <span data-i18n="load">Importer</span></button>
-    <button onclick="clearAutofill()"><span data-i18n="sweep">Sweep 🧹</span></button>
+    <button onclick="document.getElementById('importFile').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span data-i18n="load">Importer</span></button>
+    <button onclick="clearAutofill()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span data-i18n="sweep">Sweep</span></button>
     
  <div style="position: relative; display: flex; align-items: stretch;">
-    <button onclick="toggleParamMenu(event)"><span data-i18n="paramBtn">Param. ⚙️</span></button>
+    <button onclick="toggleParamMenu(event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span data-i18n="paramBtn">Paramètres</span></button>
     <div id="param-dropdown" style="display:none; position:absolute; top:100%; left:0; background:var(--container-bg); border:1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 200; padding: 10px; width: 160px; margin-top: 5px; border-radius: 4px;">
         <div data-i18n="margins" style="font-size: 11px; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid var(--border-color); color: var(--text-color);">Marges Word</div>
         <select id="doc-margins" onchange="applyMargins()" style="width: 100%; font-size: 12px; margin-bottom: 10px; background: var(--container-bg); color: var(--text-color);">
@@ -659,7 +659,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
     <input type="file" id="importFile" style="display:none" onchange="importJSON(this)">
 
     <div style="position: relative; display: flex; align-items: stretch;">
-        <button onclick="toggleAiMenu(event)"><span data-i18n="aiGenBtn">🤖 Générer IA</span></button>
+        <button onclick="toggleAiMenu(event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><span data-i18n="aiGenBtn">Générer IA</span></button>
     </div>
 
     <div class="globe-menu" style="margin-left: auto; display: flex; gap: 8px; padding-left: 32px;">
@@ -896,7 +896,7 @@ function jumpToText(pos) {
 const translations = {
     fr: { 
         theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Centrer", "auto-backup": "Auto-Backup", "load": "Importer", "save": "Exporter",
-        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Paramètres ⚙️", margins: "Marges Word",
+        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Paramètres", margins: "Marges Word",
         "margin-normal": "Normales", "margin-narrow": "Étroites", "margin-moderate": "Moyennes", "margin-wide": "Larges",
         font: "Police", size: "Taille", rulerTitle: "Règle de texte", showRuler: "Afficher",
         aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer IA", logoBoxTitle: "En-tête / Logo", titlePlac: "TITRE:", logoPlac: "Infos établissement / Logo (Max: 633x250px, 100ko)...",
@@ -910,7 +910,7 @@ const translations = {
     },
     en: { 
         theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Center", "auto-backup": "Auto-Backup", "load": "Import", "save": "Export",
-        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters ⚙️", margins: "Word Margins",
+        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters", margins: "Word Margins",
         "margin-normal": "Normal", "margin-narrow": "Narrow", "margin-moderate": "Moderate", "margin-wide": "Wide",
         font: "Font", size: "Size", rulerTitle: "Text Ruler", showRuler: "Show",
         aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Generate", logoBoxTitle: "Header / Logo", titlePlac: "TITLE:", logoPlac: "School Info / Logo (Max: 633x250px, 100kb)...",
@@ -924,7 +924,7 @@ const translations = {
     },
     es: { 
         theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Tema", center: "Centrar", "auto-backup": "Auto-Respaldo", "load": "Importar", "save": "Exportar",
-        sweep: "Limpiar <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Param. ⚙️", margins: "Márgenes Word",
+        sweep: "Limpiar <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parámetros", margins: "Márgenes Word",
         "margin-normal": "Normal", "margin-narrow": "Estrecho", "margin-moderate": "Moderado", "margin-wide": "Ancho",
         font: "Fuente", size: "Tamaño", rulerTitle: "Regla de texto", showRuler: "Mostrar",
         aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar IA", logoBoxTitle: "Encabezado / Logo", titlePlac: "TÍTULO:", logoPlac: "Info escolar / Logo (Max: 633x250px, 100kb)...",
@@ -938,7 +938,7 @@ const translations = {
     },
     de: { 
         theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Design", center: "Zentrieren", "auto-backup": "Auto-Backup", "load": "Importieren", "save": "Exportieren",
-        sweep: "Aufräumen <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters ⚙️", margins: "Word Ränder",
+        sweep: "Aufräumen <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters", margins: "Word Ränder",
         "margin-normal": "Normal", "margin-narrow": "Schmal", "margin-moderate": "Mittel", "margin-wide": "Breit",
         font: "Schriftart", size: "Größe", rulerTitle: "Textlineal", showRuler: "Anzeigen",
         aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Generieren", logoBoxTitle: "Kopfzeile / Logo", titlePlac: "TITEL:", logoPlac: "Schulinfo / Logo (Max: 633x250px, 100kb)...",

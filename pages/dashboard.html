@@ -1672,7 +1672,7 @@
         <div id="printReportHeader" class="print-report-header">
             <div class="print-header-content">
                 <div class="print-school-info">
-                    <div id="printSchoolLogo" class="print-school-logo">🏢</div>
+                    <div id="printSchoolLogo" class="print-school-logo"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"></path><path d="M18 22V5l-6-3-6 3v17"></path><path d="M4 10h4"></path><path d="M4 15h4"></path><path d="M16 10h4"></path><path d="M16 15h4"></path></svg></div>
                     <div>
                         <h1 id="printSchoolName" class="print-school-title">ÉCOLE</h1>
                         <h2 id="printClassName" class="print-class-title">CLASSE</h2>
@@ -1750,15 +1750,27 @@
 
         <!-- Action Buttons: Export / PDF / Import -->
         <div class="action-buttons-row" id="actionButtonsRow">
-            <button class="action-btn" id="exportBtn" onclick="exportData()">SAUVEGARDER DONNÉES</button>
-            <button class="pdf-btn" id="pdfBtn" onclick="triggerPdfReport()">GÉNÉRER RAPPORT PDF</button>
-            <button class="action-btn" id="importBtn" onclick="triggerImport()">RESTAURER DONNÉES</button>
+            <button class="action-btn" id="exportBtn" onclick="exportData()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span id="exportBtnLabel">SAUVEGARDER DONNÉES</span>
+            </button>
+            <button class="pdf-btn" id="pdfBtn" onclick="triggerPdfReport()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span id="pdfBtnLabel">GÉNÉRER RAPPORT PDF</span>
+            </button>
+            <button class="action-btn" id="importBtn" onclick="triggerImport()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span id="importBtnLabel">RESTAURER DONNÉES</span>
+            </button>
             <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;" onchange="handleImport(event)">
         </div>
 
         <!-- Reset Button -->
         <div class="reset-btn-container" id="resetBtnContainer">
-            <button class="reset-btn" id="resetBtn" onclick="resetAll()">RÉINITIALISER</button>
+            <button class="reset-btn" id="resetBtn" onclick="resetAll()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span id="resetBtnLabel">RÉINITIALISER</span>
+            </button>
         </div>
     </main>
 
@@ -2318,7 +2330,7 @@
             extractCoverHint: '+ livre',
             manualImageTitle: 'Ou choisir une image manuellement',
             extracting: 'Extraction…',
-            extractFailedMsg: "Impossible d'extraire la couverture de ce fichier (format non pris en charge ou fichier corrompu). Vous pouvez toujours ajouter une image manuellement via l'icône 🖼️.",
+            extractFailedMsg: "Impossible d'extraire la couverture de ce fichier (format non pris en charge ou fichier corrompu). Vous pouvez toujours ajouter une image manuellement via l'icône ️.",
             colThemes: 'Thèmes',
             colLessons: 'Leçons',
             colProgress: 'Progression',
@@ -2379,7 +2391,7 @@
             export: 'SAUVEGARDER DONNÉES',
             import: 'RESTAURER DONNÉES',
             reset: 'RÉINITIALISER',
-            confirmReset: '⚠️ Réinitialiser toutes les données ? Écoles, classes, matières et évaluations seront définitivement supprimées. Cette action est irréversible.',
+            confirmReset: '️ Réinitialiser toutes les données ? Écoles, classes, matières et évaluations seront définitivement supprimées. Cette action est irréversible.',
             importSuccess: 'Données importées avec succès.',
             importError: "Fichier invalide. Impossible d'importer ces données.",
             addSubjectFirstTitle: "Ajoutez d'abord une matière pour débloquer cette section.",
@@ -2464,7 +2476,7 @@
             extractCoverHint: '+ Buch',
             manualImageTitle: 'Oder manuell ein Bild wählen',
             extracting: 'Extrahiere…',
-            extractFailedMsg: 'Das Cover konnte aus dieser Datei nicht extrahiert werden (nicht unterstütztes Format oder beschädigte Datei). Sie können jederzeit manuell ein Bild über das 🖼️-Symbol hinzufügen.',
+            extractFailedMsg: 'Das Cover konnte aus dieser Datei nicht extrahiert werden (nicht unterstütztes Format oder beschädigte Datei). Sie können jederzeit manuell ein Bild über das ️-Symbol hinzufügen.',
             colThemes: 'Themen',
             colLessons: 'Lektionen',
             colProgress: 'Fortschritt',
@@ -2525,7 +2537,7 @@
             export: 'DATEN SPEICHERN',
             import: 'DATEN WIEDERHERSTELLEN',
             reset: 'ZURÜCKSETZEN',
-            confirmReset: '⚠️ Alle Daten zurücksetzen? Schulen, Klassen, Fächer und Bewertungen werden endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
+            confirmReset: '️ Alle Daten zurücksetzen? Schulen, Klassen, Fächer und Bewertungen werden endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
             importSuccess: 'Daten erfolgreich importiert.',
             importError: 'Ungültige Datei. Diese Daten können nicht importiert werden.',
             addSubjectFirstTitle: 'Fügen Sie zuerst ein Fach hinzu, um diesen Bereich freizuschalten.',
@@ -2603,6 +2615,7 @@
         alert(i18n[appState.lang][key]);
     }
 
+    const SCHOOL_ICON_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"></path><path d="M18 22V5l-6-3-6 3v17"></path><path d="M4 10h4"></path><path d="M4 15h4"></path><path d="M16 10h4"></path><path d="M16 15h4"></path></svg>`;
     const LOCK_SVG_LOCKED = `<svg width="18" height="18" viewBox="0 0 512 512" xml:space="preserve"><path style="fill:#C7CFE2;" d="M365.463,283.767c-18.849,0-34.13-15.281-34.13-34.13V143.593c0-41.539-33.795-75.332-75.332-75.332c-41.539,0-75.333,33.795-75.333,75.332v106.044c0,18.849-15.281,34.13-34.13,34.13s-34.13-15.281-34.13-34.13V143.593C112.408,64.416,176.823,0,256,0s143.592,64.416,143.592,143.592v106.044C399.594,268.486,384.312,283.767,365.463,283.767z"/><g style="opacity:0.1;"><path d="M146.538,283.767c18.849,0,34.13-15.281,34.13-34.13v-76.023h-68.26v76.023C112.408,268.486,127.688,283.767,146.538,283.767z"/><path d="M331.333,173.614v76.023c0,18.849,15.281,34.13,34.13,34.13s34.13-15.281,34.13-34.13v-76.023H331.333z"/></g><path style="fill:#FFD782;" d="M404.055,207.745H107.945c-17.577,0-31.825,14.249-31.825,31.825v240.605c0,17.577,14.248,31.825,31.825,31.825h296.111c17.577,0,31.825-14.248,31.825-31.825V239.57C435.882,221.993,421.632,207.745,404.055,207.745z"/></svg>`;
     const LOCK_SVG_UNLOCKED = `<svg width="18" height="18" viewBox="0 0 512 512" xml:space="preserve"><path style="fill:#C7CFE2;" d="M112.408,170v-26.406C112.408,64.416,176.823,0,256,0s143.592,64.416,143.592,143.592v106.044c0,18.849-15.281,34.13-34.13,34.13s-34.13-15.281-34.13-34.13V143.592c0-41.539-33.795-75.332-75.332-75.332c-41.539,0-75.333,33.795-75.333,75.332v26.406h-68.259V170z"/><path style="opacity:0.1;" d="M331.333,173.613v76.023c0,18.849,15.281,34.13,34.13,34.13s34.13-15.281,34.13-34.13v-76.023H331.333z"/><path style="fill:#FFD782;" d="M404.055,207.745H107.945c-17.577,0-31.825,14.249-31.825,31.825v240.605c0,17.577,14.248,31.825,31.825,31.825h296.111c17.577,0,31.825-14.248,31.825-31.825V239.57C435.882,221.993,421.632,207.745,404.055,207.745z"/></svg>`;
     const BG_ICON_SVG = `<svg width="16" height="16" viewBox="0 0 58 58" xml:space="preserve"><g><polygon style="fill:#AFB6BB;" points="16,16 16,42 16,58 58,58 58,16 "/><polygon style="fill:#556080;" points="42,16 42,0 0,0 0,42 16,42 16,16 "/></g></svg>`;
@@ -2802,10 +2815,14 @@
         document.getElementById('extListLabel').textContent = lang.extList;
         document.getElementById('classLibLabel').textContent = lang.classLib;
         document.getElementById('classLibLink').textContent = lang.classLibLink;
-        document.getElementById('pdfBtn').textContent = lang.pdf;
-        document.getElementById('exportBtn').textContent = lang.export;
-        document.getElementById('importBtn').textContent = lang.import;
-        document.getElementById('resetBtn').textContent = '⚠️ ' + lang.reset;
+        const pdfLbl = document.getElementById('pdfBtnLabel');
+        if (pdfLbl) pdfLbl.textContent = lang.pdf; else document.getElementById('pdfBtn').textContent = lang.pdf;
+        const expLbl = document.getElementById('exportBtnLabel');
+        if (expLbl) expLbl.textContent = lang.export; else document.getElementById('exportBtn').textContent = lang.export;
+        const impLbl = document.getElementById('importBtnLabel');
+        if (impLbl) impLbl.textContent = lang.import; else document.getElementById('importBtn').textContent = lang.import;
+        const rstLbl = document.getElementById('resetBtnLabel');
+        if (rstLbl) rstLbl.textContent = lang.reset; else document.getElementById('resetBtn').textContent = lang.reset;
         document.getElementById('resetBtn').title = lang.confirmReset;
         document.getElementById('addSchoolBtn').title = lang.addSchoolTitle;
         document.getElementById('addClassBtn').title = lang.addClassTitle;
@@ -2992,7 +3009,7 @@
             pill.innerHTML = `
                 <input type="file" id="${fileId}" accept="image/*" style="display:none;" onchange="handleSchoolLogoUpload(event, ${sIdx})">
                 <div class="school-logo-btn" ${appState.editMode ? `onclick="document.getElementById('${fileId}').click()"` : ''} title="${lang.changeLogoTitle}">
-                    <div>${sch.logo ? `<img src="${sch.logo}" alt="Logo">` : '🏫'}</div>
+                    <div>${sch.logo ? `<img src="${sch.logo}" alt="Logo">` : SCHOOL_ICON_SVG}</div>
                 </div>
                 <input type="text" class="editable-input" value="${sch.name}" ${appState.editMode ? '' : 'readonly'} oninput="appState.schools[${sIdx}].name=this.value" placeholder="${lang.schoolNamePlaceholder}">
                 ${appState.editMode && appState.schools.length > 1 ? `<button class="delete-btn" onclick="removeSchool(${sIdx})" title="${lang.deleteSchoolTitle}">&times;</button>` : ''}
@@ -3356,7 +3373,7 @@
                     <div class="cover-upload-box" onclick="document.getElementById('${coverId}').click()" title="${lang.extractCoverTitle}">
                         ${book.coverImg ? `<img src="${book.coverImg}">` : `<span>${lang.extractCoverHint}</span>`}
                         ${book.extractBusy ? `<div class="cover-busy-overlay">${lang.extracting}</div>` : ''}
-                        <button type="button" class="cover-manual-btn" title="${lang.manualImageTitle}" onclick="event.stopPropagation(); document.getElementById('${coverImgId}').click();">🖼️</button>
+                        <button type="button" class="cover-manual-btn" title="${lang.manualImageTitle}" onclick="event.stopPropagation(); document.getElementById('${coverImgId}').click();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>
                     </div>
                 `;
                 tr.appendChild(tdCover);
@@ -3799,7 +3816,7 @@
 
         const schoolName = school ? school.name : lang.newSchool;
         const className = cls ? cls.name : lang.newClass;
-        const logoHtml = school && school.logo ? `<img src="${school.logo}" alt="Logo">` : '🏢';
+        const logoHtml = school && school.logo ? `<img src="${school.logo}" alt="Logo">` : SCHOOL_ICON_SVG;
 
         document.getElementById('printSchoolLogo').innerHTML = logoHtml;
         document.getElementById('printSchoolName').textContent = schoolName;

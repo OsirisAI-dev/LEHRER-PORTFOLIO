@@ -172,9 +172,9 @@
     </div>
 
 <div class="toolbar no-print">
-    <button id="theme-toggle">🌓 Theme</button>
-    <button onclick="toggleCenter()">↔️ <span data-i18n="center">Centrer</span></button>
-    <button onclick="exportJSON()">💾 <span data-i18n="save">Exporter</span></button>
+    <button id="theme-toggle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>Theme</button>
+    <button onclick="toggleCenter()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polyline points="18 8 22 12 18 16"></polyline><polyline points="6 8 2 12 6 16"></polyline><line x1="2" y1="12" x2="22" y2="12"></line></svg><span data-i18n="center">Centrer</span></button>
+    <button onclick="exportJSON()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg><span data-i18n="save">Exporter</span></button>
     
     <div class="no-print no-print-flex" style="display: flex; align-items: center; gap: 2px; padding: 0 2px; flex-wrap: nowrap;">
         <label style="font-size: 11px; display: flex; align-items: center; gap: 2px; color: var(--text-color); cursor: pointer; flex-shrink: 0; margin: 0;">
@@ -188,14 +188,14 @@
         </select>
     </div>
 
-    <button onclick="document.getElementById('importFile').click()">📂 <span data-i18n="load">Importer</span></button>
-    <button onclick="clearAutofill()">🧹 <span data-i18n="clear-autofill">Effacer Saisie</span></button>
+    <button onclick="document.getElementById('importFile').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span data-i18n="load">Importer</span></button>
+    <button onclick="clearAutofill()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span data-i18n="clear-autofill">Effacer</span></button>
     <input type="file" id="importFile" style="display:none" onchange="importJSON(this)">
     
     <div class="globe-menu">
-        <button onclick="window.print()" style="background:#f44336; color:white;">📄 PDF</button>
+        <button onclick="window.print()" style="background:#f44336; color:white;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>PDF</button>
         <button onclick="exportWord()" style="background:#2b579a; color:white;">📝 DOCX</button>
-        <button onclick="toggleLangMenu(event)">🌐 <span id="current-lang">FR</span> ▾</button>
+        <button onclick="toggleLangMenu(event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg><span id="current-lang">FR</span> ▾</button>
         <div id="lang-dropdown">
             <button onclick="setLanguage('fr')">Français</button>
             <button onclick="setLanguage('en')">English</button>
