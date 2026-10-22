@@ -9,6 +9,8 @@
    - Option D : Export / Import de sauvegarde complète unifiée (.osiris)
      chiffrée en AES-256-GCM (mot de passe Coffre-fort ou PIN) avec support
      du partage natif (AirDrop / QuickShare / Nearby Share).
+   - OsirisSyncUI : Interface utilisateur modale autonome, responsive
+     et bilingue (FR / DE) auto-injectable sur n'importe quelle page.
    ============================================================ */
 
 (function (global) {
@@ -101,7 +103,6 @@
         return res;
     }
 
-    // Chiffrement / Déchiffrement AES-GCM avec clé brute (pour le QR Code)
     async function encryptWithRawKey(plainText, rawKeyBytes) {
         var key = await crypto.subtle.importKey(
             "raw",
@@ -142,7 +143,6 @@
         return dec.decode(plainBuf);
     }
 
-    // Chiffrement / Déchiffrement basé sur un mot de passe ou code PIN (PBKDF2 + AES-GCM)
     async function deriveKeyFromPassword(password, saltUint8, iterations) {
         iterations = iterations || 100000;
         var enc = new TextEncoder();
@@ -210,9 +210,6 @@
     // ==========================================
 
     var OsirisSync = {
-        /**
-         * Extrait l'ensemble des données locales de l'utilisateur sous forme de paquet standardisé.
-         */
         collectData: function () {
             var rawStore = {};
             for (var keyName in SYNC_KEYS) {
@@ -261,9 +258,6 @@
             return bundle;
         },
 
-        /**
-         * Restaure les données du paquet dans le localStorage de l'appareil.
-         */
         applyData: function (bundle) {
             if (!bundle || bundle.magic !== MAGIC_UNIFIED || !bundle.data) {
                 throw new Error("Paquet de synchronisation invalide ou corrompu.");
@@ -294,13 +288,6 @@
             };
         },
 
-        // ==========================================
-        // OPTION D : FICHIER DE SAUVEGARDE & PARTAGE
-        // ==========================================
-
-        /**
-         * Génère un fichier .osiris chiffré et propose soit le partage natif (AirDrop/QuickShare), soit le téléchargement.
-         */
         exportBackup: async function (passwordOrPin) {
             var bundle = this.collectData();
             var jsonText = JSON.stringify(bundle, null, 2);
@@ -319,7 +306,6 @@
             var fileContent = JSON.stringify(exportPayload, null, 2);
             var blob = new Blob([fileContent], { type: "application/json" });
 
-            // Tentative d'utilisation du partage natif (iOS AirDrop, Android QuickShare, etc.)
             var sharedNatively = false;
             if (navigator.canShare && typeof File !== "undefined") {
                 try {
@@ -333,8 +319,7 @@
                         sharedNatively = true;
                     }
                 } catch (shareErr) {
-                    // Si l'utilisateur annule le menu de partage ou s'il échoue, on bascule sur le téléchargement standard
-                    console.log("Partage natif non abouti ou annulé, fallback téléchargement:", shareErr);
+                    console.log("Partage natif non abouti ou annulé:", shareErr);
                 }
             }
 
@@ -354,9 +339,6 @@
             return { filename: filename, sharedNatively: sharedNatively, meta: bundle.meta };
         },
 
-        /**
-         * Lit et déchiffre un fichier .osiris / .json importé.
-         */
         importBackup: async function (file, passwordOrPin) {
             return new Promise(function (resolve, reject) {
                 if (!file) return reject(new Error("Aucun fichier sélectionné."));
@@ -366,7 +348,6 @@
                         var text = e.target.result;
                         var parsed = JSON.parse(text);
 
-                        // Si le fichier est chiffré
                         if (parsed.magic === MAGIC_ENCRYPTED) {
                             if (!passwordOrPin) {
                                 return resolve({ needPassword: true, envelope: parsed });
@@ -390,19 +371,10 @@
             });
         },
 
-        // ==========================================
-        // OPTION A : HYBRIDE P2P WEBRTC + RELAIS E2EE
-        // ==========================================
-
-        /**
-         * Initialise une session d'émission :
-         * Chiffre le paquet, configure le P2P direct et dépose le blob chiffré sur le relais éphémère.
-         */
         createSenderSession: async function (onStatusChange) {
             var self = this;
             onStatusChange = onStatusChange || function () {};
 
-            // 1. Préparer le paquet et générer la clé 256 bits
             var bundle = self.collectData();
             var bundleJson = JSON.stringify(bundle);
             var rawKeyBytes = getRandomBytes(32);
@@ -415,9 +387,8 @@
             var relayKey = "";
             var p2pPeer = null;
 
-            // 2. Dépôt éphémère sur le relais (Zero-Knowledge)
             try {
-                onStatusChange("relay_upload", "Préparation du relais de secours éphémère...");
+                onStatusChange("relay_upload", "Préparation du relais éphémère...");
                 var relayPayload = JSON.stringify({
                     magic: MAGIC_EPHEMERAL,
                     roomId: roomId,
@@ -437,11 +408,9 @@
                     relayKey = data.key || "";
                 }
             } catch (relayErr) {
-                console.warn("Échec du relais de secours, le P2P reste actif:", relayErr);
+                console.warn("Relais note (P2P reste actif):", relayErr);
             }
 
-            // 3. Initialisation du Peer WebRTC P2P direct
-            var p2pConnected = false;
             if (typeof Peer !== "undefined") {
                 try {
                     onStatusChange("p2p_init", "Ouverture du canal direct WebRTC...");
@@ -457,8 +426,7 @@
 
                     p2pPeer.on("connection", function (conn) {
                         conn.on("open", function () {
-                            p2pConnected = true;
-                            onStatusChange("p2p_transfer", "Appareil connecté en P2P direct ! Envoi des données...");
+                            onStatusChange("p2p_transfer", "Appareil connecté en P2P direct ! Transfert...");
                             conn.send({
                                 type: "OSIRIS_SYNC_PAYLOAD",
                                 iv: encrypted.iv,
@@ -467,16 +435,11 @@
                             onStatusChange("completed", "Données transmises avec succès à votre autre appareil !");
                         });
                     });
-
-                    p2pPeer.on("error", function (err) {
-                        console.log("PeerJS note (relais prend le relais):", err);
-                    });
                 } catch (p2pErr) {
-                    console.log("P2P initialisation note:", p2pErr);
+                    console.log("PeerJS init note:", p2pErr);
                 }
             }
 
-            // 4. Construction de l'URL cible encodée dans le QR Code
             var baseHref = window.location.href.split("#")[0].split("?")[0];
             var qrUrl = baseHref + "?sync=" + encodeURIComponent(relayKey) + "&p2p=" + encodeURIComponent(roomId) + "#" + rawKeyUrlSafe;
 
@@ -495,10 +458,6 @@
             };
         },
 
-        /**
-         * Reçoit et déchiffre les données sur le 2e appareil (Smartphone/Tablette) :
-         * Tente le P2P direct et bascule instantanément sur le relais si besoin.
-         */
         receiveSession: async function (relayKey, roomId, rawKeyUrlSafe, onStatusChange) {
             onStatusChange = onStatusChange || function () {};
             var rawKeyBytes = new Uint8Array(b642buf(urlSafeToB64(rawKeyUrlSafe)));
@@ -520,12 +479,10 @@
                         });
                 }
 
-                // Tentative 1 : P2P direct WebRTC via PeerJS
-                var peer = null;
                 if (typeof Peer !== "undefined" && roomId) {
                     try {
                         onStatusChange("connecting_p2p", "Connexion directe en cours avec votre ordinateur...");
-                        peer = new Peer({
+                        var peer = new Peer({
                             debug: 0,
                             config: {
                                 iceServers: [
@@ -544,11 +501,10 @@
                             });
                         });
                     } catch (e) {
-                        console.log("P2P connect skip:", e);
+                        console.log("P2P connect note:", e);
                     }
                 }
 
-                // Tentative 2 : Bascule sur le relais éphémère après 3 secondes (ou immédiatement si pas de P2P)
                 var fetchFromRelay = async function () {
                     if (resolved || !relayKey) return;
                     try {
@@ -575,9 +531,6 @@
             });
         },
 
-        /**
-         * Vérifie au chargement de la page si un lien entrant de synchronisation est présent.
-         */
         checkIncomingSync: function (onIncomingDetected) {
             var search = window.location.search || "";
             var hash = window.location.hash || "";
@@ -598,9 +551,6 @@
             return false;
         },
 
-        /**
-         * Nettoie les paramètres d'URL après la synchronisation sans recharger la page.
-         */
         cleanUrlParams: function () {
             try {
                 var cleanUrl = window.location.origin + window.location.pathname;
@@ -609,5 +559,465 @@
         }
     };
 
+    // ==========================================
+    // OSIRIS SYNC UI (Interface Modale Universelle)
+    // ==========================================
+
+    var OsirisSyncUI = {
+        activeTab: "qr",
+        senderSession: null,
+        countdownTimer: null,
+
+        i18n: {
+            FR: {
+                modalTitle: "Synchronisation & Sauvegarde Osiris",
+                tabQr: "📱 Synchroniser (QR Code)",
+                tabFile: "💾 Sauvegarde Sécurisée (.osiris)",
+                qrDesc: "Transférez instantanément vos données (classes, notes, design et clés IA) vers votre smartphone ou tablette, sans aucun compte ni e-mail.",
+                btnGenerateQr: "Générer le QR Code de synchronisation",
+                scanPrompt: "Visez ce code avec l'appareil photo standard de votre mobile :",
+                countdownLabel: "Expire dans :",
+                e2eeNotice: "🛡️ Chiffrement AES-256-GCM de bout en bout (Zero-Knowledge). La clé de sécurité reste confinée à vos écrans.",
+                fileExportTitle: "1. Exporter / Partager",
+                fileExportDesc: "Créez un fichier chiffré complet contenant toutes vos données. Compatible AirDrop, QuickShare et clé USB.",
+                pinPlaceholder: "Mot de passe Coffre-fort ou code PIN (facultatif)",
+                btnExport: "Exporter la sauvegarde (.osiris)",
+                fileImportTitle: "2. Restaurer depuis un fichier",
+                fileImportDesc: "Importez un fichier .osiris ou .json pour mettre à jour vos données sur cet appareil.",
+                dropZoneText: "Cliquez ou déposez votre fichier .osiris ici",
+                btnImport: "Restaurer",
+                incomingTitle: "📥 Synchronisation Entrante Reçue !",
+                incomingPrompt: "Votre autre appareil souhaite mettre à jour les données de ce navigateur :",
+                btnApplySync: "Confirmer et Appliquer",
+                btnCancel: "Annuler",
+                syncSuccess: "Synchronisation terminée avec succès ! La page va s'actualiser...",
+                syncError: "Erreur de synchronisation : "
+            },
+            DE: {
+                modalTitle: "Osiris Synchronisation & Sicherung",
+                tabQr: "📱 Geräte-Sync (QR-Code)",
+                tabFile: "💾 Sicherungsdatei (.osiris)",
+                qrDesc: "Übertragen Sie Ihre Klassen, Noten, Einstellungen und KI-Schlüssel sofort auf Ihr Smartphone oder Tablet – ohne Konto oder E-Mail.",
+                btnGenerateQr: "Sync-QR-Code generieren",
+                scanPrompt: "Scannen Sie diesen Code mit der normalen Smartphone-Kamera:",
+                countdownLabel: "Gültig für:",
+                e2eeNotice: "🛡️ Ende-zu-Ende-Verschlüsselung (AES-256-GCM, Zero-Knowledge). Der Sicherheitsschlüssel bleibt ausschließlich auf Ihren Bildschirmen.",
+                fileExportTitle: "1. Exportieren / Teilen",
+                fileExportDesc: "Erstellen Sie eine verschlüsselte Sicherungsdatei. Kompatibel mit AirDrop, QuickShare oder USB-Sticks.",
+                pinPlaceholder: "Tresor-Passwort oder PIN (optional)",
+                btnExport: "Sicherung exportieren (.osiris)",
+                fileImportTitle: "2. Aus Datei wiederherstellen",
+                fileImportDesc: "Laden Sie eine .osiris- oder .json-Datei, um die Daten auf diesem Gerät zu aktualisieren.",
+                dropZoneText: "Hier klicken oder .osiris-Datei ablegen",
+                btnImport: "Wiederherstellen",
+                incomingTitle: "📥 Eingehende Synchronisation!",
+                incomingPrompt: "Ihr anderes Gerät möchte die Daten dieses Browsers aktualisieren:",
+                btnApplySync: "Bestätigen und anwenden",
+                btnCancel: "Abbrechen",
+                syncSuccess: "Synchronisation erfolgreich! Seite wird neu geladen...",
+                syncError: "Fehler bei der Synchronisation: "
+            }
+        },
+
+        getLang: function () {
+            var l = localStorage.getItem("lang") || (window.appState && window.appState.lang) || "FR";
+            return l.toUpperCase() === "DE" ? "DE" : "FR";
+        },
+
+        injectStyles: function () {
+            if (document.getElementById("osirisSyncStyles")) return;
+            var css = `
+                .osiris-sync-overlay {
+                    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.55); z-index: 10005; align-items: center; justify-content: center;
+                    backdrop-filter: blur(3px); overflow-y: auto; padding: 16px; box-sizing: border-box;
+                }
+                .osiris-sync-overlay.active { display: flex; }
+                .osiris-sync-content {
+                    background: var(--white, #ffffff); color: var(--text-color, #1e293b);
+                    border-radius: 14px; padding: 22px 24px; max-width: 540px; width: 92%;
+                    max-height: 88vh; display: flex; flex-direction: column; margin: auto;
+                    box-shadow: 0 15px 35px rgba(0,0,0,0.25); box-sizing: border-box; overflow: hidden;
+                    text-align: left;
+                }
+                .osiris-sync-header {
+                    display: flex; justify-content: space-between; align-items: center;
+                    border-bottom: 1px solid var(--border-grey, #e2e8f0); padding-bottom: 12px; margin-bottom: 14px;
+                    flex-shrink: 0;
+                }
+                .osiris-sync-title { font-size: 1.15rem; font-weight: 700; color: var(--accent, #3498db); display: flex; align-items: center; gap: 8px; }
+                .osiris-sync-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8; line-height: 1; }
+                .osiris-sync-close:hover { color: #0f172a; }
+                .osiris-sync-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border-grey, #e2e8f0); padding-bottom: 8px; flex-shrink: 0; }
+                .osiris-sync-tab-btn {
+                    background: none; border: none; padding: 6px 12px; font-weight: 600; font-size: 0.88rem;
+                    color: var(--secondary-text, #64748b); cursor: pointer; border-radius: 6px; transition: all 0.2s;
+                }
+                .osiris-sync-tab-btn.active { background: var(--accent, #3498db); color: #ffffff; }
+                .osiris-sync-body { flex: 1 1 auto; overflow-y: auto; padding-right: 4px; min-height: 0; }
+                .osiris-sync-body::-webkit-scrollbar { width: 6px; }
+                .osiris-sync-body::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 4px; }
+                .osiris-sync-box {
+                    background: rgba(52, 152, 219, 0.08); border-left: 4px solid var(--accent, #3498db);
+                    border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.88rem; line-height: 1.5;
+                }
+                .osiris-sync-qr-container { display: flex; flex-direction: column; align-items: center; margin: 12px 0; gap: 10px; }
+                .osiris-sync-qr-box {
+                    background: #ffffff; padding: 12px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    display: inline-block;
+                }
+                .osiris-sync-status-pill {
+                    display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px;
+                    font-size: 0.82rem; font-weight: 600; background: #e0f2fe; color: #0369a1;
+                }
+                .osiris-sync-status-pill.success { background: #dcfce7; color: #15803d; }
+                .osiris-sync-btn-action {
+                    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+                    background: var(--dot-checked, #27ae60); color: #ffffff; border: none; border-radius: 6px;
+                    padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+                    width: 100%; box-sizing: border-box; margin-top: 6px;
+                }
+                .osiris-sync-btn-action:hover { opacity: 0.92; transform: translateY(-1px); }
+                .osiris-sync-input {
+                    width: 100%; padding: 8px 12px; border: 1.5px solid var(--border-grey, #cbd5e1);
+                    border-radius: 6px; font-size: 0.88rem; box-sizing: border-box; margin: 6px 0 10px 0;
+                    background: var(--white, #ffffff); color: var(--text-color, #1e293b);
+                }
+                .osiris-sync-dropzone {
+                    border: 2px dashed var(--border-grey, #cbd5e1); border-radius: 8px; padding: 16px;
+                    text-align: center; cursor: pointer; margin-bottom: 10px; transition: border-color 0.2s;
+                }
+                .osiris-sync-dropzone:hover { border-color: var(--accent, #3498db); }
+                @media (max-width: 600px) {
+                    .osiris-sync-content { width: 95%; max-height: 92vh; padding: 16px 14px; }
+                    .osiris-sync-tabs { flex-wrap: wrap; }
+                    .osiris-sync-tab-btn { flex: 1 1 auto; text-align: center; }
+                }
+            `;
+            var styleEl = document.createElement("style");
+            styleEl.id = "osirisSyncStyles";
+            styleEl.textContent = css;
+            document.head.appendChild(styleEl);
+        },
+
+        injectModal: function () {
+            if (document.getElementById("osirisSyncModal")) return;
+            this.injectStyles();
+
+            var lang = this.i18n[this.getLang()];
+            var html = `
+                <div id="osirisSyncModal" class="osiris-sync-overlay" onclick="if(event.target===this) OsirisSyncUI.close()">
+                    <div class="osiris-sync-content" onclick="event.stopPropagation()">
+                        <div class="osiris-sync-header">
+                            <div class="osiris-sync-title" id="osirisSyncModalTitle">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                <span>${lang.modalTitle}</span>
+                            </div>
+                            <button class="osiris-sync-close" onclick="OsirisSyncUI.close()">&times;</button>
+                        </div>
+
+                        <div class="osiris-sync-tabs" id="osirisSyncTabs">
+                            <button class="osiris-sync-tab-btn active" id="tabQrBtn" onclick="OsirisSyncUI.switchTab('qr')">${lang.tabQr}</button>
+                            <button class="osiris-sync-tab-btn" id="tabFileBtn" onclick="OsirisSyncUI.switchTab('file')">${lang.tabFile}</button>
+                        </div>
+
+                        <div class="osiris-sync-body" id="osirisSyncBody">
+                            <!-- Onglet QR Code -->
+                            <div id="osirisSyncPanelQr">
+                                <div class="osiris-sync-box">
+                                    ${lang.qrDesc}
+                                </div>
+                                <div id="osirisSyncQrInitial">
+                                    <button class="osiris-sync-btn-action" onclick="OsirisSyncUI.startQrSync()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                        <span>${lang.btnGenerateQr}</span>
+                                    </button>
+                                </div>
+                                <div id="osirisSyncQrActive" style="display:none;" class="osiris-sync-qr-container">
+                                    <div style="font-size:0.88rem; font-weight:600;">${lang.scanPrompt}</div>
+                                    <div class="osiris-sync-qr-box" id="osirisSyncQrCanvas"></div>
+                                    <div class="osiris-sync-status-pill" id="osirisSyncStatusPill">
+                                        <span id="osirisSyncStatusText">Connexion en cours...</span>
+                                    </div>
+                                    <div style="font-size:0.8rem; color:#64748b;" id="osirisSyncCountdown">
+                                        ${lang.countdownLabel} 05:00
+                                    </div>
+                                    <div style="font-size:0.8rem; color:#64748b; text-align:center; margin-top:6px;">
+                                        ${lang.e2eeNotice}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Onglet Sauvegarde Fichier -->
+                            <div id="osirisSyncPanelFile" style="display:none;">
+                                <div style="font-weight:700; margin-bottom:4px;">${lang.fileExportTitle}</div>
+                                <div style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">${lang.fileExportDesc}</div>
+                                <input type="password" id="osirisSyncExportPin" class="osiris-sync-input" placeholder="${lang.pinPlaceholder}">
+                                <button class="osiris-sync-btn-action" onclick="OsirisSyncUI.exportFile()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    <span>${lang.btnExport}</span>
+                                </button>
+
+                                <hr style="border:none; border-top:1px solid var(--border-grey, #e2e8f0); margin:18px 0;">
+
+                                <div style="font-weight:700; margin-bottom:4px;">${lang.fileImportTitle}</div>
+                                <div style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">${lang.fileImportDesc}</div>
+                                <div class="osiris-sync-dropzone" onclick="document.getElementById('osirisSyncFileInput').click()">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent,#3498db);margin-bottom:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    <div id="osirisSyncFileName" style="font-size:0.88rem; font-weight:600;">${lang.dropZoneText}</div>
+                                </div>
+                                <input type="file" id="osirisSyncFileInput" accept=".osiris,.json" style="display:none;" onchange="OsirisSyncUI.handleFileSelect(event)">
+                                <input type="password" id="osirisSyncImportPin" class="osiris-sync-input" placeholder="${lang.pinPlaceholder}" style="display:none;">
+                                <button class="osiris-sync-btn-action" id="osirisSyncBtnImport" style="display:none;" onclick="OsirisSyncUI.importFile()">
+                                    <span>${lang.btnImport}</span>
+                                </button>
+                            </div>
+
+                            <!-- Vue Réception Entrante (Auto-détection QR code) -->
+                            <div id="osirisSyncPanelIncoming" style="display:none;">
+                                <div style="font-weight:700; font-size:1.05rem; color:var(--accent,#3498db); margin-bottom:6px;">
+                                    ${lang.incomingTitle}
+                                </div>
+                                <div style="font-size:0.9rem; margin-bottom:12px;">
+                                    ${lang.incomingPrompt}
+                                </div>
+                                <div class="osiris-sync-box" id="osirisSyncIncomingSummary">
+                                    Chargement des données...
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:14px;">
+                                    <button class="osiris-sync-btn-action" style="background:#64748b;" onclick="OsirisSyncUI.close()">
+                                        ${lang.btnCancel}
+                                    </button>
+                                    <button class="osiris-sync-btn-action" id="osirisSyncBtnConfirmApply" onclick="OsirisSyncUI.applyIncoming()">
+                                        ${lang.btnApplySync}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            var wrap = document.createElement("div");
+            wrap.innerHTML = html;
+            document.body.appendChild(wrap.firstElementChild);
+        },
+
+        open: function (initialTab) {
+            this.injectModal();
+            var m = document.getElementById("osirisSyncModal");
+            if (m) m.classList.add("active");
+            if (initialTab) this.switchTab(initialTab);
+        },
+
+        close: function () {
+            var m = document.getElementById("osirisSyncModal");
+            if (m) m.classList.remove("active");
+            if (this.senderSession) {
+                this.senderSession.destroy();
+                this.senderSession = null;
+            }
+            if (this.countdownTimer) {
+                clearInterval(this.countdownTimer);
+                this.countdownTimer = null;
+            }
+            OsirisSync.cleanUrlParams();
+        },
+
+        switchTab: function (tab) {
+            this.activeTab = tab;
+            var tabQrBtn = document.getElementById("tabQrBtn");
+            var tabFileBtn = document.getElementById("tabFileBtn");
+            var panelQr = document.getElementById("osirisSyncPanelQr");
+            var panelFile = document.getElementById("osirisSyncPanelFile");
+            var panelInc = document.getElementById("osirisSyncPanelIncoming");
+
+            if (panelInc) panelInc.style.display = "none";
+            if (tab === "qr") {
+                if (tabQrBtn) tabQrBtn.classList.add("active");
+                if (tabFileBtn) tabFileBtn.classList.remove("active");
+                if (panelQr) panelQr.style.display = "block";
+                if (panelFile) panelFile.style.display = "none";
+            } else {
+                if (tabQrBtn) tabQrBtn.classList.remove("active");
+                if (tabFileBtn) tabFileBtn.classList.add("active");
+                if (panelQr) panelQr.style.display = "none";
+                if (panelFile) panelFile.style.display = "block";
+            }
+        },
+
+        startQrSync: async function () {
+            var self = this;
+            var initBox = document.getElementById("osirisSyncQrInitial");
+            var activeBox = document.getElementById("osirisSyncQrActive");
+            var qrCanvas = document.getElementById("osirisSyncQrCanvas");
+            var statusText = document.getElementById("osirisSyncStatusText");
+            var statusPill = document.getElementById("osirisSyncStatusPill");
+            var countdownEl = document.getElementById("osirisSyncCountdown");
+
+            if (initBox) initBox.style.display = "none";
+            if (activeBox) activeBox.style.display = "flex";
+            if (qrCanvas) qrCanvas.innerHTML = "";
+
+            try {
+                self.senderSession = await OsirisSync.createSenderSession(function (code, msg) {
+                    if (statusText) statusText.textContent = msg;
+                    if (code === "completed") {
+                        if (statusPill) statusPill.className = "osiris-sync-status-pill success";
+                    }
+                });
+
+                // Génération visuelle du QR code avec QRCode.js
+                if (typeof QRCode !== "undefined" && qrCanvas) {
+                    new QRCode(qrCanvas, {
+                        text: self.senderSession.qrUrl,
+                        width: 190,
+                        height: 190,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                }
+
+                // Compte à rebours 5 minutes
+                var secondsLeft = 300;
+                var lang = self.i18n[self.getLang()];
+                if (self.countdownTimer) clearInterval(self.countdownTimer);
+                self.countdownTimer = setInterval(function () {
+                    secondsLeft--;
+                    if (secondsLeft <= 0) {
+                        clearInterval(self.countdownTimer);
+                        if (countdownEl) countdownEl.textContent = "Session expirée.";
+                        self.close();
+                    } else {
+                        var mins = Math.floor(secondsLeft / 60);
+                        var secs = secondsLeft % 60;
+                        var fmt = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+                        if (countdownEl) countdownEl.textContent = lang.countdownLabel + " " + fmt;
+                    }
+                }, 1000);
+
+            } catch (err) {
+                alert("Erreur lors de la préparation de la synchronisation: " + err.message);
+                if (initBox) initBox.style.display = "block";
+                if (activeBox) activeBox.style.display = "none";
+            }
+        },
+
+        exportFile: async function () {
+            var pin = document.getElementById("osirisSyncExportPin").value;
+            try {
+                var res = await OsirisSync.exportBackup(pin);
+                var lang = this.i18n[this.getLang()];
+                if (res.sharedNatively) {
+                    // Partagé via le menu natif
+                }
+            } catch (err) {
+                alert(this.i18n[this.getLang()].syncError + err.message);
+            }
+        },
+
+        selectedFile: null,
+        handleFileSelect: function (e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) return;
+            this.selectedFile = file;
+            var nameEl = document.getElementById("osirisSyncFileName");
+            if (nameEl) nameEl.textContent = file.name;
+            var pinInput = document.getElementById("osirisSyncImportPin");
+            var btnImport = document.getElementById("osirisSyncBtnImport");
+            if (file.name.endsWith(".osiris")) {
+                if (pinInput) pinInput.style.display = "block";
+            } else {
+                if (pinInput) pinInput.style.display = "none";
+            }
+            if (btnImport) btnImport.style.display = "block";
+        },
+
+        importFile: async function () {
+            if (!this.selectedFile) return;
+            var pin = document.getElementById("osirisSyncImportPin").value;
+            var lang = this.i18n[this.getLang()];
+            try {
+                var res = await OsirisSync.importBackup(this.selectedFile, pin);
+                if (res.needPassword) {
+                    alert("Ce fichier est chiffré. Veuillez saisir le mot de passe ou le code PIN.");
+                    document.getElementById("osirisSyncImportPin").style.display = "block";
+                    return;
+                }
+                var applied = OsirisSync.applyData(res.bundle);
+                alert(lang.syncSuccess);
+                window.location.reload();
+            } catch (err) {
+                alert(lang.syncError + err.message);
+            }
+        },
+
+        incomingBundle: null,
+        handleIncoming: async function (syncKey, p2pId, rawKey) {
+            var self = this;
+            self.open();
+            var tabs = document.getElementById("osirisSyncTabs");
+            var panelQr = document.getElementById("osirisSyncPanelQr");
+            var panelFile = document.getElementById("osirisSyncPanelFile");
+            var panelInc = document.getElementById("osirisSyncPanelIncoming");
+            var summaryEl = document.getElementById("osirisSyncIncomingSummary");
+            var lang = self.i18n[self.getLang()];
+
+            if (tabs) tabs.style.display = "none";
+            if (panelQr) panelQr.style.display = "none";
+            if (panelFile) panelFile.style.display = "none";
+            if (panelInc) panelInc.style.display = "block";
+
+            try {
+                var bundle = await OsirisSync.receiveSession(syncKey, p2pId, rawKey, function (step, msg) {
+                    if (summaryEl) summaryEl.textContent = msg;
+                });
+                self.incomingBundle = bundle;
+                var meta = bundle.meta || {};
+                var summaryHtml = `
+                    <strong>${meta.appName || 'Osiris Portfolio'}</strong><br>
+                    • Écoles : ${meta.schoolsCount || 0}<br>
+                    • Classes : ${meta.classesCount || 0} (${meta.studentsTotal || 0} élèves)<br>
+                    • Coffre-fort IA : ${meta.hasVault ? '✅ Inclus' : 'Non configuré'}<br>
+                    • Date d'envoi : ${new Date(bundle.timestamp).toLocaleString()}
+                `;
+                if (summaryEl) summaryEl.innerHTML = summaryHtml;
+            } catch (err) {
+                if (summaryEl) summaryEl.innerHTML = `<span style="color:#ef4444;">${lang.syncError} ${err.message}</span>`;
+            }
+        },
+
+        applyIncoming: function () {
+            if (!this.incomingBundle) return;
+            var lang = this.i18n[this.getLang()];
+            try {
+                OsirisSync.applyData(this.incomingBundle);
+                OsirisSync.cleanUrlParams();
+                alert(lang.syncSuccess);
+                window.location.reload();
+            } catch (err) {
+                alert(lang.syncError + err.message);
+            }
+        },
+
+        init: function () {
+            var self = this;
+            OsirisSync.checkIncomingSync(function (syncKey, p2pId, rawKey) {
+                self.handleIncoming(syncKey, p2pId, rawKey);
+            });
+        }
+    };
+
     global.OsirisSync = OsirisSync;
+    global.OsirisSyncUI = OsirisSyncUI;
+
+    // Détection automatique au chargement
+    if (typeof window !== "undefined") {
+        if (document.readyState === "loading") {
+            window.addEventListener("DOMContentLoaded", function () { OsirisSyncUI.init(); });
+        } else {
+            OsirisSyncUI.init();
+        }
+    }
+
 })(typeof window !== "undefined" ? window : this);

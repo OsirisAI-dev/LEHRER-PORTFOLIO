@@ -1593,6 +1593,9 @@
       </div>
 
       <div class="sticky-footer">
+        <button class="sticky-icon-btn" id="syncDataBtn" title="Synchronisation & Sauvegarde (.osiris / QR Code)" onclick="OsirisSyncUI.open()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        </button>
         <button class="sticky-icon-btn" id="exportDataBtn" title="Alles exportieren (Einstellungen + Safe-Schlüssel)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
         </button>
@@ -1667,6 +1670,7 @@
       <div class="submenu-header">
         <h3>API VAULT</h3>
         <div class="header-actions" style="display:flex; align-items:center; gap:10px;">
+          <button class="vault-icon-btn" id="vault-sync-btn" title="Synchroniser les clés et données (QR Code & .osiris)" onclick="OsirisSyncUI.open()">🔄</button>
           <button class="vault-icon-btn" id="delete-all-btn" title="Alle Vaults löschen">🗑️</button>
           <button class="submenu-close" id="vault-submenu-close-btn">❌</button>
         </div>
@@ -1777,7 +1781,10 @@
 
 </div>
 
+<script src="../lib/qrcode/qrcode.min.js"></script>
+<script src="../lib/peerjs/peerjs.min.js"></script>
 <script src="../js/core/vault-crypto.js"></script>
+<script src="../js/core/osiris-sync.js"></script>
 <script>
 /* --- Verknüpfungen (linkes Panel) ---
    Früher enthielt das linke Panel fest codierte Platzhalter-Einträge

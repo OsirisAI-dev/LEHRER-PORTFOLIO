@@ -1940,6 +1940,10 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 <span id="pdfBtnLabel">GÉNÉRER RAPPORT PDF</span>
             </button>
+            <button class="action-btn" id="syncBtn" onclick="OsirisSyncUI.open()" title="Synchroniser avec un smartphone ou sauvegarder (.osiris)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span id="syncBtnLabel">SYNCHRONISER</span>
+            </button>
             <button class="action-btn" id="importBtn" onclick="triggerImport()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 <span id="importBtnLabel">RESTAURER DONNÉES</span>
@@ -2193,9 +2197,12 @@
      below if your actual folder layout differs. -->
 <script src="../lib/jszip/v1/jszip.min.js"></script>
 <script src="../lib/pdf/v1/pdf.min.js"></script>
+<script src="../lib/qrcode/qrcode.min.js"></script>
+<script src="../lib/peerjs/peerjs.min.js"></script>
 <script src="../js/core/osiris-core.js"></script>
 <script src="../js/core/class-roster.js"></script>
 <script src="../js/core/epub-pdf-extractor.js"></script>
+<script src="../js/core/osiris-sync.js"></script>
 <script src="../js/apps/dashboard-pointeur.js"></script>
 
 <script>
@@ -2428,6 +2435,8 @@
             modalAnalysis: 'Analyse Statistique:',
             export: 'SAUVEGARDER DONNÉES',
             import: 'RESTAURER DONNÉES',
+            syncBtn: 'SYNCHRONISER',
+            syncBtnTitle: 'Synchroniser avec un smartphone ou sauvegarder (.osiris)',
             reset: 'RÉINITIALISER',
             confirmReset: '️ Réinitialiser toutes les données ? Écoles, classes, matières et évaluations seront définitivement supprimées. Cette action est irréversible.',
             importSuccess: 'Données importées avec succès.',
@@ -2585,6 +2594,8 @@
             modalAnalysis: 'Statistische Analyse:',
             export: 'DATEN SPEICHERN',
             import: 'DATEN WIEDERHERSTELLEN',
+            syncBtn: 'SYNCHRONISIEREN',
+            syncBtnTitle: 'Mit Smartphone synchronisieren oder sichern (QR-Code & .osiris)',
             reset: 'ZURÜCKSETZEN',
             confirmReset: '️ Alle Daten zurücksetzen? Schulen, Klassen, Fächer und Bewertungen werden endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
             importSuccess: 'Daten erfolgreich importiert.',
@@ -2882,6 +2893,10 @@
         if (expLbl) expLbl.textContent = lang.export; else document.getElementById('exportBtn').textContent = lang.export;
         const impLbl = document.getElementById('importBtnLabel');
         if (impLbl) impLbl.textContent = lang.import; else document.getElementById('importBtn').textContent = lang.import;
+        const syncLbl = document.getElementById('syncBtnLabel');
+        if (syncLbl) syncLbl.textContent = lang.syncBtn;
+        const syncBtn = document.getElementById('syncBtn');
+        if (syncBtn) syncBtn.title = lang.syncBtnTitle;
         const rstLbl = document.getElementById('resetBtnLabel');
         if (rstLbl) rstLbl.textContent = lang.reset; else document.getElementById('resetBtn').textContent = lang.reset;
         const rosterImpLbl = document.getElementById('rosterImportBtnLabel');
