@@ -60,6 +60,10 @@ const PRECACHE_URLS = [
   './js/core/config.js',
   './js/core/osiris-core.js',
   './js/core/osiris-educore.js',
+  './js/core/class-roster.js',
+  './js/core/epub-pdf-extractor.js',
+  './js/apps/wiki-app.js',
+  './js/apps/dashboard-pointeur.js',
 
   './js/utils/pwa-install.js',
   './js/utils/lib-loader.js',
