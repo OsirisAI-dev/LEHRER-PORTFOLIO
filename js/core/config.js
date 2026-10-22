@@ -20,7 +20,7 @@
   'use strict';
 
 
-  const CACHE_VERSION = 'v27';
+  const CACHE_VERSION = 'v28';
 
 
   const CHAT_ENDPOINTS = {
