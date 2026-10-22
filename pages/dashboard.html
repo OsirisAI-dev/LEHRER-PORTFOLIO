@@ -1134,6 +1134,107 @@
         .dot-radio.special:checked { background-color: var(--dot-special); border-color: var(--dot-special); }
         .copy-code { font-family: monospace; font-size: 1.1em; font-weight: bold; color: var(--text-color); min-width: 80px; text-align: left; flex-shrink: 0; border-right: 1px dashed var(--border-color); padding-right: 10px; }
 
+        .ptr-header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .ptr-mode-selector {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--grid-bg);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .ptr-mode-opt {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            user-select: none;
+        }
+
+        .ptr-mode-opt input[type="radio"] {
+            display: none;
+        }
+
+        .ptr-mode-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-color);
+            background-color: var(--dot-color);
+            box-sizing: border-box;
+            display: inline-block;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .ptr-mode-opt input[type="radio"]:checked + .ptr-mode-dot {
+            background-color: var(--dot-checked);
+            border-color: var(--dot-checked);
+        }
+
+        .ptr-mode-opt input[type="radio"]:checked + .ptr-mode-dot::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ffffff;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .copy-name-box {
+            min-width: 180px;
+            max-width: 230px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            border-right: 1px dashed var(--border-color);
+            padding-right: 10px;
+        }
+
+        .copy-code-num {
+            font-family: monospace;
+            font-size: 1.05em;
+            font-weight: bold;
+            color: var(--text-color);
+            opacity: 0.7;
+            min-width: 22px;
+            flex-shrink: 0;
+        }
+
+        .copy-name-input {
+            width: 100%;
+            padding: 5px 8px;
+            font-size: 0.9em;
+            font-family: inherit;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .copy-name-input:focus {
+            border-color: var(--dot-checked);
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+        }
+
         .statistics-panel { margin-top: 20px; padding: 15px; background: var(--grid-bg); border: 1px solid var(--border-color); border-radius: 5px; }
         .statistics-panel h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: var(--text-color); }
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
@@ -1187,6 +1288,10 @@
             #pointeurModal .stat-grid { grid-template-columns: 1fr; }
             #pointeurModal .copy-row { flex-wrap: nowrap; }
             #pointeurModal .copy-code { font-size: 0.85em; min-width: 60px; }
+            #pointeurModal .ptr-header-left { gap: 10px; }
+            #pointeurModal .ptr-mode-selector { gap: 10px; font-size: 0.82rem; padding: 2px 8px; }
+            #pointeurModal .copy-name-box { min-width: 140px; max-width: 170px; }
+            #pointeurModal .copy-name-input { font-size: 0.82em; padding: 3px 6px; }
         }
 
         @media print {
@@ -1362,7 +1467,21 @@
     <div id="pointeurModal" class="modal-overlay" onclick="if(event.target===this) closePointeurModal()">
         <div class="modal-content ptr-modal-content">
             <div class="modal-header">
-                <div class="modal-title" id="ptrModalTitle">Notes</div>
+                <div class="ptr-header-left">
+                    <div class="modal-title" id="ptrModalTitle">Notes</div>
+                    <div class="ptr-mode-selector" id="ptrModeSelector">
+                        <label class="ptr-mode-opt">
+                            <input type="radio" id="ptrModeCodesRadio" name="ptrModeRadio" value="codes" checked onchange="setPtrMode('codes')">
+                            <span class="ptr-mode-dot"></span>
+                            <span id="ptrModeCodesLabel">Par codes</span>
+                        </label>
+                        <label class="ptr-mode-opt">
+                            <input type="radio" id="ptrModeNamesRadio" name="ptrModeRadio" value="names" onchange="setPtrMode('names')">
+                            <span class="ptr-mode-dot"></span>
+                            <span id="ptrModeNamesLabel">Par noms</span>
+                        </label>
+                    </div>
+                </div>
                 <button class="modal-close-btn" id="ptrCloseBtn" onclick="closePointeurModal()" title="Fermer">&times;</button>
             </div>
 
@@ -1885,6 +2004,11 @@
             importError: "Fichier invalide. Impossible d'importer ces données.",
             addSubjectFirstTitle: "Ajoutez d'abord une matière pour débloquer cette section.",
             ptrTitle: 'Notes',
+            ptrModeCodes: 'Par codes',
+            ptrModeNames: 'Par noms',
+            ptrStudentNamePlaceholder: "Nom de l'élève",
+            ptrSaisieTitleCodes: 'Saisie des Notes par Copie (Codes)',
+            ptrSaisieTitleNames: 'Saisie des Notes par Élève (Noms)',
             ptrDevoir: 'DEVOIR',
             ptrCorrecteur: 'NOM DU CORRECTEUR',
             ptrEtablissement: 'ÉTABLISSEMENT',
@@ -1999,6 +2123,11 @@
             importError: 'Ungültige Datei. Diese Daten können nicht importiert werden.',
             addSubjectFirstTitle: 'Fügen Sie zuerst ein Fach hinzu, um diesen Bereich freizuschalten.',
             ptrTitle: 'Noten',
+            ptrModeCodes: 'Nach Codes',
+            ptrModeNames: 'Nach Namen',
+            ptrStudentNamePlaceholder: 'Name des Schülers',
+            ptrSaisieTitleCodes: 'Noteneingabe pro Arbeit (Codes)',
+            ptrSaisieTitleNames: 'Noteneingabe pro Schüler (Namen)',
             ptrDevoir: 'KLASSENARBEIT',
             ptrCorrecteur: 'KORREKTOR/-IN',
             ptrEtablissement: 'SCHULE',
@@ -2081,7 +2210,12 @@
                 if (cls.girls === undefined || cls.girls === null) cls.girls = '';
                 if (typeof cls.effectifManual !== 'boolean') cls.effectifManual = false;
                 cls.evaluations.forEach((ev, evIdx) => {
-                    if (!ev.pointeurData || typeof ev.pointeurData !== 'object') ev.pointeurData = null;
+                    if (!ev.pointeurData || typeof ev.pointeurData !== 'object') {
+                        ev.pointeurData = null;
+                    } else {
+                        if (!ev.pointeurData.mode) ev.pointeurData.mode = 'codes';
+                        if (!ev.pointeurData.namesState || typeof ev.pointeurData.namesState !== 'object') ev.pointeurData.namesState = {};
+                    }
                     if (typeof ev.id !== 'string' || !ev.id) ev.id = 'ev_' + Date.now() + '_' + evIdx;
                 });
             });
@@ -2262,7 +2396,16 @@
         document.getElementById('ptrEtablissementLabel').textContent = lang.ptrEtablissement;
         document.getElementById('ptrTotalCopiesLabel').textContent = lang.ptrTotalCopies;
         document.getElementById('h_total_papers').placeholder = lang.ptrTotalCopiesPlaceholder;
-        document.getElementById('ptrSaisieTitleEl').textContent = lang.ptrSaisieTitle;
+        const codesLbl = document.getElementById('ptrModeCodesLabel');
+        if (codesLbl) codesLbl.textContent = lang.ptrModeCodes;
+        const namesLbl = document.getElementById('ptrModeNamesLabel');
+        if (namesLbl) namesLbl.textContent = lang.ptrModeNames;
+        const saisieTitleEl = document.getElementById('ptrSaisieTitleEl');
+        if (saisieTitleEl) {
+            saisieTitleEl.textContent = (ptrMode === 'names')
+                ? (lang.ptrSaisieTitleNames || lang.ptrSaisieTitle)
+                : (lang.ptrSaisieTitleCodes || lang.ptrSaisieTitle);
+        }
         document.getElementById('ptrStatsTitleEl').textContent = lang.ptrStatsTitle;
         document.getElementById('ptrDetailsBtn').title = lang.ptrDetailsTooltip;
         document.getElementById('ptrStatTotalLabel').textContent = lang.ptrStatTotal;
@@ -3245,19 +3388,46 @@
     // --- Pointeur module ---
     let activeEvalId = null;
     let tallyState = {};
+    let namesState = {};
+    let ptrMode = 'codes';
     let currentStats = null;
     let ptrDirty = false;
     const ptrHeaderFields = ['h_devoir', 'h_correcteur', 'h_etablissement'];
 
+    function ptrEscapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     function ptrEmptyPointeurData() {
         return {
+            mode: 'codes',
             totalPapers: 0,
             tallyState: {},
+            namesState: {},
             noteCounts: null,
             countA: 0, countD: 0, countF: 0,
             numericCopiesCount: 0,
             generatedAt: null
         };
+    }
+
+    function setPtrMode(mode) {
+        if (ptrMode === mode) return;
+        ptrMode = mode;
+        ptrSetDirty();
+        updateCodes();
+        updatePointeurI18nLabels();
+    }
+
+    function setStudentName(index, val) {
+        namesState[index] = val;
+        ptrSetDirty();
     }
 
     function getActiveEvaluation() {
@@ -3303,12 +3473,25 @@
         const ev = getActiveEvaluation();
         const data = (ev && ev.pointeurData) ? ev.pointeurData : ptrEmptyPointeurData();
 
+        ptrMode = (data && data.mode === 'names') ? 'names' : 'codes';
         tallyState = data.tallyState ? JSON.parse(JSON.stringify(data.tallyState)) : {};
+        namesState = data.namesState ? JSON.parse(JSON.stringify(data.namesState)) : {};
         document.getElementById('h_total_papers').value = data.totalPapers || '';
         ptrClearDirty();
 
+        const codesRadio = document.getElementById('ptrModeCodesRadio');
+        const namesRadio = document.getElementById('ptrModeNamesRadio');
+        if (codesRadio && namesRadio) {
+            if (ptrMode === 'names') {
+                namesRadio.checked = true;
+            } else {
+                codesRadio.checked = true;
+            }
+        }
+
         ptrLoadHeaderData();
         updateCodes();
+        updatePointeurI18nLabels();
         document.getElementById('pointeurModal').classList.add('active');
     }
 
@@ -3321,6 +3504,8 @@
         document.getElementById('statsModalOverlay').classList.remove('active');
         activeEvalId = null;
         tallyState = {};
+        namesState = {};
+        ptrMode = 'codes';
         ptrClearDirty();
     }
 
@@ -3370,9 +3555,23 @@
                 `;
             });
 
+            let leftColHTML = '';
+            if (ptrMode === 'names') {
+                const currentName = namesState[i] !== undefined ? ptrEscapeHtml(namesState[i]) : '';
+                const placeholder = lang.ptrStudentNamePlaceholder || "Nom de l'élève";
+                leftColHTML = `
+                    <div class="copy-name-box">
+                        <span class="copy-code-num">${numStr}</span>
+                        <input type="text" class="copy-name-input" placeholder="${placeholder}" value="${currentName}" oninput="setStudentName(${i}, this.value)">
+                    </div>
+                `;
+            } else {
+                leftColHTML = `<div class="copy-code">${codeText}</div>`;
+            }
+
             codesHTML += `
                 <div class="copy-row">
-                    <div class="copy-code">${codeText}</div>
+                    ${leftColHTML}
                     <div class="copy-notes-container">${notesHTML}</div>
                 </div>
             `;
@@ -3467,8 +3666,10 @@
         const totalPapers = parseInt(document.getElementById('h_total_papers').value) || 0;
 
         ev.pointeurData = {
+            mode: ptrMode,
             totalPapers: totalPapers,
             tallyState: JSON.parse(JSON.stringify(tallyState)),
+            namesState: JSON.parse(JSON.stringify(namesState)),
             noteCounts: currentStats.noteCounts,
             countA: currentStats.countA,
             countD: currentStats.countD,
