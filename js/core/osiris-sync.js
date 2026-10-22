@@ -571,13 +571,13 @@
         i18n: {
             FR: {
                 modalTitle: "Synchronisation & Sauvegarde Osiris",
-                tabQr: "📱 Synchroniser (QR Code)",
-                tabFile: "💾 Sauvegarde Sécurisée (.osiris)",
+                tabQr: "Synchroniser (QR Code)",
+                tabFile: "Sauvegarde Sécurisée (.osiris)",
                 qrDesc: "Transférez instantanément vos données (classes, notes, design et clés IA) vers votre smartphone ou tablette, sans aucun compte ni e-mail.",
                 btnGenerateQr: "Générer le QR Code de synchronisation",
                 scanPrompt: "Visez ce code avec l'appareil photo standard de votre mobile :",
                 countdownLabel: "Expire dans :",
-                e2eeNotice: "🛡️ Chiffrement AES-256-GCM de bout en bout (Zero-Knowledge). La clé de sécurité reste confinée à vos écrans.",
+                e2eeNotice: "Chiffrement AES-256-GCM de bout en bout (Zero-Knowledge). La clé de sécurité reste confinée à vos écrans.",
                 fileExportTitle: "1. Exporter / Partager",
                 fileExportDesc: "Créez un fichier chiffré complet contenant toutes vos données. Compatible AirDrop, QuickShare et clé USB.",
                 pinPlaceholder: "Mot de passe Coffre-fort ou code PIN (facultatif)",
@@ -586,7 +586,7 @@
                 fileImportDesc: "Importez un fichier .osiris ou .json pour mettre à jour vos données sur cet appareil.",
                 dropZoneText: "Cliquez ou déposez votre fichier .osiris ici",
                 btnImport: "Restaurer",
-                incomingTitle: "📥 Synchronisation Entrante Reçue !",
+                incomingTitle: "Synchronisation Entrante Reçue !",
                 incomingPrompt: "Votre autre appareil souhaite mettre à jour les données de ce navigateur :",
                 btnApplySync: "Confirmer et Appliquer",
                 btnCancel: "Annuler",
@@ -595,13 +595,13 @@
             },
             DE: {
                 modalTitle: "Osiris Synchronisation & Sicherung",
-                tabQr: "📱 Geräte-Sync (QR-Code)",
-                tabFile: "💾 Sicherungsdatei (.osiris)",
+                tabQr: "Geräte-Sync (QR-Code)",
+                tabFile: "Sicherungsdatei (.osiris)",
                 qrDesc: "Übertragen Sie Ihre Klassen, Noten, Einstellungen und KI-Schlüssel sofort auf Ihr Smartphone oder Tablet – ohne Konto oder E-Mail.",
                 btnGenerateQr: "Sync-QR-Code generieren",
                 scanPrompt: "Scannen Sie diesen Code mit der normalen Smartphone-Kamera:",
                 countdownLabel: "Gültig für:",
-                e2eeNotice: "🛡️ Ende-zu-Ende-Verschlüsselung (AES-256-GCM, Zero-Knowledge). Der Sicherheitsschlüssel bleibt ausschließlich auf Ihren Bildschirmen.",
+                e2eeNotice: "Ende-zu-Ende-Verschlüsselung (AES-256-GCM, Zero-Knowledge). Der Sicherheitsschlüssel bleibt ausschließlich auf Ihren Bildschirmen.",
                 fileExportTitle: "1. Exportieren / Teilen",
                 fileExportDesc: "Erstellen Sie eine verschlüsselte Sicherungsdatei. Kompatibel mit AirDrop, QuickShare oder USB-Sticks.",
                 pinPlaceholder: "Tresor-Passwort oder PIN (optional)",
@@ -610,7 +610,7 @@
                 fileImportDesc: "Laden Sie eine .osiris- oder .json-Datei, um die Daten auf diesem Gerät zu aktualisieren.",
                 dropZoneText: "Hier klicken oder .osiris-Datei ablegen",
                 btnImport: "Wiederherstellen",
-                incomingTitle: "📥 Eingehende Synchronisation!",
+                incomingTitle: "Eingehende Synchronisation!",
                 incomingPrompt: "Ihr anderes Gerät möchte die Daten dieses Browsers aktualisieren:",
                 btnApplySync: "Bestätigen und anwenden",
                 btnCancel: "Abbrechen",
@@ -646,14 +646,21 @@
                     flex-shrink: 0;
                 }
                 .osiris-sync-title { font-size: 1.15rem; font-weight: 700; color: var(--accent, #3498db); display: flex; align-items: center; gap: 8px; }
-                .osiris-sync-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8; line-height: 1; }
-                .osiris-sync-close:hover { color: #0f172a; }
+                .osiris-sync-close {
+                    background: none; border: none; cursor: pointer; color: #94a3b8;
+                    display: inline-flex; align-items: center; justify-content: center;
+                    padding: 4px; border-radius: 6px; transition: all 0.15s ease;
+                }
+                .osiris-sync-close:hover { color: #0f172a; background: rgba(0,0,0,0.06); }
                 .osiris-sync-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border-grey, #e2e8f0); padding-bottom: 8px; flex-shrink: 0; }
                 .osiris-sync-tab-btn {
                     background: none; border: none; padding: 6px 12px; font-weight: 600; font-size: 0.88rem;
                     color: var(--secondary-text, #64748b); cursor: pointer; border-radius: 6px; transition: all 0.2s;
+                    display: inline-flex; align-items: center; gap: 6px;
                 }
                 .osiris-sync-tab-btn.active { background: var(--accent, #3498db); color: #ffffff; }
+                .osiris-sync-tab-btn svg { flex-shrink: 0; }
+                .osiris-sync-btn-action svg { flex-shrink: 0; }
                 .osiris-sync-body { flex: 1 1 auto; overflow-y: auto; padding-right: 4px; min-height: 0; }
                 .osiris-sync-body::-webkit-scrollbar { width: 6px; }
                 .osiris-sync-body::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 4px; }
@@ -710,15 +717,23 @@
                     <div class="osiris-sync-content" onclick="event.stopPropagation()">
                         <div class="osiris-sync-header">
                             <div class="osiris-sync-title" id="osirisSyncModalTitle">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                                 <span>${lang.modalTitle}</span>
                             </div>
-                            <button class="osiris-sync-close" onclick="OsirisSyncUI.close()">&times;</button>
+                            <button class="osiris-sync-close" onclick="OsirisSyncUI.close()" aria-label="Close" title="Fermer">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
                         </div>
 
                         <div class="osiris-sync-tabs" id="osirisSyncTabs">
-                            <button class="osiris-sync-tab-btn active" id="tabQrBtn" onclick="OsirisSyncUI.switchTab('qr')">${lang.tabQr}</button>
-                            <button class="osiris-sync-tab-btn" id="tabFileBtn" onclick="OsirisSyncUI.switchTab('file')">${lang.tabFile}</button>
+                            <button class="osiris-sync-tab-btn active" id="tabQrBtn" onclick="OsirisSyncUI.switchTab('qr')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><line x1="7" y1="7" x2="7.01" y2="7"></line><line x1="17" y1="7" x2="17.01" y2="7"></line><line x1="7" y1="17" x2="7.01" y2="17"></line><line x1="17" y1="17" x2="17.01" y2="17"></line></svg>
+                                <span>${lang.tabQr}</span>
+                            </button>
+                            <button class="osiris-sync-tab-btn" id="tabFileBtn" onclick="OsirisSyncUI.switchTab('file')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                <span>${lang.tabFile}</span>
+                            </button>
                         </div>
 
                         <div class="osiris-sync-body" id="osirisSyncBody">
@@ -729,7 +744,7 @@
                                 </div>
                                 <div id="osirisSyncQrInitial">
                                     <button class="osiris-sync-btn-action" onclick="OsirisSyncUI.startQrSync()">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10" rx="1.5"></rect></svg>
                                         <span>${lang.btnGenerateQr}</span>
                                     </button>
                                 </div>
@@ -737,13 +752,16 @@
                                     <div style="font-size:0.88rem; font-weight:600;">${lang.scanPrompt}</div>
                                     <div class="osiris-sync-qr-box" id="osirisSyncQrCanvas"></div>
                                     <div class="osiris-sync-status-pill" id="osirisSyncStatusPill">
+                                        <svg id="osirisSyncStatusIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                         <span id="osirisSyncStatusText">Connexion en cours...</span>
                                     </div>
-                                    <div style="font-size:0.8rem; color:#64748b;" id="osirisSyncCountdown">
-                                        ${lang.countdownLabel} 05:00
+                                    <div style="font-size:0.8rem; color:#64748b; display:inline-flex; align-items:center; gap:5px;" id="osirisSyncCountdown">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        <span id="osirisSyncCountdownText">${lang.countdownLabel} 05:00</span>
                                     </div>
-                                    <div style="font-size:0.8rem; color:#64748b; text-align:center; margin-top:6px;">
-                                        ${lang.e2eeNotice}
+                                    <div style="font-size:0.8rem; color:#64748b; text-align:center; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:6px; line-height:1.4;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent,#3498db);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                                        <span>${lang.e2eeNotice}</span>
                                     </div>
                                 </div>
                             </div>
@@ -754,7 +772,7 @@
                                 <div style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">${lang.fileExportDesc}</div>
                                 <input type="password" id="osirisSyncExportPin" class="osiris-sync-input" placeholder="${lang.pinPlaceholder}">
                                 <button class="osiris-sync-btn-action" onclick="OsirisSyncUI.exportFile()">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                     <span>${lang.btnExport}</span>
                                 </button>
 
@@ -763,20 +781,22 @@
                                 <div style="font-weight:700; margin-bottom:4px;">${lang.fileImportTitle}</div>
                                 <div style="font-size:0.85rem; color:#64748b; margin-bottom:8px;">${lang.fileImportDesc}</div>
                                 <div class="osiris-sync-dropzone" onclick="document.getElementById('osirisSyncFileInput').click()">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent,#3498db);margin-bottom:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent,#3498db);margin-bottom:6px;"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m16 16-4-4-4 4"></path></svg>
                                     <div id="osirisSyncFileName" style="font-size:0.88rem; font-weight:600;">${lang.dropZoneText}</div>
                                 </div>
                                 <input type="file" id="osirisSyncFileInput" accept=".osiris,.json" style="display:none;" onchange="OsirisSyncUI.handleFileSelect(event)">
                                 <input type="password" id="osirisSyncImportPin" class="osiris-sync-input" placeholder="${lang.pinPlaceholder}" style="display:none;">
                                 <button class="osiris-sync-btn-action" id="osirisSyncBtnImport" style="display:none;" onclick="OsirisSyncUI.importFile()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     <span>${lang.btnImport}</span>
                                 </button>
                             </div>
 
                             <!-- Vue Réception Entrante (Auto-détection QR code) -->
                             <div id="osirisSyncPanelIncoming" style="display:none;">
-                                <div style="font-weight:700; font-size:1.05rem; color:var(--accent,#3498db); margin-bottom:6px;">
-                                    ${lang.incomingTitle}
+                                <div style="font-weight:700; font-size:1.05rem; color:var(--accent,#3498db); margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="4" width="12" height="16" rx="2"></rect><path d="m18 8 4 4-4 4"></path><path d="M14 12h8"></path></svg>
+                                    <span>${lang.incomingTitle}</span>
                                 </div>
                                 <div style="font-size:0.9rem; margin-bottom:12px;">
                                     ${lang.incomingPrompt}
@@ -786,10 +806,12 @@
                                 </div>
                                 <div style="display:flex; gap:10px; margin-top:14px;">
                                     <button class="osiris-sync-btn-action" style="background:#64748b;" onclick="OsirisSyncUI.close()">
-                                        ${lang.btnCancel}
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        <span>${lang.btnCancel}</span>
                                     </button>
                                     <button class="osiris-sync-btn-action" id="osirisSyncBtnConfirmApply" onclick="OsirisSyncUI.applyIncoming()">
-                                        ${lang.btnApplySync}
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        <span>${lang.btnApplySync}</span>
                                     </button>
                                 </div>
                             </div>
@@ -863,6 +885,10 @@
                     if (statusText) statusText.textContent = msg;
                     if (code === "completed") {
                         if (statusPill) statusPill.className = "osiris-sync-status-pill success";
+                        var statusIcon = document.getElementById("osirisSyncStatusIcon");
+                        if (statusIcon) {
+                            statusIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+                        }
                     }
                 });
 
@@ -884,15 +910,18 @@
                 if (self.countdownTimer) clearInterval(self.countdownTimer);
                 self.countdownTimer = setInterval(function () {
                     secondsLeft--;
+                    var countdownTextEl = document.getElementById("osirisSyncCountdownText");
                     if (secondsLeft <= 0) {
                         clearInterval(self.countdownTimer);
-                        if (countdownEl) countdownEl.textContent = "Session expirée.";
+                        if (countdownTextEl) countdownTextEl.textContent = "Session expirée.";
+                        else if (countdownEl) countdownEl.textContent = "Session expirée.";
                         self.close();
                     } else {
                         var mins = Math.floor(secondsLeft / 60);
                         var secs = secondsLeft % 60;
                         var fmt = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
-                        if (countdownEl) countdownEl.textContent = lang.countdownLabel + " " + fmt;
+                        if (countdownTextEl) countdownTextEl.textContent = lang.countdownLabel + " " + fmt;
+                        else if (countdownEl) countdownEl.textContent = lang.countdownLabel + " " + fmt;
                     }
                 }, 1000);
 
@@ -978,7 +1007,7 @@
                     <strong>${meta.appName || 'Osiris Portfolio'}</strong><br>
                     • Écoles : ${meta.schoolsCount || 0}<br>
                     • Classes : ${meta.classesCount || 0} (${meta.studentsTotal || 0} élèves)<br>
-                    • Coffre-fort IA : ${meta.hasVault ? '✅ Inclus' : 'Non configuré'}<br>
+                    • Coffre-fort IA : ${meta.hasVault ? '<span style="color:#16a34a;font-weight:600;">✓ Inclus</span>' : 'Non configuré'}<br>
                     • Date d'envoi : ${new Date(bundle.timestamp).toLocaleString()}
                 `;
                 if (summaryEl) summaryEl.innerHTML = summaryHtml;
