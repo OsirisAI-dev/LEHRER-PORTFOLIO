@@ -1144,6 +1144,7 @@
             color: var(--text-color);
             max-height: 90vh;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .header-grid {
@@ -1164,11 +1165,11 @@
             background-color: var(--input-bg); color: var(--text-color); width: 100%;
         }
 
-        .codes-panel { margin-bottom: 20px; padding: 15px; background: var(--grid-bg); border: 1px solid var(--border-color); border-radius: 5px; }
+        .codes-panel { margin-bottom: 20px; padding: 15px; background: var(--grid-bg); border: 1px solid var(--border-color); border-radius: 5px; overflow-x: hidden; }
         .codes-panel h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: var(--text-color); }
         .codes-list { display: flex; flex-direction: column; gap: 12px; }
-        .copy-row { display: flex; align-items: center; background: var(--bg-color); padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; gap: 10px; }
-        .copy-notes-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; flex-grow: 1; scrollbar-width: thin; }
+        .copy-row { display: flex; align-items: center; background: var(--bg-color); padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; gap: 10px; max-width: 100%; box-sizing: border-box; }
+        .copy-notes-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; flex-grow: 1; flex-shrink: 1; min-width: 0; scrollbar-width: thin; }
         .note-dot-label { display: flex; flex-direction: column; align-items: center; font-size: 0.75em; cursor: pointer; min-width: 24px; }
         .note-num { margin-bottom: 4px; font-weight: bold; color: var(--text-color); }
         .dot-radio { appearance: none; width: 18px; height: 18px; border: 2px solid var(--accent-color); border-radius: 50%; cursor: pointer; background-color: var(--dot-color); transition: all 0.2s; margin: 0; }
@@ -3079,7 +3080,7 @@
         const cls = getActiveClass();
         const lang = i18n[appState.lang];
         if (!cls || !Array.isArray(cls.students) || cls.students.length === 0) {
-            alert(lang.rosterNoStudents);
+            if (force) alert(lang.rosterNoStudents);
             return;
         }
 
@@ -4254,6 +4255,7 @@
     }
 
     function updateCodes() {
+        const lang = i18n[appState.lang];
         const name = document.getElementById('h_correcteur').value.trim();
         const total = parseInt(document.getElementById('h_total_papers').value) || 0;
 
