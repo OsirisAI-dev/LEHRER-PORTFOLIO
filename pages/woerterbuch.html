@@ -1022,6 +1022,8 @@
         </div>
     </div>
 
+    <script src="../js/core/config.js"></script>
+    <script src="../js/core/vault-crypto.js"></script>
     <script>
         /* =====================================================================
            DEBUG LOG (developer-only): keeps recent technical errors (API
@@ -1401,155 +1403,45 @@ menuState = menuState || {
             }
         }
 
-        const VAULT_SUPPORTED = !!(window.crypto && window.crypto.subtle && window.indexedDB);
+        const VAULT_SUPPORTED = VaultCrypto.isSupported();
         const VAULT_DB_NAME = 'iaDictVaultDB';
         const VAULT_STORE = 'keys';
         const VAULT_KEY_ID = 'vaultKey';
         const VAULT_STORAGE_KEY = 'iaDictKeyVault';
 
-        function openVaultDb() {
-            return new Promise((resolve, reject) => {
-                const req = indexedDB.open(VAULT_DB_NAME, 1);
-                req.onupgradeneeded = () => {
-                    if (!req.result.objectStoreNames.contains(VAULT_STORE)) {
-                        req.result.createObjectStore(VAULT_STORE);
-                    }
-                };
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
-        }
-
-        async function getVaultKey() {
-            const db = await openVaultDb();
-            const existing = await new Promise((resolve, reject) => {
-                const tx = db.transaction(VAULT_STORE, 'readonly');
-                const req = tx.objectStore(VAULT_STORE).get(VAULT_KEY_ID);
-                req.onsuccess = () => resolve(req.result || null);
-                req.onerror = () => reject(req.error);
-            });
-            if (existing) return existing;
-            const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-            await new Promise((resolve, reject) => {
-                const tx = db.transaction(VAULT_STORE, 'readwrite');
-                tx.objectStore(VAULT_STORE).put(key, VAULT_KEY_ID);
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            });
-            return key;
-        }
-
-        function bufToB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-        function b64ToBuf(b64) { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
-
-        async function saveApiKeyVault() {
-            if (!VAULT_SUPPORTED) return;
-            try {
-                const key = await getVaultKey();
-                const iv = crypto.getRandomValues(new Uint8Array(12));
-                const payload = JSON.stringify({ apiKeys: menuState.apiKeys });
-                const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(payload));
-                localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify({ iv: bufToB64(iv), data: bufToB64(cipher) }));
-            } catch (err) {
-                console.warn('API-Schlüssel-Tresor konnte nicht gespeichert werden:', err);
-            }
-        }
-
-        async function loadApiKeyVault() {
-            if (!VAULT_SUPPORTED) return false;
-            const raw = localStorage.getItem(VAULT_STORAGE_KEY);
-            if (!raw) return false;
-            try {
-                const { iv, data } = JSON.parse(raw);
-                const key = await getVaultKey();
-                const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(iv) }, key, b64ToBuf(data));
-                const parsed = JSON.parse(new TextDecoder().decode(plainBuf));
-                menuState.apiKeys = (parsed && typeof parsed.apiKeys === 'object') ? parsed.apiKeys : {};
-                return true;
-            } catch (err) {
-                console.warn('API-Schlüssel-Tresor beschädigt — wird zurückgesetzt.', err);
-                localStorage.removeItem(VAULT_STORAGE_KEY);
-                menuState.apiKeys = {};
-                return false;
-            }
-        }
-
-        async function migrateLegacyPlaintextKeys(vaultWasLoaded) {
-            if (!VAULT_SUPPORTED || vaultWasLoaded) return;
-            const hasLegacyKeys = menuState.apiKeys && Object.keys(menuState.apiKeys).length > 0;
-            if (hasLegacyKeys) await saveApiKeyVault();
-            saveMenuState();
-        }
-
-        /* ---- Vom portfolio-shell.html aufgerufen (via unsichtbares iframe) —
-           liefert/ersetzt den rohen, weiterhin verschlüsselten Tresor-Blob
-           (iaDictKeyVault), ohne ihn hier zu entschlüsseln. Gleiches Protokoll
-           wie KI_SAFE.html: es werden nur dieselben Chiffretext-Bytes
-           verschoben, die sonst in localStorage liegen — kein
-           Passphrase-Austausch nötig. */
-
-
-        const VAULT_PROVIDER_ALIASES = {
-            'pollinationsai': 'pollinations', 'pollinations': 'pollinations',
-            'cerebras': 'cerebras',
-            'groq': 'groq',
-            'googlegemini': 'google', 'google': 'google', 'gemini': 'google',
-            'nvidianim': 'nvidia', 'nvidia': 'nvidia',
-            'githubmodels': 'github', 'github': 'github',
-            'cloudflareworkersai': 'cloudflare', 'cloudflare': 'cloudflare',
-            'openrouter': 'openrouter',
-            'huggingface': 'huggingface', 'huggingfacecommunityfallback': 'huggingface'
-        };
-        function normalizeVaultProviderName(name) {
-            const key = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-            return VAULT_PROVIDER_ALIASES[key] || null;
-        }
-
-        window.addEventListener('message', (e) => {
-            if (!e.data || !e.data.type) return;
-            if (e.origin !== window.location.origin) {
-                console.warn('[Security] Ignored postMessage from unexpected origin:', e.origin);
-                return;
-            }
-            if (e.data.type === 'osirisVaultRequestExport') {
-                let blob = null;
-                try {
-                    const raw = localStorage.getItem(VAULT_STORAGE_KEY);
-                    blob = raw ? JSON.parse(raw) : null;
-                } catch (err) { blob = null; }
-                if (e.source) e.source.postMessage({ type: 'osirisVaultExportData', blob }, window.location.origin);
-            } else if (e.data.type === 'osirisVaultRestoreBlob' && e.data.blob) {
-                try {
-                    localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(e.data.blob));
-                    loadApiKeyVault().then(() => {
-                        sanitizeApiKeys();
-                        if (typeof initMenu === 'function') initMenu();
-                    });
-                } catch (err) { /* Speicher nicht verfügbar */ }
-            } else if (e.data.type === 'osirisVaultKeys' && Array.isArray(e.data.keys)) {
-
-
-                let applied = 0;
-                e.data.keys.forEach(k => {
-                    const providerId = normalizeVaultProviderName(k && k.provider);
-                    const value = k && typeof k.key === 'string' ? k.key.trim() : '';
-                    if (providerId && value) {
-                        menuState.apiKeys[providerId] = value;
-                        applied++;
-                    }
-                });
-                if (applied > 0) {
-                    saveMenuState();
-                    saveApiKeyVault();
-
-                    if (typeof apiKeyInp !== 'undefined' && menuState.apiKeys[menuState.apiProvider] !== undefined) {
-                        apiKeyInp.value = menuState.apiKeys[menuState.apiProvider] || '';
-                        if (typeof refreshApiKeyValidation === 'function') refreshApiKeyValidation();
-                    }
+        const vaultClient = VaultCrypto.createClient({
+            dbName: VAULT_DB_NAME,
+            storeName: VAULT_STORE,
+            keyId: VAULT_KEY_ID,
+            storageKey: VAULT_STORAGE_KEY,
+            onRestore: () => {
+                sanitizeApiKeys();
+                if (typeof initMenu === 'function') initMenu();
+            },
+            onKeysUpdated: (newKeys) => {
+                Object.assign(menuState.apiKeys, newKeys);
+                saveMenuState();
+                vaultClient.saveKeys(menuState.apiKeys);
+                if (typeof apiKeyInp !== 'undefined' && menuState.apiKeys[menuState.apiProvider] !== undefined) {
+                    apiKeyInp.value = menuState.apiKeys[menuState.apiProvider] || '';
+                    if (typeof refreshApiKeyValidation === 'function') refreshApiKeyValidation();
                 }
-                if (e.source) e.source.postMessage({ type: 'osirisVaultKeysApplied', count: applied }, e.origin || '*');
             }
         });
+
+        const openVaultDb = () => VaultCrypto.openVaultDb(VAULT_DB_NAME, VAULT_STORE);
+        const getVaultKey = () => VaultCrypto.getVaultKey(VAULT_DB_NAME, VAULT_STORE, VAULT_KEY_ID);
+        const bufToB64 = VaultCrypto.bufToB64;
+        const b64ToBuf = VaultCrypto.b64ToBuf;
+        const saveApiKeyVault = () => vaultClient.saveKeys(menuState.apiKeys);
+        const loadApiKeyVault = async () => {
+            const keys = await vaultClient.loadKeys();
+            if (keys) { menuState.apiKeys = keys; return true; }
+            menuState.apiKeys = {};
+            return false;
+        };
+        const migrateLegacyPlaintextKeys = (loaded) => vaultClient.migrateLegacy(loaded, menuState.apiKeys, saveMenuState);
+        const normalizeVaultProviderName = VaultCrypto.normalizeProviderName;
 
         const themeToggleBtn = document.getElementById('themeToggle');
         const themeIconSun = document.getElementById('themeIconSun');

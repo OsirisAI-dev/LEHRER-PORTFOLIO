@@ -1777,6 +1777,7 @@
 
 </div>
 
+<script src="../js/core/vault-crypto.js"></script>
 <script>
 /* --- Verknüpfungen (linkes Panel) ---
    Früher enthielt das linke Panel fest codierte Platzhalter-Einträge
@@ -1892,38 +1893,11 @@ const VAULT_STORE_KEY = 'ki_safe_vault_store';
 const VAULT_PROVIDERS_KEY = 'ki_safe_providers';
 const VAULT_DEFAULT_PROVIDERS = ['Pollinations AI', 'Cerebras', 'Groq', 'Google Gemini', 'NVIDIA NIM', 'GitHub Models', 'Cloudflare Workers AI', 'OpenRouter', 'Hugging Face'];
 
-function vb64FromBytes(bytes) {
-  let bin = '';
-  bytes.forEach(b => bin += String.fromCharCode(b));
-  return btoa(bin);
-}
-function vbytesFromB64(b64) {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
-}
-async function deriveVaultKey(passphrase, saltBytes) {
-  const enc = new TextEncoder();
-  const baseKey = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: saltBytes, iterations: 150000, hash: 'SHA-256' },
-    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-  );
-}
-async function encryptVault(passphrase, data) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveVaultKey(passphrase, salt);
-  const enc = new TextEncoder();
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(data)));
-  return { v: 1, salt: vb64FromBytes(salt), iv: vb64FromBytes(iv), ct: vb64FromBytes(new Uint8Array(ciphertext)) };
-}
-async function decryptVault(passphrase, blob) {
-  const key = await deriveVaultKey(passphrase, vbytesFromB64(blob.salt));
-  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: vbytesFromB64(blob.iv) }, key, vbytesFromB64(blob.ct));
-  return JSON.parse(new TextDecoder().decode(plainBuf));
-}
+const vb64FromBytes = (bytes) => VaultCrypto.bufToB64(bytes);
+const vbytesFromB64 = (b64) => VaultCrypto.b64ToBuf(b64);
+const deriveVaultKey = (passphrase, saltBytes) => VaultCrypto.deriveVaultKey(passphrase, saltBytes);
+const encryptVault = (passphrase, data) => VaultCrypto.encryptVault(passphrase, data);
+const decryptVault = (passphrase, blob) => VaultCrypto.decryptVault(passphrase, blob);
 
 /* failCount lebt nur im Speicher (kein localStorage/sessionStorage) —
    wird bei jedem Neuladen/Schließen der Seite zurückgesetzt. Gewollt:
