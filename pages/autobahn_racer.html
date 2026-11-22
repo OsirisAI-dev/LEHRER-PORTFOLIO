@@ -334,17 +334,6 @@
   .rpm-seg.on-y { background: #facc15; }
   .rpm-seg.on-r { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
 
-  .db-pill {
-    font-size: 0.67rem;
-    color: var(--accent-green);
-    background: rgba(34, 197, 94, 0.12);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 8px;
-    padding: 5px 8px;
-    text-align: center;
-    font-weight: 700;
-  }
-
   /* Keys legend */
   .keys-grid {
     display: grid;
@@ -992,8 +981,8 @@
   }
   .goals-stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
     margin-bottom: 4px;
   }
   .goals-road-grid {
@@ -1033,27 +1022,76 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
   }
-  .trophy-card {
+  .trophy-flip-card {
+    perspective: 720px;
+    min-height: 118px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: default;
+    text-align: center;
+  }
+  .trophy-flip-card.can-flip { cursor: pointer; }
+  .trophy-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 118px;
+    transform-style: preserve-3d;
+    transition: transform 0.54s cubic-bezier(0.22, 0.9, 0.32, 1);
+  }
+  .trophy-flip-card.flipped .trophy-flip-inner { transform: rotateY(180deg); }
+  .trophy-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     background: var(--bg-card);
     border: 1.5px solid var(--border-subtle);
     border-radius: 10px;
-    padding: 8px 7px;
+    padding: 7px 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
+    justify-content: center;
     gap: 3px;
-    opacity: 0.72;
+    color: var(--text-main);
   }
-  .trophy-card.earned {
+  .trophy-face.front { opacity: 0.74; }
+  .trophy-face.front.earned {
     opacity: 1;
     border-color: var(--accent-gold);
     background: linear-gradient(180deg, rgba(250, 204, 21, 0.14), var(--bg-card));
     box-shadow: 0 4px 14px rgba(250, 204, 21, 0.14);
   }
+  .trophy-face.back {
+    transform: rotateY(180deg);
+    border-color: rgba(249, 115, 22, 0.55);
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.15), var(--bg-card));
+  }
+  .trophy-face.back.earned {
+    border-color: #f97316;
+    background: linear-gradient(180deg, rgba(249, 115, 22, 0.24), rgba(147, 51, 234, 0.12), var(--bg-card));
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.28);
+  }
+  .trophy-flip-tag {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    font-size: 0.5rem;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.18);
+    color: var(--autobahn-glow);
+  }
+  .trophy-face.back .trophy-flip-tag {
+    background: rgba(249, 115, 22, 0.22);
+    color: #fb923c;
+  }
   .trophy-ico-wrap {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1061,12 +1099,32 @@
     background: rgba(148, 163, 184, 0.15);
     color: var(--text-dim);
   }
-  .trophy-card.earned .trophy-ico-wrap {
+  .trophy-face.front.earned .trophy-ico-wrap {
     background: rgba(250, 204, 21, 0.22);
     color: var(--accent-gold);
   }
-  .trophy-card strong { font-size: 0.69rem; line-height: 1.15; }
-  .trophy-card small { font-size: 0.56rem; color: var(--text-dim); line-height: 1.2; }
+  .trophy-face.back .trophy-ico-wrap {
+    background: rgba(249, 115, 22, 0.20);
+    color: #fb923c;
+  }
+  .trophy-face.back.earned .trophy-ico-wrap {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(250, 204, 21, 0.32));
+    color: #facc15;
+  }
+  .trophy-face strong { font-size: 0.67rem; line-height: 1.15; }
+  .trophy-face small { font-size: 0.55rem; color: var(--text-dim); line-height: 1.18; }
+  .tier-flip-btn {
+    background: rgba(249, 115, 22, 0.16);
+    border: 1px solid rgba(249, 115, 22, 0.45);
+    color: var(--accent-orange);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+  .tier-flip-btn:hover { background: rgba(249, 115, 22, 0.26); }
 
   /* Mobile Garage Quick Bar & Floating Map PiP (hidden on desktop) */
   .mobile-menu-bar {
@@ -1156,7 +1214,7 @@
     .theme-grid { grid-template-columns: repeat(2, 1fr); gap: 5px; }
     .car-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .toggles-row { grid-template-columns: repeat(2, 1fr); gap: 5px; }
-    .goals-stats-row { grid-template-columns: repeat(2, 1fr); }
+    .goals-stats-row { grid-template-columns: repeat(3, 1fr); }
     .goals-road-grid, .goals-trophy-grid { grid-template-columns: repeat(2, 1fr); gap: 5px; }
     .cta-btn.secondary { padding: 7px 6px; font-size: 0.72rem; gap: 4px; }
     .pill-btn { padding: 7px 8px; }
@@ -1285,7 +1343,7 @@
           <svg class="svg-ico sm" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
           WORT-ZIELE &amp; TROPHÄEN
         </span>
-        <span class="trophy-pill" id="hudTrophyCount">0/8</span>
+        <span class="trophy-pill" id="hudTrophyCount">0/16</span>
       </div>
       <div style="font-size:0.72rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="hudNextGoalTitle">Nächstes Ziel: A3 · Rheinland</div>
       <div class="goal-bar-track"><div class="goal-bar-fill" id="hudNextGoalFill"></div></div>
@@ -1372,7 +1430,7 @@
         <div class="m-quick-actions">
           <button type="button" class="icon-btn m-theme-chip" id="btnGoalsMenuMobile" aria-label="Ziele und Trophäen" title="Wort-Ziele &amp; Trophäen" style="color:var(--accent-gold);">
             <svg class="svg-ico sm" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            <span id="mTrophyBadge">0/8</span>
+            <span id="mTrophyBadge">0/16</span>
           </button>
           <button type="button" class="icon-btn m-theme-chip active-state" id="btnThemeMenuMobile" aria-label="Tag oder Nacht wechseln"></button>
           <button type="button" class="icon-btn active-state" id="btnTtsMenuMobile" aria-label="Gratulationen vorlesen" title="Vorlesen an/aus">
@@ -1397,8 +1455,7 @@
             <span style="font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.9px; color:var(--autobahn-glow);">1. Spielmodus wählen</span>
             <span class="setup-summary-chip" id="setupSummaryChip">Artikel · B1 · Alle</span>
           </span>
-          <span style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-            <span id="dbStatusMenu" style="color:var(--accent-green); font-size:0.62rem; font-weight:700;">Wortschatz lädt…</span>
+          <span style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
             <svg class="svg-ico sm setup-chevron" id="icoSetupChevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </span>
         </button>
@@ -1425,18 +1482,25 @@
               </strong>
               <span>hat / ist + Partizip II</span>
             </button>
-            <button class="pill-btn" data-mode="mix">
+            <button class="pill-btn" data-mode="substantivierung">
+              <strong>
+                <svg class="svg-ico sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Substantivierung
+              </strong>
+              <span>Verb → Nomen (2 breite Spuren)</span>
+            </button>
+            <button class="pill-btn" data-mode="mix" style="grid-column: 1 / -1;">
               <strong>
                 <svg class="svg-ico sm" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
                 Autobahn-Mix
               </strong>
-              <span>Alle Formen im Wechsel</span>
+              <span>Artikel, Präteritum, Partizip II &amp; Substantivierung im Wechsel</span>
             </button>
           </div>
 
           <div class="section-lbl">
             <span>2. GER / CEFR-Sprachniveau &amp; Tempo</span>
-            <span id="cefrPoolInfo" style="color:var(--text-dim); font-size:0.6rem;">Offline-DB gefiltert</span>
+            <span id="cefrPoolInfo" style="color:var(--text-dim); font-size:0.6rem;">B1</span>
           </div>
           <div class="cefr-row" id="cefrRow">
             <button class="diff-btn" data-cefr="A1">A1<small>Start</small></button>
@@ -1495,7 +1559,7 @@
           <div class="goal-strip-text" id="menuGoalText">Nächstes Ziel: A3 · Rheinland (0/10 Wörter)</div>
           <div class="goal-bar-track"><div class="goal-bar-fill" id="menuGoalFill"></div></div>
         </div>
-        <span class="trophy-pill" id="menuTrophyBadge">0/8</span>
+        <span class="trophy-pill" id="menuTrophyBadge">0/16</span>
       </button>
 
       <div class="section-lbl">
@@ -1639,11 +1703,12 @@
         </div>
         <p>Top 10 Fahrer — lokal gespeichert</p>
       </div>
-      <div class="diff-row" id="lbFilterRow" style="grid-template-columns:repeat(5,1fr); margin-bottom:8px;">
+      <div class="diff-row" id="lbFilterRow" style="grid-template-columns:repeat(6,1fr); margin-bottom:8px;">
         <button class="diff-btn selected" data-lbfilter="all">Alle</button>
         <button class="diff-btn" data-lbfilter="artikel">Art.</button>
         <button class="diff-btn" data-lbfilter="praeteritum">Prät.</button>
         <button class="diff-btn" data-lbfilter="partizip2">P.II</button>
+        <button class="diff-btn" data-lbfilter="substantivierung">Subst.</button>
         <button class="diff-btn" data-lbfilter="mix">Mix</button>
       </div>
       <div class="lb-list" id="lbModalList" style="flex:1; overflow-y:auto;"></div>
@@ -1671,6 +1736,7 @@
         <div class="mini-stat"><span>Artikel</span><strong id="gsArtikel">0</strong></div>
         <div class="mini-stat"><span>Präteritum</span><strong id="gsPraet">0</strong></div>
         <div class="mini-stat"><span>Partizip II</span><strong id="gsPartizip">0</strong></div>
+        <div class="mini-stat"><span>Substantiv.</span><strong id="gsSubst">0</strong></div>
       </div>
 
       <div class="section-lbl">
@@ -1681,7 +1747,10 @@
 
       <div class="section-lbl">
         <span>Trophäen-Vitrine</span>
-        <span id="goalsTrophyCount" style="color:var(--accent-gold); font-size:0.6rem;">0/8 erhalten</span>
+        <span style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="tier-flip-btn" id="btnToggleTrophyTier" style="display:none;" title="Zwischen Stufe I und Stufe II · Legende wechseln">↻ Stufe II</button>
+          <span id="goalsTrophyCount" style="color:var(--accent-gold); font-size:0.6rem;">0/16 erhalten</span>
+        </span>
       </div>
       <div class="goals-trophy-grid" id="goalsTrophyGrid"></div>
 
@@ -1729,17 +1798,14 @@
           <div class="map-waypoint-list" id="mapWaypointList">
             <div class="map-wp active" data-wp="0"><span>1. Freiburg</span><strong>A8</strong></div>
             <div class="map-wp" data-wp="1"><span>2. München</span><strong>A9</strong></div>
-            <div class="map-wp locked" data-wp="2"><span>3. Köln/Rhein</span><strong>10 W.</strong></div>
-            <div class="map-wp locked" data-wp="3"><span>4. Berlin</span><strong>25 W.</strong></div>
-            <div class="map-wp locked" data-wp="4"><span>5. Nordsee</span><strong>45 W.</strong></div>
-            <div class="map-wp locked" data-wp="5"><span>6. Zugspitze</span><strong>75 W.</strong></div>
+            <div class="map-wp locked" data-wp="2"><span>3. Köln/Rhein</span><strong>15 W.</strong></div>
+            <div class="map-wp locked" data-wp="3"><span>4. Berlin</span><strong>35 W.</strong></div>
+            <div class="map-wp locked" data-wp="4"><span>5. Nordsee</span><strong>70 W.</strong></div>
+            <div class="map-wp locked" data-wp="5"><span>6. Zugspitze</span><strong>120 W.</strong></div>
           </div>
         </div>
       </div>
     </div>
-
-    <div class="db-pill" id="dbStatusDesktop" title="Offline-Wörterbuch Status">Starter-Wortschatz bereit…</div>
-    <input type="file" id="dbFilePicker" accept=".json" style="display:none;">
 
     <div class="gauge-card" style="margin-top:auto;">
       <div class="gauge-label">
@@ -1928,7 +1994,7 @@
       highway: 'A3',
       name: 'RHEINLAND & WEIN',
       sub: 'Etappe 3 · Weinberge, Rheinburg & Windräder',
-      unlockWords: 10,
+      unlockWords: 15,
       grassA: '#3b6629',
       grassB: '#325823',
       signCities: ['KÖLN 41 km', 'MAINZ 92 km'],
@@ -1939,7 +2005,7 @@
       highway: 'A10',
       name: 'BERLIN-RING',
       sub: 'Etappe 4 · Brandenburger Tor & Fernsehturm',
-      unlockWords: 25,
+      unlockWords: 35,
       grassA: '#334155',
       grassB: '#2b3648',
       signCities: ['BERLIN-MITTE 8 km', 'POTSDAM 29 km'],
@@ -1950,7 +2016,7 @@
       highway: 'A27',
       name: 'NORDSEE & KÜSTE',
       sub: 'Etappe 5 · Leuchtturm, Dünen & Windpark',
-      unlockWords: 45,
+      unlockWords: 70,
       grassA: '#3d6b4f',
       grassB: '#355f46',
       signCities: ['HAMBURG 55 km', 'BREMERHAVEN 18 km'],
@@ -1961,7 +2027,7 @@
       highway: 'A7',
       name: 'ALPENPASS & ZUGSPITZE',
       sub: 'Etappe 6 · Bergpanorama, Schlösser & Gipfel',
-      unlockWords: 75,
+      unlockWords: 120,
       grassA: '#1f5a4c',
       grassB: '#184a3e',
       signCities: ['FÜSSEN 14 km', 'ZUGSPITZE 28 km'],
@@ -1970,29 +2036,67 @@
   ];
 
   // =========================================================================
-  // 2B. WORD-COUNT TROPHY SYSTEM (Autobahnkönig, Gehendes Wörterbuch, ...)
+  // 2B. FLIPPABLE 2-TIER TROPHY SYSTEM (Stufe I -> Stufe II · Legende)
   // =========================================================================
   const TROPHY_ICONS = {
     flag: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
     drop: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
     clock: '<svg class="svg-ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>',
     bolt: '<svg class="svg-ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    cube: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
     compass: '<svg class="svg-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>',
     crown: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M2 18h20l-2-11-5 4-3-6-3 6-5-4-2 11z"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
     book: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    flame: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M12 2c.5 3.5-2 5.5-2 8.5a4 4 0 0 0 8 0c0-2.5-1.5-4.5-2.5-6 0 2-1 3-2 3 .5-2.5-.5-4.5-1.5-5.5z"/><path d="M8.5 11.5C6.5 13 6 15 6 16.5a6 6 0 0 0 12 0"/></svg>',
+    wand: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/></svg>',
+    stone: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M6 3h12l3 6-9 12L3 9l3-6z"/><path d="M3 9h18"/><path d="M12 3v18"/></svg>',
     trophy: '<svg class="svg-ico" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>'
   };
 
-  const TROPHIES = [
-    { id: 'ersteAusfahrt', name: 'Erste Ausfahrt', desc: '10 richtige Wörter gesamt', metric: 'totalWords', target: 10, icon: 'flag' },
-    { id: 'artikelAss', name: 'Artikel-Ass', desc: '20 richtige Artikel (der/die/das)', metric: 'artikel', target: 20, icon: 'drop' },
-    { id: 'praeteritumProfi', name: 'Präteritum-Profi', desc: '20 richtige Präteritum-Formen', metric: 'praeteritum', target: 20, icon: 'clock' },
-    { id: 'partizipMeister', name: 'Partizipmeister', desc: '25 richtige Partizip-II-Formen', metric: 'partizip2', target: 25, icon: 'bolt' },
-    { id: 'seinSpezialist', name: 'Sein-Spezialist', desc: '10 richtige „ist + Partizip II“-Verben', metric: 'seinVerbs', target: 10, icon: 'compass' },
-    { id: 'autobahnKoenig', name: 'Autobahnkönig', desc: '60 richtige Wörter gesamt', metric: 'totalWords', target: 60, icon: 'crown' },
-    { id: 'gehendesWoerterbuch', name: 'Gehendes Wörterbuch', desc: '120 richtige Wörter gesamt', metric: 'totalWords', target: 120, icon: 'book' },
-    { id: 'gerLegende', name: 'GER-Meisterfahrer', desc: '200 richtige Wörter gesamt', metric: 'totalWords', target: 200, icon: 'trophy' }
+  // 8 Flippable Trophy Categories: each flips from Stufe I -> Stufe II (Legende) once completed!
+  const TROPHY_SLOTS = [
+    {
+      slotId: 'start',
+      t1: { id: 'ersteAusfahrt', name: 'Erste Ausfahrt', desc: '25 richtige Wörter gesamt', metric: 'totalWords', target: 25, icon: 'flag', tier: 1 },
+      t2: { id: 'jetztWirdsErnst', name: "Jetzt wird's ernst!", desc: '400 richtige Wörter gesamt', metric: 'totalWords', target: 400, icon: 'flame', tier: 2 }
+    },
+    {
+      slotId: 'artikel',
+      t1: { id: 'artikelAss', name: 'Artikel-Ass', desc: '40 richtige Artikel (der/die/das)', metric: 'artikel', target: 40, icon: 'drop', tier: 1 },
+      t2: { id: 'hoellischSicher', name: 'Höllisch sicher!', desc: '150 richtige Artikel', metric: 'artikel', target: 150, icon: 'flame', tier: 2 }
+    },
+    {
+      slotId: 'praeteritum',
+      t1: { id: 'praeteritumProfi', name: 'Präteritum-Profi', desc: '40 richtige Präteritum-Formen', metric: 'praeteritum', target: 40, icon: 'clock', tier: 1 },
+      t2: { id: 'zeitmaschinenGott', name: 'Zeitmaschinen-Gott', desc: '150 richtige Präteritum-Formen', metric: 'praeteritum', target: 150, icon: 'trophy', tier: 2 }
+    },
+    {
+      slotId: 'partizip2',
+      t1: { id: 'partizipMeister', name: 'Partizipmeister', desc: '50 richtige Partizip-II-Formen', metric: 'partizip2', target: 50, icon: 'bolt', tier: 1 },
+      t2: { id: 'wortzauberer', name: 'Wortzauberer', desc: '180 richtige Partizip-II-Formen', metric: 'partizip2', target: 180, icon: 'wand', tier: 2 }
+    },
+    {
+      slotId: 'substantivierung',
+      t1: { id: 'substantivArchitekt', name: 'Substantiv-Architekt', desc: '30 richtige Substantivierungen', metric: 'substantivierung', target: 30, icon: 'cube', tier: 1 },
+      t2: { id: 'nominalAlchemist', name: 'Nominal-Alchemist', desc: '120 richtige Substantivierungen', metric: 'substantivierung', target: 120, icon: 'wand', tier: 2 }
+    },
+    {
+      slotId: 'sein',
+      t1: { id: 'seinSpezialist', name: 'Sein-Spezialist', desc: '25 richtige „ist + Partizip II“-Verben', metric: 'seinVerbs', target: 25, icon: 'compass', tier: 1 },
+      t2: { id: 'hoellenNavigator', name: 'Höllen-Navigator', desc: '80 richtige „ist + Partizip II“-Verben', metric: 'seinVerbs', target: 80, icon: 'flame', tier: 2 }
+    },
+    {
+      slotId: 'koenig',
+      t1: { id: 'autobahnKoenig', name: 'Autobahnkönig', desc: '150 richtige Wörter gesamt', metric: 'totalWords', target: 150, icon: 'crown', tier: 1 },
+      t2: { id: 'steinVonRosette', name: 'Stein von Rosette', desc: '750 richtige Wörter gesamt', metric: 'totalWords', target: 750, icon: 'stone', tier: 2 }
+    },
+    {
+      slotId: 'duden',
+      t1: { id: 'gehendesWoerterbuch', name: 'Gehendes Wörterbuch', desc: '300 richtige Wörter gesamt', metric: 'totalWords', target: 300, icon: 'book', tier: 1 },
+      t2: { id: 'lebenderDuden', name: 'Lebender Duden', desc: '1.200 richtige Wörter gesamt', metric: 'totalWords', target: 1200, icon: 'book', tier: 2 }
+    }
   ];
+  const TROPHIES = TROPHY_SLOTS.flatMap(s => [s.t1, s.t2]);
 
   // =========================================================================
   // 3. GERMAN GRATULATIONS & MILESTONES
@@ -2263,7 +2367,26 @@
     ['impfen','impfte','geimpft','to vaccinate / vacciner','C2']
   ];
 
-  // Runtime Word Pool (immediately seeded with starter deck, enriched asynchronously from iaDictLocalDB / Dict_db.json)
+  // Curated A1-C2 Substantivierung Starter Pairs (enriched with 2,300+ DB pairs via derivedWord!)
+  const STARTER_SUBST = [
+    ['essen','das','Essen','meal / repas','A1'], ['fahren','die','Fahrt','ride / trajet','A1'],
+    ['kaufen','der','Kauf','purchase / achat','A1'], ['anfangen','der','Anfang','beginning / début','A1'],
+    ['fragen','die','Frage','question / question','A1'], ['arbeiten','die','Arbeit','work / travail','A1'],
+    ['anmelden','die','Anmeldung','registration / inscription','A2'], ['einladen','die','Einladung','invitation / invitation','A2'],
+    ['bezahlen','die','Bezahlung','payment / paiement','A2'], ['besuchen','der','Besuch','visit / visite','A2'],
+    ['beginnen','der','Beginn','start / début','A2'], ['erklären','die','Erklärung','explanation / explication','A2'],
+    ['entscheiden','die','Entscheidung','decision / décision','B1'], ['entwickeln','die','Entwicklung','development / développement','B1'],
+    ['erfahren','die','Erfahrung','experience / expérience','B1'], ['vergleichen','der','Vergleich','comparison / comparaison','B1'],
+    ['beweisen','der','Beweis','proof / preuve','B1'], ['hoffen','die','Hoffnung','hope / espoir','B1'],
+    ['verändern','die','Veränderung','change / changement','B2'], ['untersuchen','die','Untersuchung','examination / enquête','B2'],
+    ['ausnehmen','die','Ausnahme','exception / exception','B2'], ['überzeugen','die','Überzeugung','conviction / conviction','B2'],
+    ['betreiben','der','Betrieb','operation / entreprise','B2'], ['erzeugen','das','Erzeugnis','product / produit','B2'],
+    ['unterdrücken','die','Unterdrückung','suppression / répression','C1'], ['erläutern','die','Erläuterung','clarification / précision','C1'],
+    ['identifizieren','die','Identifizierung','identification / identification','C1'], ['ablehnen','die','Ablehnung','rejection / refus','C1'],
+    ['wahrnehmen','die','Wahrnehmung','perception / perception','C2'], ['übereinstimmen','die','Übereinstimmung','agreement / concordance','C2']
+  ];
+
+  // Runtime Word Pool (enriched silently from iaDictLocalDB / Dict_db.json)
   const wordPool = {
     nouns: STARTER_NOUNS.map(([word, genus, hint, cefr]) => ({
       word,
@@ -2283,6 +2406,17 @@
       themes: classifyThemes(inf, hint, ''),
       fromDb: false
     })),
+    subst: STARTER_SUBST.map(([verb, genus, noun, hint, cefr]) => ({
+      verb,
+      genus,
+      noun,
+      display: `${genus} ${noun}`,
+      hint,
+      cefr,
+      themes: classifyThemes(`${verb} ${noun}`, hint, ''),
+      fromDb: false
+    })),
+    nounSet: new Set(STARTER_NOUNS.map(([w]) => w.toLowerCase())),
     loadedFromDb: false
   };
 
@@ -2310,11 +2444,45 @@
     return 'C2';
   }
 
+  function extractBestDerivedNoun(verbLower, levelsObj) {
+    if (!levelsObj || verbLower.length < 4 || verbLower.includes(' ')) return null;
+    const stems = [verbLower.endsWith('en') ? verbLower.slice(0, -2) : verbLower.slice(0, -1)];
+    if (verbLower.endsWith('eln')) stems.push(verbLower.slice(0, -3) + 'l');
+    if (verbLower.endsWith('ern')) stems.push(verbLower.slice(0, -3) + 'r');
+    if (verbLower.endsWith('ieren')) stems.push(verbLower.slice(0, -5));
+    let best = null;
+    const vals = Object.values(levelsObj);
+    for (let i = 0; i < vals.length; i++) {
+      const list = vals[i] && vals[i].derivedWord;
+      if (!Array.isArray(list)) continue;
+      for (let j = 0; j < list.length; j++) {
+        const item = list[j];
+        if (!item || typeof item !== 'object') continue;
+        const g = String(item.genus || '').trim().toLowerCase();
+        const dw = String(item.word || '').trim();
+        if ((g !== 'der' && g !== 'die' && g !== 'das') || !dw || dw.includes(' ') || dw.length > 18) continue;
+        const dl = dw.toLowerCase();
+        let sc = 0;
+        for (let k = 0; k < stems.length; k++) {
+          const st = stems[k];
+          if (st.length < 3) continue;
+          if (dl === st + 'ung' || dl === st + 'ation' || dl === st + 'tion' || dl === st + 'nis' || dl === st + 'schaft' || dl === st + 'heit' || dl === st + 'keit') sc = Math.max(sc, 10);
+          else if (dl === st + 't' || dl === st + 'e' || dl === st) sc = Math.max(sc, 8);
+        }
+        if (sc === 0 && dw.length <= verbLower.length + 1 && dl.slice(0, 3) === verbLower.slice(0, 3) && !/(?:er|in|chen|lein)$/.test(dl)) sc = 6;
+        if (sc === 0 && dl === verbLower && g === 'das') sc = 5;
+        if (sc > 0 && (!best || sc > best.sc)) best = { sc, genus: g, noun: dw[0].toUpperCase() + dw.slice(1) };
+      }
+    }
+    return best;
+  }
+
   function ingestDbRecords(records) {
     if (!Array.isArray(records) || !records.length) return;
     const nounMap = new Map(wordPool.nouns.map(n => [n.word.toLowerCase(), n]));
     const verbMap = new Map(wordPool.verbs.map(v => [v.inf.toLowerCase(), v]));
-    let addedN = 0, addedV = 0, upgraded = 0;
+    const substMap = new Map(wordPool.subst.map(s => [s.verb.toLowerCase(), s]));
+    let addedN = 0, addedV = 0, addedS = 0, upgraded = 0;
 
     for (let i = 0; i < records.length; i++) {
       const r = records[i];
@@ -2343,6 +2511,7 @@
           const themes = classifyThemes(displayNoun, hint, kf);
           const rec = { word: displayNoun, genus: r.genus, hint, cefr, themes, fromDb: true };
           nounMap.set(key, rec);
+          wordPool.nounSet.add(key);
           wordPool.nouns.push(rec);
           addedN++;
         }
@@ -2356,10 +2525,14 @@
           const aux = rawAux === 'sein'
             ? 'sein'
             : (rawAux.includes('sein') && rawAux.includes('haben') ? 'haben|sein' : 'haben');
+          let recCefr = 'B1';
+          let recThemes = null;
           if (verbMap.has(inf)) {
             const existing = verbMap.get(inf);
             if (!existing.fromDb) { existing.fromDb = true; upgraded++; }
             if (c.aux) existing.aux = aux;
+            recCefr = existing.cefr;
+            recThemes = existing.themes;
           } else if (
             inf.length >= 4 && inf.length <= 16 &&
             pt3.length >= 3 && pt3.length <= 17 &&
@@ -2367,24 +2540,42 @@
             !pt3.includes('/') && !p2.includes(' ')
           ) {
             const isIrreg = !pt3.endsWith('te') && !pt3.includes('te ');
-            const cefr = classifyDbCefr(inf, true, isIrreg);
-            const themes = classifyThemes(inf, hint, kf);
-            const rec = { inf, pt: pt3, p2, aux, hint, cefr, themes, fromDb: true };
+            recCefr = classifyDbCefr(inf, true, isIrreg);
+            recThemes = classifyThemes(inf, hint, kf);
+            const rec = { inf, pt: pt3, p2, aux, hint, cefr: recCefr, themes: recThemes, fromDb: true };
             verbMap.set(inf, rec);
             wordPool.verbs.push(rec);
             addedV++;
+          }
+          // Extract real Verb -> Derived Noun nominalization pair from levels.derivedWord!
+          const derived = extractBestDerivedNoun(inf, r.levels);
+          if (derived) {
+            if (substMap.has(inf)) {
+              const ex = substMap.get(inf);
+              if (!ex.fromDb) { ex.fromDb = true; upgraded++; }
+            } else {
+              const sRec = {
+                verb: inf,
+                genus: derived.genus,
+                noun: derived.noun,
+                display: `${derived.genus} ${derived.noun}`,
+                hint,
+                cefr: recCefr,
+                themes: recThemes || classifyThemes(`${inf} ${derived.noun}`, hint, kf),
+                fromDb: true
+              };
+              substMap.set(inf, sRec);
+              wordPool.nounSet.add(derived.noun.toLowerCase());
+              wordPool.subst.push(sRec);
+              addedS++;
+            }
           }
         }
       }
     }
 
-    if (addedN || addedV || upgraded) {
+    if (addedN || addedV || addedS || upgraded) {
       wordPool.loadedFromDb = true;
-      const desk = document.getElementById('dbStatusDesktop');
-      desk.textContent = `DB aktiv: ${wordPool.nouns.length.toLocaleString('de-DE')} Nomen · ${wordPool.verbs.length.toLocaleString('de-DE')} Verben`;
-      desk.style.cursor = 'default';
-      desk.title = 'Lokale Datenbank aktiv (zufällige Wortauswahl)';
-      document.getElementById('dbStatusMenu').textContent = `${wordPool.nouns.length.toLocaleString('de-DE')} Nomen · ${wordPool.verbs.length.toLocaleString('de-DE')} Verben`;
       if (typeof updatePoolStatsUI === 'function') updatePoolStatsUI();
     }
   }
@@ -2483,14 +2674,8 @@
       } catch (e) {}
     }
 
-    // 3. Offline file:// CORS fallback: allow 1-click local Dict_db.json selection (cached to IndexedDB permanently)
-    if (!wordPool.loadedFromDb) {
-      const desk = document.getElementById('dbStatusDesktop');
-      desk.textContent = `Offline-Deck (${wordPool.nouns.length + wordPool.verbs.length}) · Dict_db.json laden`;
-      desk.style.cursor = 'pointer';
-      desk.title = 'Klicken, um db/Dict_db.json einmalig in die lokale Datenbank zu laden';
-      document.getElementById('dbStatusMenu').textContent = `Offline-Deck · DB laden`;
-      if (typeof updatePoolStatsUI === 'function') updatePoolStatsUI();
+    if (!wordPool.loadedFromDb && typeof updatePoolStatsUI === 'function') {
+      updatePoolStatsUI();
     }
   }
 
@@ -2606,6 +2791,39 @@
       uniq.push('ge' + inf.slice(0, -1) + (uniq.length === 0 ? 't' : 'en'));
     }
     return uniq;
+  }
+
+  function buildSubstantivierungDistractor(item) {
+    const noun = item.noun;
+    const genus = item.genus;
+    const otherArticles = ['der', 'die', 'das'].filter(a => a !== genus);
+    const wrongArticle = otherArticles[secureRandomInt(otherArticles.length)];
+    const morphCands = [];
+    if (noun.endsWith('ung')) {
+      const base = noun.slice(0, -3);
+      morphCands.push(`die ${base}heit`, `das ${base}nis`, `die ${base}tion`, `der ${base}er`);
+    } else if (noun.endsWith('tion')) {
+      const base = noun.slice(0, -4);
+      morphCands.push(`die ${base}ung`, `das ${base}nis`, `die ${base}heit`);
+    } else if (noun.endsWith('nis')) {
+      const base = noun.slice(0, -3);
+      morphCands.push(`die ${base}ung`, `die ${base}heit`, `der ${base}t`);
+    } else if (noun.endsWith('heit') || noun.endsWith('keit')) {
+      const base = noun.slice(0, -4);
+      morphCands.push(`die ${base}ung`, `das ${base}nis`);
+    } else {
+      morphCands.push(`die ${noun}ung`, `das ${noun}nis`, `die ${noun}heit`);
+    }
+    // Filter out any candidate whose noun part already exists as a real German noun in DB!
+    const validMorph = morphCands.filter(c => {
+      const bare = c.split(' ').slice(1).join(' ').toLowerCase();
+      return bare && bare !== noun.toLowerCase() && !wordPool.nounSet.has(bare);
+    });
+    // Alternate between realistic wrong-suffix traps (60%) and wrong-article traps (40%)
+    if (validMorph.length && secureRandomInt(10) < 6) {
+      return validMorph[secureRandomInt(validMorph.length)];
+    }
+    return `${wrongArticle} ${noun}`;
   }
 
   function shuffle(arr) {
@@ -2932,7 +3150,7 @@
     return filtered.length ? filtered[0].score : 0;
   }
 
-  const MODE_LABELS = { artikel: 'Artikel', praeteritum: 'Präteritum', partizip2: 'Partizip II', mix: 'Mix' };
+  const MODE_LABELS = { artikel: 'Artikel', praeteritum: 'Präteritum', partizip2: 'Partizip II', substantivierung: 'Substantiv.', mix: 'Mix' };
 
   function renderLeaderboardInto(containerId, filterMode, maxRows) {
     const el = document.getElementById(containerId);
@@ -3515,6 +3733,7 @@
   let ROAD_LEFT = Math.round((LOGICAL_W - ROAD_W) / 2);
   let ROAD_RIGHT = ROAD_LEFT + ROAD_W;
   let LANE_X = [ROAD_LEFT + LANE_W * 0.5, ROAD_LEFT + LANE_W * 1.5, ROAD_LEFT + LANE_W * 2.5];
+  let DUAL_LANE_X = [ROAD_LEFT + ROAD_W * 0.265, ROAD_LEFT + ROAD_W * 0.735];
   let mobileTopInsetLogical = 44;
 
   const canvas = document.getElementById('gameCanvas');
@@ -3563,6 +3782,7 @@
     ROAD_LEFT = Math.round((LOGICAL_W - ROAD_W) / 2);
     ROAD_RIGHT = ROAD_LEFT + ROAD_W;
     LANE_X = [ROAD_LEFT + LANE_W * 0.5, ROAD_LEFT + LANE_W * 1.5, ROAD_LEFT + LANE_W * 2.5];
+    DUAL_LANE_X = [ROAD_LEFT + ROAD_W * 0.265, ROAD_LEFT + ROAD_W * 0.735];
 
     if (window.innerWidth <= 840 && rect.height > 0) {
       const mh = document.getElementById('mobileHud');
@@ -3577,7 +3797,9 @@
     if (dx !== 0 && typeof state !== 'undefined' && state) {
       state.playerX += dx;
       if (state.traffic) state.traffic.forEach(t => { t.x = LANE_X[t.lane]; });
-      if (state.activeWave && state.activeWave.tanks) state.activeWave.tanks.forEach(tk => { tk.x = LANE_X[tk.lane]; });
+      if (state.activeWave && state.activeWave.tanks) {
+        state.activeWave.tanks.forEach(tk => { tk.x = tk.isDual ? DUAL_LANE_X[tk.lane] : LANE_X[tk.lane]; });
+      }
       if (state.popups) state.popups.forEach(p => { p.x += dx; });
       if (state.particles) state.particles.forEach(p => { p.x += dx; });
       if (state.scenery) {
@@ -3736,14 +3958,15 @@
   }
 
   function loadGoalStats() {
-    const base = { totalWords: 0, artikel: 0, praeteritum: 0, partizip2: 0, seinVerbs: 0, bestStreak: 0, trophies: [] };
+    const base = { totalWords: 0, artikel: 0, praeteritum: 0, partizip2: 0, substantivierung: 0, seinVerbs: 0, bestStreak: 0, trophies: [], prestigeFlipped: false };
     try {
       const raw = JSON.parse(localStorage.getItem(GOALS_KEY) || '{}');
       if (raw && typeof raw === 'object') {
-        ['totalWords', 'artikel', 'praeteritum', 'partizip2', 'seinVerbs', 'bestStreak'].forEach(k => {
+        ['totalWords', 'artikel', 'praeteritum', 'partizip2', 'substantivierung', 'seinVerbs', 'bestStreak'].forEach(k => {
           base[k] = Math.max(0, Number(raw[k]) || 0);
         });
         if (Array.isArray(raw.trophies)) base.trophies = raw.trophies.filter(Boolean);
+        if (raw.prestigeFlipped) base.prestigeFlipped = true;
       }
     } catch (e) {}
     const cefrSum = Object.values(cefrProgress).reduce((a, b) => a + b, 0);
@@ -3751,6 +3974,8 @@
     return base;
   }
   let goalStats = loadGoalStats();
+  const manualTrophyFlips = new Map(); // slotId -> boolean override
+  let globalTrophyTierView = null; // null = auto (flips earned slots to Stufe II), 1 = all front, 2 = all unlocked back
 
   function saveGoalStats() {
     try { localStorage.setItem(GOALS_KEY, JSON.stringify(goalStats)); } catch (e) {}
@@ -3777,6 +4002,10 @@
   function isTrophyUnlocked(trophyOrId) {
     const t = typeof trophyOrId === 'string' ? TROPHIES.find(x => x.id === trophyOrId) : trophyOrId;
     return t ? getTrophyProgress(t).earned : false;
+  }
+
+  function isAllTier1Complete() {
+    return TROPHY_SLOTS.every(s => isTrophyUnlocked(s.t1));
   }
 
   function activateBanner(b) {
@@ -3821,12 +4050,13 @@
         });
       }
     });
-    TROPHIES.forEach(t => {
-      const p = getTrophyProgress(t);
+    TROPHY_SLOTS.forEach(slot => {
+      const activeT = isTrophyUnlocked(slot.t1) ? slot.t2 : slot.t1;
+      const p = getTrophyProgress(activeT);
       if (!p.earned) {
         candidates.push({
-          kind: 'Trophäe',
-          label: t.name,
+          kind: activeT.tier === 2 ? 'Legende' : 'Trophäe',
+          label: activeT.name,
           current: p.current,
           target: p.target,
           rem: p.target - p.current
@@ -3852,10 +4082,10 @@
     const unit = (next && next.unit) || 'Wörter';
     const titleStr = next
       ? `Nächstes Ziel (${next.kind}): ${next.label}`
-      : 'Alle Strecken, Autos & Trophäen freigeschaltet!';
+      : 'Alle Strecken, Autos & Legenden-Trophäen frei!';
     const stripStr = next
       ? `Ziel: ${next.label} (${next.current}/${next.target} ${unit})`
-      : `Meister! Alle ${TROPHIES.length} Trophäen & ${BIOMES.length} Strecken frei!`;
+      : `Lebender Duden! Alle ${TROPHIES.length} Trophäen frei!`;
 
     const ht = document.getElementById('hudNextGoalTitle');
     const hf = document.getElementById('hudNextGoalFill');
@@ -3886,15 +4116,25 @@
 
   function renderGoalsOverlay() {
     const unlockedRoads = BIOMES.filter(b => isRoadUnlocked(b)).length;
-    const earnedTrophies = TROPHIES.filter(t => isTrophyUnlocked(t)).length;
+    const earnedT1 = TROPHY_SLOTS.filter(s => isTrophyUnlocked(s.t1)).length;
+    const earnedT2 = TROPHY_SLOTS.filter(s => isTrophyUnlocked(s.t2)).length;
+    const earnedTotal = earnedT1 + earnedT2;
     const setTxt = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = String(v); };
     setTxt('gsTotal', goalStats.totalWords);
     setTxt('gsArtikel', goalStats.artikel);
     setTxt('gsPraet', goalStats.praeteritum);
     setTxt('gsPartizip', goalStats.partizip2);
+    setTxt('gsSubst', goalStats.substantivierung);
     setTxt('goalsRoadCount', `${unlockedRoads}/${BIOMES.length} frei`);
-    setTxt('goalsTrophyCount', `${earnedTrophies}/${TROPHIES.length} erhalten`);
-    setTxt('goalsOverviewSub', `${goalStats.totalWords} richtige Wörter · ${unlockedRoads}/${BIOMES.length} Strecken · ${earnedTrophies}/${TROPHIES.length} Trophäen`);
+    setTxt('goalsTrophyCount', `${earnedTotal}/${TROPHIES.length} (I: ${earnedT1}/8 · II: ${earnedT2}/8)`);
+    setTxt('goalsOverviewSub', `${goalStats.totalWords} richtige Wörter · ${unlockedRoads}/${BIOMES.length} Strecken · ${earnedTotal}/${TROPHIES.length} Trophäen`);
+
+    const tierBtn = document.getElementById('btnToggleTrophyTier');
+    if (tierBtn) {
+      tierBtn.style.display = earnedT1 > 0 ? 'inline-flex' : 'none';
+      const showingBack = globalTrophyTierView !== 1;
+      tierBtn.textContent = showingBack ? '↻ Alle auf Stufe I' : '↻ Stufe II · Legende';
+    }
 
     const roadGrid = document.getElementById('goalsRoadGrid');
     if (roadGrid) {
@@ -3932,17 +4172,58 @@
 
     const trophyGrid = document.getElementById('goalsTrophyGrid');
     if (trophyGrid) {
-      trophyGrid.innerHTML = TROPHIES.map(t => {
-        const p = getTrophyProgress(t);
-        return `
-          <div class="trophy-card${p.earned ? ' earned' : ''}" data-trophy-id="${t.id}">
-            <div class="trophy-ico-wrap">${TROPHY_ICONS[t.icon] || TROPHY_ICONS.trophy}</div>
-            <strong>${t.name}</strong>
-            <small>${t.desc}</small>
-            <div class="goal-bar-track" style="width:92%;"><div class="goal-bar-fill" style="width:${p.pct}%"></div></div>
-            <small style="color:${p.earned ? 'var(--accent-gold)' : 'var(--text-dim)'}; font-weight:800;">${p.earned ? 'Erhalten ✓' : `${p.current}/${p.target}`}</small>
+      trophyGrid.innerHTML = '';
+      const allT1Done = isAllTier1Complete();
+      TROPHY_SLOTS.forEach(slot => {
+        const p1 = getTrophyProgress(slot.t1);
+        const p2 = getTrophyProgress(slot.t2);
+        const canFlip = p1.earned || allT1Done;
+        let isFlipped = false;
+        if (canFlip) {
+          if (manualTrophyFlips.has(slot.slotId)) isFlipped = manualTrophyFlips.get(slot.slotId);
+          else if (globalTrophyTierView === 1) isFlipped = false;
+          else if (globalTrophyTierView === 2) isFlipped = true;
+          else isFlipped = p1.earned; // Auto-flip completed category to reveal Stufe II Prestige!
+        }
+
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'trophy-flip-card' + (canFlip ? ' can-flip' : '') + (isFlipped ? ' flipped' : '') + (p1.earned ? ' tier1-done' : '') + (p2.earned ? ' tier2-done' : '');
+        card.dataset.slotId = slot.slotId;
+        card.dataset.trophyId = isFlipped ? slot.t2.id : slot.t1.id;
+        card.title = canFlip
+          ? 'Tippen zum Umdrehen: Stufe I ⇄ Stufe II (Legende)'
+          : `Schließe „${slot.t1.name}“ ab, um die Stufe-II-Rückseite freizuschalten!`;
+
+        card.innerHTML = `
+          <div class="trophy-flip-inner">
+            <div class="trophy-face front${p1.earned ? ' earned' : ''}">
+              ${canFlip ? '<span class="trophy-flip-tag">↻ II</span>' : ''}
+              <div class="trophy-ico-wrap">${TROPHY_ICONS[slot.t1.icon] || TROPHY_ICONS.trophy}</div>
+              <strong>${slot.t1.name}</strong>
+              <small>${slot.t1.desc}</small>
+              <div class="goal-bar-track" style="width:90%;"><div class="goal-bar-fill" style="width:${p1.pct}%"></div></div>
+              <small style="color:${p1.earned ? 'var(--accent-gold)' : 'var(--text-dim)'}; font-weight:800;">${p1.earned ? 'Stufe I ✓' : `${p1.current}/${p1.target}`}</small>
+            </div>
+            <div class="trophy-face back${p2.earned ? ' earned' : ''}">
+              <span class="trophy-flip-tag">II ↻</span>
+              <div class="trophy-ico-wrap">${TROPHY_ICONS[slot.t2.icon] || TROPHY_ICONS.flame}</div>
+              <strong>${slot.t2.name}</strong>
+              <small>${slot.t2.desc}</small>
+              <div class="goal-bar-track" style="width:90%;"><div class="goal-bar-fill" style="width:${p2.pct}%"></div></div>
+              <small style="color:${p2.earned ? '#fb923c' : 'var(--text-dim)'}; font-weight:800;">${p2.earned ? 'Legende ✓' : `${p2.current}/${p2.target}`}</small>
+            </div>
           </div>`;
-      }).join('');
+
+        card.addEventListener('click', () => {
+          if (!canFlip) { sfx.playWrongTank(); return; }
+          const nextFlip = !card.classList.contains('flipped');
+          manualTrophyFlips.set(slot.slotId, nextFlip);
+          card.classList.toggle('flipped', nextFlip);
+          card.dataset.trophyId = nextFlip ? slot.t2.id : slot.t1.id;
+        });
+        trophyGrid.appendChild(card);
+      });
     }
   }
 
@@ -3991,6 +4272,7 @@
     const lockedCarsBefore = CARS.filter(c => !isCarUnlocked(c)).map(c => c.id);
     const lockedRoadsBefore = BIOMES.filter(b => !isRoadUnlocked(b)).map(b => b.id);
     const lockedTrophiesBefore = TROPHIES.filter(t => !isTrophyUnlocked(t)).map(t => t.id);
+    const allT1Before = isAllTier1Complete();
 
     const bucket = settings.cefr !== 'ALL' ? settings.cefr : (wordCefr || 'B1');
     if (bucket in cefrProgress) {
@@ -4002,6 +4284,7 @@
     goalStats.totalWords += 1;
     if (qMode === 'artikel') goalStats.artikel += 1;
     else if (qMode === 'praeteritum') goalStats.praeteritum += 1;
+    else if (qMode === 'substantivierung') goalStats.substantivierung += 1;
     else if (qMode === 'partizip2') {
       goalStats.partizip2 += 1;
       if (aux === 'sein' || aux === 'haben|sein') goalStats.seinVerbs += 1;
@@ -4054,18 +4337,19 @@
       });
     });
 
-    // 3. Newly Unlocked Trophies (Autobahnkönig, Gehendes Wörterbuch, Partizipmeister, ...)
+    // 3. Newly Unlocked Trophies (Stufe I + Flippable Stufe II · Legende!)
     const newlyTrophies = TROPHIES.filter(t => lockedTrophiesBefore.includes(t.id) && getTrophyProgress(t).earned);
     newlyTrophies.forEach(trophy => {
       anyUnlock = true;
       if (!goalStats.trophies.includes(trophy.id)) goalStats.trophies.push(trophy.id);
       state.newlyUnlockedTrophies.push(trophy);
+      const isLegend = trophy.tier === 2;
       enqueueCelebration({
         isUnlock: true,
-        tag: 'GRATULATION! · NEUE TROPHÄE',
+        tag: isLegend ? 'GRATULATION! · LEGENDE-TROPHÄE' : 'GRATULATION! · NEUE TROPHÄE',
         text: `Trophäe „${trophy.name}“ erhalten!`,
-        sub: `${trophy.desc} — in deiner Vitrine!`,
-        color: '#facc15',
+        sub: isLegend ? `${trophy.desc} — Stufe II gemeistert!` : `${trophy.desc} — Rückseite Stufe II freigeschaltet!`,
+        color: isLegend ? '#fb923c' : '#facc15',
         timer: 3.4,
         confetti: true,
         playSfx: true,
@@ -4073,6 +4357,24 @@
         spoken: `Gratulation! Du hast die Trophäe ${trophy.name} freigeschaltet!`
       });
     });
+
+    if (!allT1Before && isAllTier1Complete()) {
+      goalStats.prestigeFlipped = true;
+      manualTrophyFlips.clear();
+      globalTrophyTierView = 2;
+      enqueueCelebration({
+        isUnlock: true,
+        tag: 'GRATULATION! · STUFE II AKTIVIERT',
+        text: "Alle Trophäen umgedreht — Jetzt wird's ernst!",
+        sub: 'Neue Legenden-Ziele: Höllisch, Stein von Rosette & Lebender Duden!',
+        color: '#f97316',
+        timer: 3.8,
+        confetti: true,
+        playSfx: true,
+        haptic: [30, 40, 30, 40, 60],
+        spoken: 'Gratulation! Alle Trophäen wurden auf Stufe zwei umgedreht! Jetzt wird es ernst!'
+      });
+    }
 
     saveGoalStats();
     updateGoalsUI();
@@ -4181,14 +4483,18 @@
       (settings.cefr === 'ALL' || v.cefr === settings.cefr) &&
       (settings.theme === 'all' || v.themes.includes(settings.theme))
     );
+    const subst = wordPool.subst.filter(s =>
+      (settings.cefr === 'ALL' || s.cefr === settings.cefr) &&
+      (settings.theme === 'all' || s.themes.includes(settings.theme))
+    );
     const cefrEl = document.getElementById('cefrPoolInfo');
     if (cefrEl) {
-      cefrEl.textContent = `${settings.cefr === 'ALL' ? 'A1–C2' : settings.cefr}: ${nouns.length} N · ${verbs.length} V`;
+      cefrEl.textContent = `${settings.cefr === 'ALL' ? 'A1–C2' : settings.cefr}: ${nouns.length} N · ${verbs.length} V · ${subst.length} S`;
     }
     const themeEl = document.getElementById('themeCountBadge');
     if (themeEl) {
       const lbl = THEME_LABELS[settings.theme] || settings.theme;
-      themeEl.textContent = `${lbl} (${nouns.length + verbs.length})`;
+      themeEl.textContent = `${lbl} (${nouns.length + verbs.length + subst.length})`;
     }
   }
 
@@ -4330,8 +4636,8 @@
     return Math.floor(Math.random() * max);
   }
 
-  function filterWordPool(list, isNoun) {
-    const keyFn = item => (isNoun ? 'n:' + item.word : 'v:' + item.inf);
+  function filterWordPool(list, kind) {
+    const keyFn = item => (kind === 'noun' ? 'n:' + item.word : (kind === 'subst' ? 's:' + item.verb : 'v:' + item.inf));
     // When full local DB is active, draw genuinely random words from DB records first
     const dbOnly = wordPool.loadedFromDb ? list.filter(x => x.fromDb) : list;
     const baseList = dbOnly.length >= 10 ? dbOnly : list;
@@ -4355,12 +4661,43 @@
     const cfg = CEFR_CFG[settings.cefr] || CEFR_CFG.B1;
     let qMode = settings.mode;
     if (qMode === 'mix') {
-      const modes = ['artikel', 'praeteritum', 'partizip2'];
+      const modes = ['artikel', 'praeteritum', 'partizip2', 'substantivierung'];
       qMode = modes[secureRandomInt(modes.length)];
     }
 
+    if (qMode === 'substantivierung') {
+      const pool = filterWordPool(wordPool.subst, 'subst');
+      const item = pool[secureRandomInt(pool.length)] || wordPool.subst[0];
+      state.usedWords.add('s:' + item.verb);
+      const distractor = buildSubstantivierungDistractor(item);
+      const opts = shuffle([item.display, distractor]);
+      const randPalettes = cfg.randomTankColors ? pickRandomTankPalettes(opts) : null;
+      return {
+        qMode: 'substantivierung',
+        isDual: true,
+        wordCefr: item.cefr,
+        fromDb: !!item.fromDb,
+        badge: `SUBSTANTIVIERUNG · ${item.cefr}`,
+        prompt: `${item.verb} → ___`,
+        hint: item.hint,
+        correctLabel: item.display,
+        correctDisplay: `${item.verb} → ${item.display}`,
+        tanks: opts.map((label, lane) => ({
+          lane,
+          isDual: true,
+          w: 132,
+          halfW: 64,
+          x: DUAL_LANE_X[lane],
+          label,
+          isCorrect: label === item.display,
+          hit: false,
+          palette: randPalettes ? randPalettes[lane] : null
+        }))
+      };
+    }
+
     if (qMode === 'artikel') {
-      const pool = filterWordPool(wordPool.nouns, true);
+      const pool = filterWordPool(wordPool.nouns, 'noun');
       const item = pool[secureRandomInt(pool.length)] || wordPool.nouns[0];
       state.usedWords.add('n:' + item.word);
       const opts = cfg.shuffleArticles
@@ -4388,7 +4725,7 @@
     }
 
     // Verb modes: Präteritum or Partizip II
-    const pool = filterWordPool(wordPool.verbs, false);
+    const pool = filterWordPool(wordPool.verbs, 'verb');
     const item = pool[secureRandomInt(pool.length)] || wordPool.verbs[0];
     state.usedWords.add('v:' + item.inf);
 
@@ -4859,13 +5196,14 @@
     } else {
       // Crisp damping + subtle lane-center alignment when releasing arrow keys
       state.playerVx *= Math.pow(0.0005, dt);
-      let nearestLaneX = LANE_X[1];
+      const snapLanes = (state.activeWave && state.activeWave.isDual) ? DUAL_LANE_X : LANE_X;
+      let nearestLaneX = snapLanes[0];
       let bestDist = 9999;
-      for (const lx of LANE_X) {
+      for (const lx of snapLanes) {
         const d = Math.abs(state.playerX - lx);
         if (d < bestDist) { bestDist = d; nearestLaneX = lx; }
       }
-      if (bestDist < 26) {
+      if (bestDist < 34) {
         state.playerX += (nearestLaneX - state.playerX) * Math.min(1, dt * 8.5);
       }
     }
@@ -4943,9 +5281,9 @@
     } else {
       state.activeWave.y += dy * 0.72; // Fuel tanks approach slightly slower than scenery for smooth readability!
       if (!state.activeWave.resolved) {
-        // Collision check with each of the 3 lane fuel tanks
+        // Collision check with lane fuel tanks (3-lane standard or 2-lane wide Substantivierung)
         for (const tank of state.activeWave.tanks) {
-          if (Math.abs(state.activeWave.y - PLAYER_Y) < 46 && Math.abs(state.playerX - tank.x) < 44) {
+          if (Math.abs(state.activeWave.y - PLAYER_Y) < 46 && Math.abs(state.playerX - tank.x) < (tank.halfW || 44)) {
             resolveWaveHit(state.activeWave, tank);
             break;
           }
@@ -5042,7 +5380,7 @@
   // 11. REALISTIC TOP-DOWN CANVAS RENDERER
   // =========================================================================
   function drawFuelTank(ctx, tank, y, qMode, resolved) {
-    const w = 78;
+    const w = tank.w || 78;
     const h = 64;
     const x = tank.x;
     const pulse = 1 + Math.sin(state.timeSec * 7.5 + tank.lane) * 0.035;
@@ -5053,7 +5391,7 @@
     if (resolved && tank.hit) ctx.globalAlpha = 0.08;
     ctx.scale(pulse, pulse);
 
-    // Tank color: randomized per wave in C1/C2 (no color hints!), else article-color aid or metallic gold
+    // Tank color: randomized per wave in C1/C2 (no color hints!), else article-color aid or metallic gold/teal
     let topCol = '#f59e0b', botCol = '#b45309', rimCol = '#fef08a', glowCol = 'rgba(250, 204, 21, 0.28)';
     if (tank.palette) {
       topCol = tank.palette.top;
@@ -5064,6 +5402,8 @@
       if (tank.label === 'der')      { topCol = '#2563eb'; botCol = '#1e3a8a'; rimCol = '#93c5fd'; glowCol = 'rgba(59, 130, 246, 0.34)'; }
       else if (tank.label === 'die') { topCol = '#e11d48'; botCol = '#881337'; rimCol = '#fda4af'; glowCol = 'rgba(244, 63, 94, 0.34)'; }
       else if (tank.label === 'das') { topCol = '#16a34a'; botCol = '#14532d'; rimCol = '#86efac'; glowCol = 'rgba(34, 197, 94, 0.34)'; }
+    } else if (qMode === 'substantivierung') {
+      topCol = '#0d9488'; botCol = '#115e59'; rimCol = '#5eead4'; glowCol = 'rgba(20, 184, 166, 0.32)';
     }
 
     // Glowing road pad beneath fuel tank
@@ -5120,16 +5460,23 @@
     roundRectPath(ctx, -w * 0.45, -10, w * 0.90, 34, 8);
     ctx.fill();
 
-    // Auto-scale font cleanly for longer German Präteritum / Partizip II forms
+    // Auto-scale font cleanly for longer German Präteritum, Partizip II & wide Substantivierung forms
     const txt = tank.label;
-    let fontSize = 20;
-    if (txt.length >= 13) fontSize = 10.5;
-    else if (txt.length >= 10) fontSize = 12;
-    else if (txt.length >= 8) fontSize = 14;
-    else if (txt.length >= 6) fontSize = 16.5;
+    let fontSize = w >= 110 ? 15.5 : 20;
+    if (w >= 110) {
+      if (txt.length >= 20) fontSize = 10.5;
+      else if (txt.length >= 17) fontSize = 11.5;
+      else if (txt.length >= 14) fontSize = 12.5;
+      else if (txt.length >= 11) fontSize = 14;
+    } else {
+      if (txt.length >= 13) fontSize = 10.5;
+      else if (txt.length >= 10) fontSize = 12;
+      else if (txt.length >= 8) fontSize = 14;
+      else if (txt.length >= 6) fontSize = 16.5;
+    }
     ctx.fillStyle = '#ffffff';
     ctx.font = `900 ${fontSize}px Inter, system-ui, sans-serif`;
-    ctx.fillText(txt, 0, 8);
+    ctx.fillText(txt, 0, 8, w * 0.86);
 
     ctx.restore();
   }
@@ -5627,30 +5974,6 @@
   }
   document.getElementById('btnToggleSetupMenu').addEventListener('click', () => { toggleSetupMenu(); });
 
-  // Allow 1-click loading of db/Dict_db.json when opened directly via file:// without IndexedDB populated
-  document.getElementById('dbStatusDesktop').addEventListener('click', () => {
-    if (!wordPool.loadedFromDb) {
-      const picker = document.getElementById('dbFilePicker');
-      if (picker) picker.click();
-    }
-  });
-  document.getElementById('dbFilePicker').addEventListener('change', (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(String(reader.result || '[]'));
-        const list = Array.isArray(data) ? data : (data && Array.isArray(data.words) ? data.words : []);
-        if (list.length) {
-          ingestDbRecords(list);
-          cacheRecordsToIndexedDb(list);
-        }
-      } catch (err) {}
-    };
-    reader.readAsText(file, 'utf-8');
-  });
-
   // Mode, CEFR Level & Theme Selectors
   document.getElementById('modeGrid').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-mode]');
@@ -5818,6 +6141,11 @@
     if (ret) ret.classList.remove('hidden');
     updateGoalsUI();
   });
+  document.getElementById('btnToggleTrophyTier').addEventListener('click', () => {
+    manualTrophyFlips.clear();
+    globalTrophyTierView = globalTrophyTierView === 1 ? 2 : 1;
+    renderGoalsOverlay();
+  });
   document.getElementById('mapWaypointList').addEventListener('click', (e) => {
     const wp = e.target.closest('.map-wp');
     if (!wp) return;
@@ -5888,9 +6216,10 @@
     if (k === ' ' || k === 'Escape') {
       if (state.phase === 'playing' || state.phase === 'paused') togglePause();
     }
-    // Optional direct lane jump keys 1/2/3 on PC
+    // Optional direct lane jump keys 1/2/3 on PC (or 1/2 for dual wide Substantivierung tanks)
     if (state.phase === 'playing' && (k === '1' || k === '2' || k === '3')) {
-      const targetX = LANE_X[Number(k) - 1];
+      const isDual = !!(state.activeWave && state.activeWave.isDual);
+      const targetX = isDual ? DUAL_LANE_X[k === '1' ? 0 : 1] : LANE_X[Number(k) - 1];
       state.playerVx = (targetX - state.playerX) * 7.5;
     }
   }, { passive: false });
@@ -5933,8 +6262,13 @@
     try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     const lx = clientXToLogical(e.clientX);
     if (lx >= ROAD_LEFT && lx <= ROAD_RIGHT) {
-      const lane = Math.min(2, Math.max(0, Math.floor((lx - ROAD_LEFT) / LANE_W)));
-      state.playerVx = (LANE_X[lane] - state.playerX) * 7.2;
+      if (state.activeWave && state.activeWave.isDual) {
+        const sideIdx = lx < (ROAD_LEFT + ROAD_W * 0.5) ? 0 : 1;
+        state.playerVx = (DUAL_LANE_X[sideIdx] - state.playerX) * 7.2;
+      } else {
+        const lane = Math.min(2, Math.max(0, Math.floor((lx - ROAD_LEFT) / LANE_W)));
+        state.playerVx = (LANE_X[lane] - state.playerX) * 7.2;
+      }
     }
   });
   canvas.addEventListener('pointermove', (e) => {
@@ -5960,6 +6294,8 @@
     CARS,
     BIOMES,
     TROPHIES,
+    TROPHY_SLOTS,
+    isAllTier1Complete,
     startRace,
     togglePause,
     pickGrammarQuestion,

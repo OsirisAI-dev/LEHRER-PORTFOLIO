@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edu Hub</title>
 
+<script src="../js/core/deutschthek-sync.js"></script>
 <script>
   /* Pre-paint restore: set lang/font before first paint, same pattern as
      BIBLIOTHEK_HUB.html, so there's no flash of default chrome on reload. */
@@ -16,9 +17,62 @@
       if (saved.font) document.documentElement.style.setProperty('--hub-font-family', saved.font);
     } catch (e) {}
   })();
+  document.addEventListener('DOMContentLoaded', function () {
+    function getHubLang() {
+      try {
+        var p = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}');
+        return p.lang === 'DE' ? 'DE' : 'FR';
+      } catch (e) { return 'FR'; }
+    }
+    function notifyFrameReload(detail) {
+      try {
+        var frame = document.getElementById('tool-frame');
+        if (frame && frame.contentWindow) {
+          var targetOrigin = (window.OsirisSecurity && window.OsirisSecurity.getTargetOrigin) ? window.OsirisSecurity.getTargetOrigin() : '*';
+          frame.contentWindow.postMessage({ type: 'RELOAD_DATA', payload: Object.assign({ deutschthekSync: true }, detail || {}) }, targetOrigin);
+        }
+      } catch (e) {}
+    }
+    var toolbar = document.querySelector('header .toolbar');
+    var fontBtn = document.getElementById('fontBtn');
+    if (toolbar && !document.getElementById('syncBtn')) {
+      var syncBtn = document.createElement('button');
+      syncBtn.type = 'button';
+      syncBtn.className = 'hub-btn';
+      syncBtn.id = 'syncBtn';
+      syncBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg><span></span>';
+      function refreshSyncBtnText() {
+        var l = getHubLang();
+        syncBtn.title = l === 'DE' ? 'Mit DeutschThek synchronisieren' : 'Synchroniser avec DeutschThek';
+        syncBtn.querySelector('span').textContent = 'Sync';
+      }
+      refreshSyncBtnText();
+      var langBtn = document.getElementById('langBtn');
+      if (langBtn) langBtn.addEventListener('click', function () { setTimeout(refreshSyncBtnText, 0); });
+      syncBtn.addEventListener('click', async function (ev) {
+        ev.stopPropagation();
+        syncBtn.classList.add('is-syncing');
+        syncBtn.disabled = true;
+        try {
+          if (window.DeutschThekSync) {
+            await window.DeutschThekSync.syncNow({ force: true, silent: false });
+          }
+        } finally {
+          syncBtn.classList.remove('is-syncing');
+          syncBtn.disabled = false;
+        }
+      });
+      toolbar.insertBefore(syncBtn, fontBtn || null);
+    }
+    if (window.DeutschThekSync && typeof window.DeutschThekSync.init === 'function') {
+      window.DeutschThekSync.init({ autoSync: true, onUpdated: notifyFrameReload });
+    }
+  });
 </script>
 
 <style>
+  @keyframes dtSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .hub-btn.is-syncing svg { animation: dtSpin 0.9s linear infinite; }
   * { box-sizing: border-box; }
 
   :root {

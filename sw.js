@@ -18,7 +18,7 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v31';
+const CACHE_VERSION = 'v33';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
@@ -61,12 +61,16 @@ const PRECACHE_URLS = [
   './pages/portfolio-subpage.html',
   './pages/lehrskizze-editor.html',
 
+  './assets/library-bg.webp',
+  './assets/wiki-globe.webp',
   './icons/switch_fach.png',
   './icons/switch_woerterbuch.png',
   './icons/icon_autobahn_racer.svg',
 
   './js/smart_tutor.js',
   './js/core/config.js',
+  './js/core/deutschthek-sync.js',
+  './js/core/portfolio-ocr.js',
   './js/core/osiris-core.js',
   './js/core/osiris-educore.js',
   './js/core/class-roster.js',
@@ -142,12 +146,17 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return;
 
+  if (url.origin !== self.location.origin || url.pathname.endsWith('official-catalog.json')) {
+    return;
+  }
+
   if (AI_HOSTNAMES.includes(url.hostname)) {
 
     return;
   }
 
   if (
+    url.pathname.includes('/assets/')      ||
     url.pathname.includes('/lib/')         ||
     url.pathname.includes('/fonts/')       ||
     url.pathname.includes('/icons/')       ||
