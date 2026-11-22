@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anleitung zur API-Konfiguration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #101012;
+    --panel: #17171a;
+    --panel-raised: #1d1d21;
+    --cue: #efe6d3;
+    --cue-ink: #201c14;
+    --signal: #e2394a;
+    --tele: #39d97a;
+    --tele-dim: #1f7a45;
+    --amber: #c98a3b;
+    --muted: #8b8a92;
+    --ink: #eae7dd;
+    --line: #2a2a2f;
+    --radius: 14px;
+    --shadow-color: rgba(0,0,0,0.5);
+  }
+
+  body.light-theme {
+    --bg: #f4f4f8;
+    --panel: #ffffff;
+    --panel-raised: #f9f9fc;
+    --cue: #fcf9f2;
+    --cue-ink: #201c14;
+    --signal: #d93040;
+    --tele: #1f9d55;
+    --tele-dim: #84d6a5;
+    --amber: #b87118;
+    --muted: #6b6a72;
+    --ink: #101012;
+    --line: #d1d1d6;
+    --shadow-color: rgba(0,0,0,0.08);
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; transition: background 0.3s ease, color 0.3s ease; }
+
+  body{
+    background: radial-gradient(1200px 500px at 50% -10%, var(--panel-raised) 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    padding: 28px 16px 40px;
+  }
+
+  .lang-fr { display: none; }
+  body.show-fr .lang-de { display: none; }
+  body.show-fr .lang-fr { display: inline; }
+  body.show-fr div.lang-fr, body.show-fr p.lang-fr, body.show-fr h2.lang-fr, body.show-fr h3.lang-fr, body.show-fr ol.lang-fr { display: block; }
+  body.show-fr span.lang-fr { display: inline; }
+  body.show-fr a.lang-fr { display: inline-flex; }
+
+  .display{ font-family:'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 0.04em; }
+  .app{ max-width: 620px; margin: 0 auto; }
+
+  .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 22px; }
+  .brand{ display:flex; align-items:center; gap: 10px; }
+  .brand h1{ font-size: 24px; font-weight:700; margin:0; color: var(--ink); }
+
+  .icon-btn{
+    background: var(--panel); border:1px solid var(--line); color: var(--ink);
+    width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition: border-color .15s ease, transform .1s ease, background .3s ease;
+  }
+  .icon-btn:hover{ border-color: var(--amber); }
+  .icon-btn:active{ transform: scale(.94); }
+
+  .lang-btn {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .section{ margin-bottom: 28px; }
+  .slug{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size: 11px; letter-spacing: .12em; color: var(--amber); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .card{
+    background: var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 16px; transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .card h2 {
+    font-family: 'Oswald', sans-serif; font-size: 18px; margin: 0 0 8px 0;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink);
+  }
+
+  .card p { font-size: 13px; line-height: 1.6; color: var(--ink); margin: 0 0 14px 0; }
+  .card p strong { color: var(--tele); }
+  body.light-theme .card p strong { color: var(--amber); }
+
+  .steps { margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.6; }
+  .steps li { margin-bottom: 6px; }
+
+  .provider-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--panel-raised); border: 1px solid var(--tele-dim); color: var(--tele);
+    padding: 8px 16px; border-radius: 8px; font-family: 'Space Mono', monospace;
+    font-size: 12px; text-decoration: none; transition: all 0.15s ease;
+  }
+  .provider-link:hover { background: var(--tele-dim); color: #08170d; border-color: var(--tele); }
+  body.light-theme .provider-link { border-color: var(--line); color: var(--ink); }
+  body.light-theme .provider-link:hover { background: var(--line); }
+
+  .security-box {
+    background: #0d1721; border: 1px solid #2b5278; border-radius: var(--radius); padding: 16px;
+  }
+  body.light-theme .security-box { background: #edf4fc; border-color: #b0cbe8; }
+  .security-box h3 {
+    margin: 0 0 6px 0; font-family: 'Oswald', sans-serif; font-size: 14px;
+    text-transform: uppercase; color: #5b9cf2;
+  }
+  .security-box p { margin: 0; font-size: 12.5px; color: var(--ink); }
+
+  @media (min-width: 768px){
+    body{ padding: 48px 32px 60px; }
+    .app{ max-width: 920px; }
+    .brand h1{ font-size: 28px; }
+    .card{ padding: 24px; }
+  }
+
+  @media (min-width: 1200px){
+    .app{ max-width: 1180px; }
+  }
+  html.in-iframe .inner-back-btn { display: none !important; }
+</style>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+</head>
+<body class="dark-theme" id="appBody">
+
+<div class="app">
+  <header class="header">
+    <div class="brand">
+      <button class="icon-btn inner-back-btn" onclick="window.history.back();" aria-label="Zurück" style="margin-right: 4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <h1 class="display">
+        <span class="lang-de">API-Anbieter Anleitung</span>
+        <span class="lang-fr">Guide des API</span>
+      </h1>
+    </div>
+    <div class="header-actions">
+        <button class="icon-btn lang-btn" id="langToggle" aria-label="Sprache umschalten">FR</button>
+        <button class="icon-btn" id="themeToggle" aria-label="Theme umschalten">☀️</button>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="slug">
+      <span class="lang-de">Sicherheit & Funktionsweise</span>
+      <span class="lang-fr">Sécurité & Fonctionnement</span>
+    </div>
+    <div class="security-box">
+      <h3 class="lang-de">Warum einen API-Schlüssel statt Ihrer Zugangsdaten verwenden?</h3>
+      <h3 class="lang-fr">Pourquoi utiliser une clé API au lieu de vos identifiants ?</h3>
+      <p class="lang-de">
+        Aus wichtigen Sicherheitsgründen fragt diese Wörterbuch-App <strong>niemals</strong> nach E-Mail-Adressen oder Passwörtern. Ein API-Schlüssel fungiert als isoliertes Zugriffstoken: Er ermöglicht es der App lediglich, anonyme Textanfragen zu stellen. Ihre privaten Daten bleiben absolut sicher.
+      </p>
+      <p class="lang-fr">
+        Pour des raisons de sécurité importantes, cette application de dictionnaire ne demande <strong>jamais</strong> d'adresses e-mail ou de mots de passe. Une clé API fonctionne comme un jeton d'accès isolé : elle permet uniquement à l'application d'effectuer des requêtes textuelles anonymes. Vos données privées restent absolument sécurisées.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="slug">
+      <span class="lang-de">Option 1 - Multimodell</span>
+      <span class="lang-fr">Option 1 - Multimodèle</span>
+    </div>
+    <div class="card">
+      <h2 class="lang-de">OpenRouter (Kostenlose Modelle)</h2>
+      <h2 class="lang-fr">OpenRouter (Modèles gratuits)</h2>
+      <p class="lang-de">
+        OpenRouter bündelt Dutzende KIs an einem Ort. Es bietet Zugang zu komplett kostenlosen Modellen wie <strong>Mistral</strong> oder <strong>Llama 3 Instruct (Free)</strong> - perfekt, um das KI-Wörterbuch kostenlos zu nutzen.
+      </p>
+      <p class="lang-fr">
+        OpenRouter regroupe des dizaines d'IA en un seul endroit. Il offre un accès à des modèles entièrement gratuits comme <strong>Mistral</strong> ou <strong>Llama 3 Instruct (Free)</strong> - parfait pour utiliser le dictionnaire IA gratuitement.
+      </p>
+      <ol class="steps lang-de">
+        <li>Erstellen Sie ein kostenloses Konto auf OpenRouter.</li>
+        <li>Navigieren Sie zum Bereich <strong>Keys</strong> (Schlüssel) in Ihrem Dashboard.</li>
+        <li>Klicken Sie auf <strong>Create Key</strong>, geben Sie einen Namen ein und kopieren Sie den Schlüssel.</li>
+      </ol>
+      <ol class="steps lang-fr">
+        <li>Créez un compte gratuit sur OpenRouter.</li>
+        <li>Accédez à la section <strong>Keys</strong> (Clés) dans votre tableau de bord.</li>
+        <li>Cliquez sur <strong>Create Key</strong>, entrez un nom et copiez la clé.</li>
+      </ol>
+      <a href="https://openrouter.ai/" target="_blank" class="provider-link lang-de" rel="noopener noreferrer">
+        OpenRouter-Schlüssel abrufen
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+      <a href="https://openrouter.ai/" target="_blank" class="provider-link lang-fr" rel="noopener noreferrer">
+        Obtenir une clé OpenRouter
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="slug">
+      <span class="lang-de">Option 2 - Empfohlen für Gemini</span>
+      <span class="lang-fr">Option 2 - Recommandé pour Gemini</span>
+    </div>
+    <div class="card">
+      <h2>Google AI Studio</h2>
+      <p class="lang-de">
+        Die offizielle Umgebung für Google-Entwickler. Bietet ein <strong>sehr großzügiges kostenloses Kontingent</strong> für Gemini Flash und Gemini Pro. Ideal, wenn Sie bereits ein Google-Konto haben und hochpräzise Übersetzungen wünschen.
+      </p>
+      <p class="lang-fr">
+        L'environnement officiel pour les développeurs Google. Offre un <strong>quota gratuit très généreux</strong> pour Gemini Flash et Gemini Pro. Idéal si vous possédez déjà un compte Google et souhaitez des traductions de haute précision.
+      </p>
+      <ol class="steps lang-de">
+        <li>Melden Sie sich mit Ihrem Google-Konto an.</li>
+        <li>Klicken Sie auf die Schaltfläche <strong>Get API Key</strong>.</li>
+        <li>Wählen Sie ein Projekt aus (oder erstellen Sie eines) und generieren Sie Ihren Schlüssel.</li>
+      </ol>
+      <ol class="steps lang-fr">
+        <li>Connectez-vous avec votre compte Google.</li>
+        <li>Cliquez sur le bouton <strong>Get API Key</strong>.</li>
+        <li>Sélectionnez un projet (ou créez-en un) et générez votre clé.</li>
+      </ol>
+      <a href="https://ai.google.dev/aistudio" target="_blank" class="provider-link lang-de" rel="noopener noreferrer">
+        Google AI Studio-Schlüssel abrufen
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+      <a href="https://ai.google.dev/aistudio" target="_blank" class="provider-link lang-fr" rel="noopener noreferrer">
+        Obtenir une clé Google AI Studio
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="slug">
+      <span class="lang-de">Option 3 - Höchste Geschwindigkeit</span>
+      <span class="lang-fr">Option 3 - Vitesse maximale</span>
+    </div>
+    <div class="card">
+      <h2>Groq Cloud</h2>
+      <p class="lang-de">
+        Groq zeichnet sich durch phänomenale Inferenz-Geschwindigkeit aus (fast sofortige Generierung). Die Testangebote umfassen blitzschnelle Versionen von <strong>LLaMA 3 (Meta)</strong>.
+      </p>
+      <p class="lang-fr">
+        Groq se distingue par une vitesse d'inférence phénoménale (génération presque instantanée). Les offres de test incluent des versions ultra-rapides de <strong>LLaMA 3 (Meta)</strong>.
+      </p>
+      <ol class="steps lang-de">
+        <li>Registrieren Sie sich kostenlos in der Groq Cloud-Konsole.</li>
+        <li>Gehen Sie zum Tab <strong>API Keys</strong> im linken Menü.</li>
+        <li>Klicken Sie auf <strong>Create API Key</strong> und speichern Sie den angezeigten Code.</li>
+      </ol>
+      <ol class="steps lang-fr">
+        <li>Inscrivez-vous gratuitement dans la console Groq Cloud.</li>
+        <li>Allez dans l'onglet <strong>API Keys</strong> dans le menu de gauche.</li>
+        <li>Cliquez sur <strong>Create API Key</strong> et enregistrez le code affiché.</li>
+      </ol>
+      <a href="https://console.groq.com/" target="_blank" class="provider-link lang-de" rel="noopener noreferrer">
+        Groq Cloud-Schlüssel abrufen
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+      <a href="https://console.groq.com/" target="_blank" class="provider-link lang-fr" rel="noopener noreferrer">
+        Obtenir une clé Groq Cloud
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const storage = {
+    set(k, v) { localStorage.setItem(k, v); },
+    get(k) { return localStorage.getItem(k); }
+  };
+
+  const appBody = document.getElementById('appBody');
+  const themeToggle = document.getElementById('themeToggle');
+  const langToggle = document.getElementById('langToggle');
+
+  let currentTheme = storage.get('theme_preference') || 'dark';
+  let currentLang = storage.get('lang_preference') || 'de';
+
+  function applyTheme() {
+    if (currentTheme === 'light') {
+      appBody.classList.remove('dark-theme');
+      appBody.classList.add('light-theme');
+      themeToggle.textContent = '🌙';
+    } else {
+      appBody.classList.remove('light-theme');
+      appBody.classList.add('dark-theme');
+      themeToggle.textContent = '☀️';
+    }
+  }
+
+  function applyLang() {
+    if (currentLang === 'fr') {
+      appBody.classList.add('show-fr');
+      langToggle.textContent = 'DE';
+    } else {
+      appBody.classList.remove('show-fr');
+      langToggle.textContent = 'FR';
+    }
+  }
+
+  applyTheme();
+  applyLang();
+
+  themeToggle.addEventListener('click', () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    storage.set('theme_preference', currentTheme);
+    applyTheme();
+  });
+
+  langToggle.addEventListener('click', () => {
+    currentLang = currentLang === 'de' ? 'fr' : 'de';
+    storage.set('lang_preference', currentLang);
+    applyLang();
+  });
+
+})();
+</script>
+</body>
+</html>

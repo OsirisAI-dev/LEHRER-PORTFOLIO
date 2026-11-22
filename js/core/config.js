@@ -20,7 +20,7 @@
   'use strict';
 
 
-  const CACHE_VERSION = 'v28';
+  const CACHE_VERSION = 'v31';
 
 
   const CHAT_ENDPOINTS = {
@@ -80,7 +80,8 @@
     library:         '/pages/library.html',
     eduHub:          '/pages/edu-hub.html',
     woerterbuch:     '/pages/woerterbuch.html',
-    fachwoerterbuch: '/pages/fachwoerterbuch.html'
+    fachwoerterbuch: '/pages/fachwoerterbuch.html',
+    autobahnRacer:   '/pages/autobahn_racer.html'
   };
 
   const OSIRIS_CONFIG = {

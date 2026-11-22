@@ -144,6 +144,19 @@
           "type": "image/svg+xml"
         }
       ]
+    },
+    {
+      "name": "Autobahn Racer",
+      "short_name": "Autobahn",
+      "description": "Deutsch Rallye — Grammatik- und Wortschatzspiel",
+      "url": "./pages/autobahn_racer.html",
+      "icons": [
+        {
+          "src": "./icons/icon_autobahn_racer.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ],
   "prefer_related_applications": false

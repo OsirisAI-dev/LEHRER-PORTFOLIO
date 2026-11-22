@@ -18,10 +18,11 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v29';
+const CACHE_VERSION = 'v31';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
+  'gen.pollinations.ai',
   'text.pollinations.ai',
   'api.cerebras.ai',
   'api.groq.com',
@@ -41,7 +42,8 @@ const PRECACHE_URLS = [
   './manifest.json', 
   './data/LEHRERPORTFOLIO_Tutoriel_PWA_DE.pdf',
   './data/LEHRERPORTFOLIO_Tutoriel_PWA_FR.pdf',
-  './db/default_woerterbuch.json',
+  './db/manifest.json',
+  './db/Dict_db.json',
   './db/default_fachwoerterbuch.json',
   './db/default_testbank.json',
 
@@ -54,9 +56,16 @@ const PRECACHE_URLS = [
   './pages/edu-hub.html',
   './pages/woerterbuch.html',
   './pages/fachwoerterbuch.html',
+  './pages/autobahn_racer.html',
+  './pages/api-anleitung.html',
   './pages/portfolio-subpage.html',
   './pages/lehrskizze-editor.html',
 
+  './icons/switch_fach.png',
+  './icons/switch_woerterbuch.png',
+  './icons/icon_autobahn_racer.svg',
+
+  './js/smart_tutor.js',
   './js/core/config.js',
   './js/core/osiris-core.js',
   './js/core/osiris-educore.js',
@@ -139,23 +148,24 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (
-    url.pathname.startsWith('/lib/')       ||
-    url.pathname.startsWith('/fonts/')     ||
-    url.pathname.startsWith('/icons/')     ||
-    url.pathname.startsWith('/screenshots/')
+    url.pathname.includes('/lib/')         ||
+    url.pathname.includes('/fonts/')       ||
+    url.pathname.includes('/icons/')       ||
+    url.pathname.includes('/db/')          ||
+    url.pathname.includes('/screenshots/')
   ) {
     event.respondWith(cacheFirst(request));
     return;
   }
 
   if (
-    url.pathname.startsWith('/pages/')   ||
-    url.pathname.startsWith('/js/')      ||
-    url.pathname.startsWith('/shelves/') ||
-    url.pathname === '/'                 ||
-    url.pathname === '/index.html'       ||
-    url.pathname === '/offline.html'     ||
-    url.pathname === '/manifest.json'
+    url.pathname.includes('/pages/')      ||
+    url.pathname.includes('/js/')         ||
+    url.pathname.includes('/shelves/')    ||
+    url.pathname === '/'                  ||
+    url.pathname.endsWith('/index.html')  ||
+    url.pathname.endsWith('/offline.html')||
+    url.pathname.endsWith('/manifest.json')
   ) {
     event.respondWith(staleWhileRevalidate(event));
     return;

@@ -4,24 +4,28 @@
 <meta charset="UTF-8">
 <link rel="manifest" href="../manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KI SPEZIALISIERTES WÖRTERBUCH — Osiris</title>
+<title>KI FACHWÖRTERBUCH — Osiris</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../icons/icon-192.png">
+  <script>if (window.self !== window.top) document.documentElement.classList.add('in-portfolio-iframe');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-dark:#121212; --bg-panel:#1e1e1e; --bg-input:#2a2a2a;
+  --bg-dark:#000000; --bg-panel:#1e1e1e; --bg-input:#2a2a2a;
   --text-light:#ffffff; --text-dim:#8a8a8a;
   --accent-green:#4ade80; --accent-red:#e2394a; --accent-gold:#b48645; --accent-blue:#5aa9ff;
   --border-dim:#333333; --shadow-color:rgba(0,0,0,.5);
   --font-hand:'Kalam',cursive,'Segoe UI',sans-serif;
 }
 body.light-mode{
-  --bg-dark:#f4f4f8; --bg-panel:#ffffff; --bg-input:#eceff3;
+  --bg-dark:#ffffff; --bg-panel:#ffffff; --bg-input:#eceff3;
   --text-light:#101012; --text-dim:#6b6a72; --border-dim:#dddddd; --shadow-color:rgba(0,0,0,.12);
 }
 *{box-sizing:border-box;}
 html{overflow-x:hidden;}
+html.in-portfolio-iframe .hub-back-btn { display: none !important; }
 body, button, input, select, textarea{
   font-family:var(--font-hand);
 }
@@ -37,12 +41,29 @@ body.font-mono h1, body.font-mono h2, body.font-mono h3{font-family:'Courier New
 [data-fontscale]{font-size:calc(1em * var(--fs-mult,1));}
 :root{--fs-mult:1;}
 
-/* Header */
-.top-section{background:var(--bg-dark); padding:16px clamp(16px,4vw,60px) 10px; border-bottom:1px solid var(--border-dim);}
+.top-section {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: var(--bg-dark);
+    padding: 12px clamp(16px, 4vw, 40px) 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--border-dim);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+
+
+
+
+.logo h1 { margin: 0; font-size: clamp(1rem, 4.5vw, 1.25rem); font-family: var(--font-hand); font-weight: 700; color: var(--text-light); white-space: nowrap; }
+.logo p { margin: 4px 0 0; font-size: clamp(0.55rem, 2.5vw, 0.7rem); color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-hand); white-space: nowrap; }
+
 .logo-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
-.logo h1{margin:0; font-size:26px; letter-spacing:.5px; font-family:var(--font-hand); font-weight:700;}
-.logo p{margin:4px 0 0; font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-family:var(--font-hand);}
-.header-icons{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:16px; flex-wrap:wrap; row-gap:10px;}
+
+
+.header-icons{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; flex-wrap:wrap; row-gap:10px; width: 100%;}
+.header-icons .icon-btn { border-color: var(--text-dim); color: var(--text-light); }
 .icon-btn{
   width:44px; height:44px; border-radius:50%; border:1.5px solid var(--text-dim); background:transparent;
   color:var(--text-light); font-size:13px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;
@@ -59,7 +80,6 @@ body.font-mono h1, body.font-mono h2, body.font-mono h3{font-family:'Courier New
 }
 .status-dot.online{ background:var(--accent-green); box-shadow:0 0 0 3px rgba(74,222,128,.18); }
 
-/* Scrim + Wordlist panel */
 .scrim{position:fixed; inset:0; background:var(--shadow-color); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60;}
 .scrim.show{opacity:1; pointer-events:auto;}
 .wl-panel{
@@ -95,7 +115,6 @@ body.font-mono h1, body.font-mono h2, body.font-mono h3{font-family:'Courier New
 .wl-btn:hover{border-color:var(--accent-green); color:var(--accent-green);}
 .wl-btn.primary{border-color:var(--accent-blue); color:var(--accent-blue);}
 
-/* Main */
 main{padding:20px clamp(16px,4vw,60px);}
 
 .search-card{background:var(--bg-panel); border:1px solid var(--border-dim); border-radius:16px; padding:18px; margin-bottom:16px;}
@@ -178,8 +197,6 @@ main{padding:20px clamp(16px,4vw,60px);}
 .no-icon-note{margin-top:8px; margin-bottom:26px; font-size:11px; color:var(--text-dim); display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
 .no-icon-note input[type=file]{font-size:11px;}
 
-/* Discover strip: fixed dock pinned to the bottom of the viewport,
-   horizontally scrolling, always visible above the page content. */
 main{padding-bottom:132px;}
 .discover-wrap{
   position:fixed; left:0; right:0; bottom:0; z-index:50;
@@ -198,7 +215,6 @@ main{padding-bottom:132px;}
 
 .status-msg{font-size:12px; color:var(--text-dim); margin:8px 0; min-height:16px;}
 
-/* ---------- Settings Modal (draggable, same pattern as KI_sample) ---------- */
 .settings-modal{
   position:fixed; top:12%; left:50%; transform:translateX(-50%);
   width:360px; max-width:90vw; background:var(--bg-panel); border:1px solid var(--text-dim);
@@ -226,7 +242,6 @@ main{padding-bottom:132px;}
 .settings-section:first-child{border-top:none; padding-top:0;}
 .api-hint{font-size:10.5px; color:var(--text-dim); margin-top:6px; line-height:1.5;}
 
-/* ---------- Target-language picker (full Google Translate list, searchable) ---------- */
 .lang-trigger{
   display:flex; align-items:center; justify-content:space-between; width:100%;
   background:var(--bg-input); color:var(--text-light); border:1px solid var(--border-dim); border-radius:10px;
@@ -247,10 +262,9 @@ main{padding-bottom:132px;}
 .lang-item:hover{background:var(--bg-input);}
 .lang-item.active{color:var(--accent-green); font-weight:bold;}
 
-/* ---------- Definition PNG preview image ---------- */
+.gen-preview-opt{display:flex;align-items:center;gap:8px;margin:10px 0 4px;font-size:12px;color:#8a8a8a;cursor:pointer;}
 .def-preview-img{margin-top:8px; display:block; max-width:100%; border-radius:8px; border:1px solid var(--border-dim);}
 
-/* Big loading-circle overlay, shown during word lookups (same as KI_sample) */
 .big-loader-overlay{display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:200;}
 .big-loader-overlay.show{display:flex;}
 .big-loader-inner{position:relative; display:flex; align-items:center; justify-content:center;}
@@ -264,7 +278,6 @@ main{padding-bottom:132px;}
 }
 .big-loader-cancel:hover{border-color:var(--accent-red); color:var(--accent-red);}
 
-/* New-word confirmation popup (shown automatically after a KI search for an unknown word) */
 .modal-scrim{position:fixed; inset:0; background:var(--shadow-color); display:none; align-items:center; justify-content:center; z-index:90;}
 .modal-scrim.show{display:flex;}
 .modal-box{background:var(--bg-panel); border-radius:14px; padding:20px; width:min(420px,90vw); border:1px solid var(--border-dim); max-height:85vh; overflow-y:auto;}
@@ -296,13 +309,19 @@ main{padding-bottom:132px;}
 }
 .edit-icon-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
 .edit-icon-btn svg { width: 12px; height: 12px; }
-.word-title-icon { position: relative; }
+.word-title-icon { position: relative; } /* ensure positioned context */
+
+.logo-container { display: flex; flex-direction: column; align-items: flex-start; width: 100%; }
+.logo-inner { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; }
+@media (max-width: 640px) {
+    .logo-container { align-items: center; }
+    .logo-inner { justify-content: center; }
+}
 </style>
 </head>
 <body>
 
 <div class="scrim" id="scrim"></div>
-
 
 <div class="modal-scrim" id="dbUploadModalScrim">
   <div class="modal-box" id="dbUploadModal">
@@ -318,14 +337,12 @@ main{padding-bottom:132px;}
   </div>
 </div>
 
-
 <div class="big-loader-overlay" id="bigLoader">
   <div class="big-loader-inner">
     <div class="big-spinner"></div>
     <button type="button" class="big-loader-cancel" id="bigLoaderCancel" title="Suche abbrechen">✕</button>
   </div>
 </div>
-
 
 <aside class="wl-panel" id="wlPanel">
   <div class="wl-head">
@@ -339,27 +356,37 @@ main{padding-bottom:132px;}
   </div>
 </aside>
 
-
 <div class="top-section">
-  <div class="logo-row">
-    <div class="logo">
-      <h1><span class="status-dot" id="statusDot" title="Online / Offline"></span>KI SPEZIALISIERTES WÖRTERBUCH</h1>
-      <p>DEUTSCHES SPEZIALISIERTES KI-WÖRTERBUCH</p>
+<div class="logo-container">
+<div class="logo-inner">
+    <button class="icon-btn hub-back-btn" title="Zurück zum Hub" onclick="if (window.self !== window.top) { window.parent.postMessage({ type: 'osirisOpenHomeTab' }, window.location.origin); } else { window.location.href='../index.html'; }" style="padding: 0; display:flex; align-items:center; justify-content:center; flex-shrink: 0; border-color: transparent;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="logo" style="text-align: center;">
+        <h1 style="margin-bottom:0;"><span class="status-dot" id="statusDot" title="Online / Offline"></span>KI FACHWÖRTERBUCH</h1>
     </div>
-  </div>
-  <div class="header-icons">
+    <button class="icon-btn" title="Wechseln zu KI Wörterbuch" onclick="window.location.href='woerterbuch.html'" style="padding: 0; display:flex; align-items:center; justify-content:center; overflow: hidden; border-color: transparent; flex-shrink: 0; border-radius: 50%;">
+        <img src="../icons/switch_woerterbuch.png?v=2" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+    </button>
+</div>
+<p style="margin-top:4px; font-size: 0.625rem; color: var(--text-dim); text-transform: uppercase; font-family:var(--font-hand);">DEUTSCHES KI-FACHWÖRTERBUCH</p>
+</div>
+<div class="header-icons" style="margin-top:8px;">
+
     <button class="icon-btn" id="wlOpenBtn" title="Wortliste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></button>
     <button class="icon-btn" id="btnFontDown" title="Schrift kleiner">A-</button>
     <button class="icon-btn" id="btnFontUp" title="Schrift größer">A+</button>
     <button class="icon-btn" id="btnFontStyle" title="Schriftstil">Aa</button>
     <button class="icon-btn" id="btnTheme" title="Hell-/Dunkelmodus"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg></button>
-    <button class="icon-btn" id="btnSettings" title="API-Schlüssel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="icon-btn" id="btnSettings" title="Einstellungen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </div>
 </div>
 
-<input type="file" id="iconUploadInput" accept="image/*" style="display:none;">
+
+  <input type="file" id="iconUploadInput" accept="image/*" style="display:none;">
+
 <main>
-  
+
   <div class="search-card">
     <div class="search-card-head">
       <div class="search-label" id="searchLabel">WORT</div>
@@ -373,7 +400,6 @@ main{padding-bottom:132px;}
   </div>
   <div class="status-msg" id="searchStatus"></div>
 
-  
   <div class="word-card" id="wordCard">
     <div class="word-title-row">
       <div class="word-title-icon" id="wordIcon"></div>
@@ -399,44 +425,23 @@ main{padding-bottom:132px;}
       <button class="plural-read-btn" id="btnReadPlural">VORLESEN</button>
     </div>
 
+    <label class="gen-preview-opt"><input type="checkbox" id="genPreviewImg"><span data-i18n="genPreviewLbl"></span></label>
     <div class="def-list" id="defList"></div>
   </div>
 
-  
   <div class="discover-wrap">
     <div class="discover-title" id="discoverTitle">Weitere Wörter entdecken (KI)</div>
     <div class="discover-strip" id="discoverStrip"></div>
   </div>
 </main>
 
-
 <div class="settings-modal" id="settingsModal">
   <div class="settings-header" id="settingsHeader">
     <h3><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span>API-Konfiguration</span></h3>
+      <span>Konfiguration</span></h3>
     <button class="settings-close" id="cancelSettings">✕</button>
   </div>
   <div class="settings-body">
-    <div class="settings-section">
-      <label>Definitionsanbieter</label>
-      <select id="providerSelect">
-        <option value="pollinations">Pollinations AI (kostenloser Schlüssel)</option>
-        <option value="cerebras">Cerebras (ultra-schnell)</option>
-        <option value="openrouter">OpenRouter</option>
-        <option value="groq">Groq</option>
-        <option value="google">Google Gemini</option>
-        <option value="nvidia">NVIDIA NIM</option>
-        <option value="github">GitHub Models</option>
-        <option value="cloudflare">Cloudflare Workers AI</option>
-        <option value="huggingface">Hugging Face</option>
-      </select>
-    </div>
-    <div class="settings-section">
-      <label>API-Schlüssel (falls nötig)</label>
-      <input type="password" id="apiKeyInput" placeholder="sk-...">
-      <div class="api-hint" id="apiKeyStatus" style="display:none;"></div>
-      <div class="api-hint">Der Schlüssel wird verschlüsselt in diesem Browser gespeichert (nicht im Klartext) und verlässt dieses Gerät nie.</div>
-    </div>
     <div class="settings-section">
       <label>Stimme (Vorlesen)</label>
       <select id="voiceProfileSelect">
@@ -470,7 +475,6 @@ main{padding-bottom:132px;}
   </div>
 </div>
 
-
 <div class="scrim" id="langScrim"></div>
 <div class="lang-modal" id="langModal">
   <div class="lang-modal-head">
@@ -482,7 +486,6 @@ main{padding-bottom:132px;}
     <div class="lang-list" id="langList"></div>
   </div>
 </div>
-
 
 <div class="modal-scrim" id="newWordModalScrim">
   <div class="modal-box">
@@ -510,17 +513,18 @@ main{padding-bottom:132px;}
   </div>
 </div>
 
-<script src="../js/core/config.js"></script>
-<script src="../js/core/vault-crypto.js"></script>
 <script>
-/* =========================================================
-   WORDLIST — Osiris Inc.
-   Dictionnaire multi-domaines : recherche, définitions par
-   domaine, traduction, lecture audio, panneau de mots
-   catégorisés avec icônes SVG, découverte IA.
-   ========================================================= */
+// ─── Utility: HTML escaping ─────────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-/* ---------- i18n ---------- */
+
 const I18N = {
   de: {
     addWord:'+ Wort hinzufügen', updateSvg:'⟳ Icons aktualisieren (SVG)',
@@ -531,6 +535,7 @@ const I18N = {
     noIcon:'Kein Icon für dieses Wort gefunden/generiert.',
     addPng:'Eigenes Bild hinzufügen (PNG)…',
     genIcons:'Fehlende Icons werden generiert…', done:'Fertig.',
+    genPreviewLbl:'Vorschaubild generieren (KI-Bild, verbraucht API-Kontingent)', iconsConfirm:'{n} Icons zusätzlich als KI-Bild generieren? Das verbraucht API-Kontingent.', iconsLocalDone:'Icons lokal aktualisiert (SVG).',
     searching:'Suche läuft…', notFound:'Wort nicht gefunden, KI generiert…',
     translating:'Übersetzung…', wort:'WORT', zielsprache:'ZIELSPRACHE AUSWÄHLEN',
     plural:'PLURAL', noPlural:'—'
@@ -544,6 +549,7 @@ const I18N = {
     noIcon:"Aucune icône trouvée/générée pour ce mot.",
     addPng:'Ajouter une image (PNG)…',
     genIcons:'Génération des icônes manquantes…', done:'Terminé.',
+    genPreviewLbl:'Générer l\'image d\'aperçu (image IA, consomme le quota API)', iconsConfirm:'Générer aussi {n} icônes en image IA ? Cela consomme du quota API.', iconsLocalDone:'Icônes mises à jour localement (SVG).',
     searching:'Recherche en cours…', notFound:'Mot introuvable, génération IA…',
     translating:'Traduction…', wort:'MOT', zielsprache:'CHOISIR LA LANGUE CIBLE',
     plural:'PLURIEL', noPlural:'—'
@@ -557,6 +563,7 @@ const I18N = {
     noIcon:'No icon found/generated for this word.',
     addPng:'Add your own image (PNG)…',
     genIcons:'Generating missing icons…', done:'Done.',
+    genPreviewLbl:'Generate preview image (AI image, uses API quota)', iconsConfirm:'Also generate {n} icons as AI images? This uses API quota.', iconsLocalDone:'Icons updated locally (SVG).',
     searching:'Searching…', notFound:'Word not found, generating with AI…',
     translating:'Translating…', wort:'WORD', zielsprache:'SELECT TARGET LANGUAGE',
     plural:'PLURAL', noPlural:'—'
@@ -564,7 +571,6 @@ const I18N = {
 };
 let uiLang = localStorage.getItem('wl_uiLang') || 'de';
 
-/* ---------- Built-in SVG icon set (currentColor) ---------- */
 const SVG_ICONS = {
   default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z"/><path d="M4 4v13a3 3 0 0 0 3 3h11"/></svg>`,
   medical: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3v6a5 5 0 0 0 10 0V3"/><circle cx="19" cy="15" r="2.5"/><path d="M11 9v3a5 5 0 0 0 5 5h.5"/></svg>`,
@@ -572,31 +578,133 @@ const SVG_ICONS = {
   cybersecurity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`
 };
 function pickBuiltinIcon(domains){
-  const d = (domains||[]).map(x=>x.toLowerCase());
-  if (d.some(x=>x.includes('méd')||x.includes('med'))) return SVG_ICONS.medical;
-  if (d.some(x=>x.includes('cyber'))) return SVG_ICONS.cybersecurity;
-  if (d.some(x=>x.includes('ia')||x.includes('ai'))) return SVG_ICONS.ia;
+  const d = (domains||[]).join(' ').toLowerCase();
+  if (/medizin|médecin|medicin|gesundheit|santé|health|pharma|anatom/.test(d)) return SVG_ICONS.medical;
+  if (/cyber|sicherheit|sécurité|security/.test(d)) return SVG_ICONS.cybersecurity;
+  if (/(^|[\s,\/])(ki|ia|ai)($|[\s,\/])|künstliche|intelligence|artificial|maschin|machine|informatik|computer/.test(d)) return SVG_ICONS.ia;
   return SVG_ICONS.default;
 }
-
-/* ---------- Data model / storage ---------- */
+// SVG-as-<img> needs an xmlns (else it renders broken) and cannot inherit currentColor (else black on dark).
+function svgToDataUri(svg){
+  let s = String(svg).trim();
+  if (!/xmlns=/.test(s)) s = s.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  s = s.replace(/currentColor/g, '#b8b8c0');
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+}
 
 let wordDB = null;
-try { wordDB = JSON.parse(localStorage.getItem('wl_db') || 'null'); } catch(e){}
-wordDB = wordDB || {
-  'MEDIZIN': [
-    { token:'Stethoskop', genus:'das', plural:'Stethoskope', domains:['Medizin'], defs:{ 'Medizin':"Instrument, mit dem Ärzte innere Körpergeräusche abhören, insbesondere Herz und Lunge." }, icon:{type:'svg', value:SVG_ICONS.medical}, translations:{} }
-  ],
-  'KI & SICHERHEIT': [
-    { token:'Token', genus:'der', plural:'Token', domains:['KI','Cybersicherheit'],
-      defs:{
-        'KI':"Texteinheit (Wort, Teilwort oder Zeichen), die ein Sprachmodell zur Verarbeitung und Erzeugung von Text verwendet.",
-        'Cybersicherheit':"Datenkette (Berechtigungsnachweis), die einen Nutzer oder eine Sitzung authentifiziert, ohne das Passwort erneut preiszugeben."
-      },
-      icon:{type:'svg', value:SVG_ICONS.ia}, translations:{} }
-  ]
-};
-function saveDB(){ try { localStorage.setItem('wl_db', JSON.stringify(wordDB)); } catch(e) {} }
+
+const WORDDB_DB_NAME = 'WlWordDbStore';
+const WORDDB_STORE_NAME = 'wl_db_data';
+
+function openWordDbStorage() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(WORDDB_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(WORDDB_STORE_NAME)) {
+        req.result.createObjectStore(WORDDB_STORE_NAME);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function loadWordDb() {
+  let dbObj = null;
+
+  try {
+    const db = await openWordDbStorage();
+    dbObj = await new Promise((resolve, reject) => {
+      const tx = db.transaction(WORDDB_STORE_NAME, 'readonly');
+      const store = tx.objectStore(WORDDB_STORE_NAME);
+      const req = store.get('data');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  } catch(e) {}
+
+  if (!dbObj) {
+    try {
+      const local = localStorage.getItem('wl_db');
+      if (local) {
+        dbObj = JSON.parse(local);
+        localStorage.removeItem('wl_db');
+      }
+    } catch(e) {}
+  }
+
+  if (!dbObj) {
+    try {
+      let dbToLoad = 'default_fachwoerterbuch.json';
+      const manifestRes = await fetch('../db/manifest.json');
+      if (manifestRes.ok) {
+        const files = await manifestRes.json();
+        const dictFile = files.find(f => /fach/i.test(f) || /woerterbuch/i.test(f));
+        if (dictFile) dbToLoad = dictFile;
+      }
+      const res = await fetch('../db/' + dbToLoad);
+      if (res.ok) {
+        const text = await res.text();
+        const data = JSON.parse(text);
+        let imported = (data && typeof data.wordDB === 'object') ? data.wordDB : (typeof data === 'object' ? data : null);
+
+        if (imported && (imported.app === 'iaDictLocalDB' || Array.isArray(imported.words))) {
+          const converted = { 'IMPORTIERT': [] };
+          const wordsArray = Array.isArray(imported.words) ? imported.words : (Array.isArray(imported) ? imported : []);
+
+          wordsArray.forEach(w => {
+             const word = w.word || w.token || 'Unbekannt';
+             const def = w.definitionPrimaryDe || w.def || '';
+             converted['IMPORTIERT'].push({
+               token: word,
+               genus: '',
+               plural: '',
+               domains: ['Importiert'],
+               defs: { 'Importiert': def },
+               icon: {type: 'svg', value: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`},
+               translations: {}
+             });
+          });
+          imported = converted;
+        } else if (imported && imported.app === 'wlWortliste') {
+          imported = imported.wordDB;
+        }
+
+        if (imported && Object.keys(imported).length > 0 && !imported.app) {
+          dbObj = imported;
+        }
+      }
+    } catch(e) {
+      console.warn("Failed to load default dictionary", e);
+    }
+  }
+
+  wordDB = dbObj || {
+    'MEDIZIN': [
+      { token:'Stethoskop', genus:'das', plural:'Stethoskope', domains:['Medizin'], defs:{ 'Medizin':"Instrument, mit dem Ärzte innere Körpergeräusche abhören, insbesondere Herz und Lunge." }, icon:{type:'svg', value:SVG_ICONS.medical}, translations:{} }
+    ],
+    'KI & SICHERHEIT': [
+      { token:'Token', genus:'der', plural:'Token', domains:['KI','Cybersicherheit'],
+        defs:{
+          'KI':"Texteinheit (Wort, Teilwort oder Zeichen), die ein Sprachmodell zur Verarbeitung und Erzeugung von Text verwendet.",
+          'Cybersicherheit':"Datenkette (Berechtigungsnachweis), die einen Nutzer oder eine Sitzung authentifiziert, ohne das Passwort erneut preiszugeben."
+        },
+        icon:{type:'svg', value:SVG_ICONS.ia}, translations:{} }
+    ]
+  };
+
+  saveDB();
+}
+
+function saveDB() {
+  if (!wordDB) return;
+  openWordDbStorage().then(db => {
+    const tx = db.transaction(WORDDB_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(WORDDB_STORE_NAME);
+    store.put(wordDB, 'data');
+  }).catch(()=>{});
+}
 
 let menuState = null;
 try { menuState = JSON.parse(localStorage.getItem('wl_menu') || 'null'); } catch(e){}
@@ -606,95 +714,190 @@ menuState = menuState || {
 if (!menuState.targetLanguage) menuState.targetLanguage = 'Französisch';
 if (!['female','male','child','senior'].includes(menuState.voiceProfile)) menuState.voiceProfile = 'female';
 
-
 if (!menuState.apiKeys || typeof menuState.apiKeys !== 'object') menuState.apiKeys = {};
-delete menuState.apiKeyTimestamps; // legacy field from the old 30-day expiry — no longer used
+delete menuState.apiKeyTimestamps; 
 if (typeof menuState.apiKey === 'string' && menuState.apiKey.trim() && !menuState.apiKeys[menuState.provider]) {
   menuState.apiKeys[menuState.provider] = menuState.apiKey.trim();
 }
 delete menuState.apiKey;
 
-
-const VAULT_SUPPORTED = VaultCrypto.isSupported();
-const VAULT_DB_NAME = 'wlDictVaultDB';
+const VAULT_SUPPORTED = !!(window.crypto && window.crypto.subtle && window.indexedDB);
+const VAULT_DB_NAME = 'iaDictVaultDB';
 const VAULT_STORE = 'keys';
 const VAULT_KEY_ID = 'vaultKey';
-const VAULT_STORAGE_KEY = 'wlDictKeyVault';
+const VAULT_STORAGE_KEY = 'iaDictKeyVault';
+
+function openVaultDb(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(VAULT_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(VAULT_STORE)) req.result.createObjectStore(VAULT_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function getVaultKey(){
+  const db = await openVaultDb();
+  const existing = await new Promise((resolve, reject) => {
+    const tx = db.transaction(VAULT_STORE, 'readonly');
+    const req = tx.objectStore(VAULT_STORE).get(VAULT_KEY_ID);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+  if (existing) return existing;
+  const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(VAULT_STORE, 'readwrite');
+    tx.objectStore(VAULT_STORE).put(key, VAULT_KEY_ID);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  return key;
+}
+function bufToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function b64ToBuf(b64){ return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
 
 let vaultKeysPersisted = false;
 
-const vaultClient = VaultCrypto.createClient({
-  dbName: VAULT_DB_NAME,
-  storeName: VAULT_STORE,
-  keyId: VAULT_KEY_ID,
-  storageKey: VAULT_STORAGE_KEY,
-  onRestore: () => {
-    if (typeof settingsModal !== 'undefined' && settingsModal.classList.contains('show')) {
-      settingsDraftKeys = { ...menuState.apiKeys };
-      const provider = document.getElementById('providerSelect').value;
-      apiKeyInputEl.value = settingsDraftKeys[provider] || '';
-      updateApiKeyFormatHint();
-    }
-  },
-  onKeysUpdated: (newKeys) => {
-    Object.assign(menuState.apiKeys, newKeys);
-    vaultClient.saveKeys(menuState.apiKeys).then(() => {
-      vaultKeysPersisted = vaultClient.persisted;
-      saveMenu();
-      if (typeof settingsModal !== 'undefined' && settingsModal.classList.contains('show')) {
-        settingsDraftKeys = { ...menuState.apiKeys };
-        const provider = document.getElementById('providerSelect').value;
-        apiKeyInputEl.value = settingsDraftKeys[provider] || '';
-        updateApiKeyFormatHint();
-      }
-    });
-  }
-});
-
-const openVaultDb = () => VaultCrypto.openVaultDb(VAULT_DB_NAME, VAULT_STORE);
-const getVaultKey = () => VaultCrypto.getVaultKey(VAULT_DB_NAME, VAULT_STORE, VAULT_KEY_ID);
-const bufToB64 = VaultCrypto.bufToB64;
-const b64ToBuf = VaultCrypto.b64ToBuf;
-
 async function saveApiKeyVault(){
-  const ok = await vaultClient.saveKeys(menuState.apiKeys);
-  vaultKeysPersisted = vaultClient.persisted;
-  return ok;
-}
-
-async function loadApiKeyVault(){
-  const keys = await vaultClient.loadKeys();
-  if (keys) {
-    menuState.apiKeys = keys;
-    vaultKeysPersisted = vaultClient.persisted;
+  if (!VAULT_SUPPORTED) { vaultKeysPersisted = false; return false; }
+  try{
+    const key = await getVaultKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const payload = JSON.stringify({ apiKeys: menuState.apiKeys });
+    const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(payload));
+    localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify({ iv: bufToB64(iv), data: bufToB64(cipher) }));
+    vaultKeysPersisted = true;
     return true;
+  }catch(err){
+    console.warn('API-Schlüssel-Tresor konnte nicht gespeichert werden:', err);
+    vaultKeysPersisted = false;
+    return false;
   }
-  menuState.apiKeys = {};
-  vaultKeysPersisted = false;
+}
+async function loadLegacyWlVaultIfNeeded(){
+  if (!VAULT_SUPPORTED) return false;
+  const legacyRaw = localStorage.getItem('wlDictKeyVault');
+  if (!legacyRaw) return false;
+  try{
+    const { iv, data } = JSON.parse(legacyRaw);
+    const db = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('wlDictVaultDB', 1);
+      req.onupgradeneeded = () => {
+        if (!req.result.objectStoreNames.contains(VAULT_STORE)) req.result.createObjectStore(VAULT_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    const key = await new Promise((resolve, reject) => {
+      const tx = db.transaction(VAULT_STORE, 'readonly');
+      const req = tx.objectStore(VAULT_STORE).get(VAULT_KEY_ID);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+    if (!key) return false;
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(iv) }, key, b64ToBuf(data));
+    const parsed = JSON.parse(new TextDecoder().decode(plainBuf));
+    const legacyKeys = (parsed && typeof parsed === 'object') ? (parsed.apiKeys || parsed) : {};
+    if (legacyKeys && typeof legacyKeys === 'object' && Object.keys(legacyKeys).length > 0) {
+      menuState.apiKeys = { ...legacyKeys, ...(menuState.apiKeys || {}) };
+      await saveApiKeyVault();
+      return true;
+    }
+  }catch(e){}
   return false;
 }
 
-async function migrateLegacyPlaintextKeys(vaultWasLoaded){
-  await vaultClient.migrateLegacy(vaultWasLoaded, menuState.apiKeys, saveMenu);
-  vaultKeysPersisted = vaultClient.persisted;
+async function loadApiKeyVault(){
+  if (!VAULT_SUPPORTED) return false;
+  const raw = localStorage.getItem(VAULT_STORAGE_KEY);
+  if (!raw) return await loadLegacyWlVaultIfNeeded();
+  try{
+    const { iv, data } = JSON.parse(raw);
+    const key = await getVaultKey();
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(iv) }, key, b64ToBuf(data));
+    const parsed = JSON.parse(new TextDecoder().decode(plainBuf));
+    menuState.apiKeys = (parsed && typeof parsed === 'object') ? (parsed.apiKeys || parsed) : {};
+    vaultKeysPersisted = true;
+    return true;
+  }catch(err){
+    console.warn('API-Schlüssel-Tresor beschädigt — wird zurückgesetzt.', err);
+    localStorage.removeItem(VAULT_STORAGE_KEY);
+    menuState.apiKeys = {};
+    vaultKeysPersisted = false;
+    return false;
+  }
 }
 
-const normalizeVaultProviderName = VaultCrypto.normalizeProviderName;
+async function migrateLegacyPlaintextKeys(vaultWasLoaded){
+  if (!VAULT_SUPPORTED || vaultWasLoaded) return;
+  const hasLegacyKeys = menuState.apiKeys && Object.keys(menuState.apiKeys).length > 0;
+  if (hasLegacyKeys) await saveApiKeyVault(); 
+  saveMenu(); 
+}
+
+const VAULT_PROVIDER_ALIASES = {
+  'pollinationsai': 'pollinations', 'pollinations': 'pollinations',
+  'cerebras': 'cerebras',
+  'openrouter': 'openrouter',
+  'groq': 'groq',
+  'googlegemini': 'google', 'google': 'google', 'gemini': 'google',
+  'nvidianim': 'nvidia', 'nvidia': 'nvidia',
+  'cloudflareworkersai': 'cloudflare', 'cloudflare': 'cloudflare',
+  'huggingface': 'huggingface', 'huggingfacecommunityfallback': 'huggingface'
+};
+function normalizeVaultProviderName(name){
+  const key = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return VAULT_PROVIDER_ALIASES[key] || null;
+}
+
+window.addEventListener('message', (e) => {
+  if (!e.data || !e.data.type) return;
+  if (e.origin !== window.location.origin) {
+    console.warn('[Security] Ignored postMessage from unexpected origin:', e.origin);
+    return;
+  }
+  if (e.data.type === 'osirisVaultRequestExport') {
+    let blob = null;
+    try {
+      const raw = localStorage.getItem(VAULT_STORAGE_KEY);
+      blob = raw ? JSON.parse(raw) : null;
+    } catch (err) { blob = null; }
+    if (e.source) e.source.postMessage({ type: 'osirisVaultExportData', blob }, window.location.origin);
+  } else if (e.data.type === 'osirisVaultRestoreBlob' && e.data.blob) {
+    try {
+      localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(e.data.blob));
+      loadApiKeyVault().then(() => { saveMenu(); });
+    } catch (err) {  }
+  } else if (e.data.type === 'osirisVaultKeys' && Array.isArray(e.data.keys)) {
+    let applied = 0;
+    e.data.keys.forEach(k => {
+      const providerId = normalizeVaultProviderName(k && k.provider);
+      const value = k && typeof k.key === 'string' ? k.key.trim() : '';
+      if (providerId && value) {
+        menuState.apiKeys[providerId] = value;
+        applied++;
+      }
+    });
+    if (applied > 0) {
+      saveApiKeyVault().then(() => { saveMenu(); });
+    }
+    if (e.source) e.source.postMessage({ type: 'osirisVaultKeysApplied', count: applied }, window.location.origin);
+  }
+});
 
 function saveMenu(){
   if (VAULT_SUPPORTED && vaultKeysPersisted) {
-
 
     const { apiKeys, ...rest } = menuState;
     localStorage.setItem('wl_menu', JSON.stringify(rest));
   } else {
 
-
     localStorage.setItem('wl_menu', JSON.stringify(menuState));
   }
 }
 
-/* ---------- Full Google Translate language list (same list as KI_sample) ---------- */
 const LANG_META = {
   'Afrikaans':{code:'af',speech:'af-ZA'}, 'Akan':{code:'ak',speech:'ak-GH'}, 'Albanisch':{code:'sq',speech:'sq-AL'},
   'Amharisch':{code:'am',speech:'am-ET'}, 'Arabisch':{code:'ar',speech:'ar-SA'}, 'Armenisch':{code:'hy',speech:'hy-AM'},
@@ -727,12 +930,10 @@ const LANG_META = {
 };
 function getTargetLangMeta(){ return LANG_META[menuState.targetLanguage] || LANG_META['Französisch']; }
 function getTargetLangCode(){ return getTargetLangMeta().code; }
-function getTargetLangSpeech(){ return getTargetLangMeta().speech; }
 
 let selectedWord = null;
 let previewOpenFor = null;
 
-/* ---------- Article helpers (Genus for the word, "die" for every German plural) ---------- */
 function stripLeadingArticle(str){
   return (str||'').replace(/^(der|die|das)\s+/i, '').trim();
 }
@@ -746,7 +947,6 @@ function formatPluralWithArticle(w){
   return `die ${bare}`;
 }
 
-/* ---------- Init ---------- */
 function applyI18n(){
   const t = I18N[uiLang];
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t[el.dataset.i18n]; });
@@ -766,12 +966,44 @@ function applyFont(){
   if (menuState.fontStyle==='serif') document.body.classList.add('font-serif');
   if (menuState.fontStyle==='mono') document.body.classList.add('font-mono');
 }
+// navigator.onLine only reports whether the device has *a* network interface
+// (e.g. connected to Wi-Fi) — not whether the internet, or this app's API, is
+// actually reachable. A Wi-Fi network with no uplink, or a captive portal, still
+// reports navigator.onLine === true. We back it with a real probe against the
+// app's own default API host, re-checked periodically so a connection that goes
+// bad quietly (without the OS ever firing an 'offline' event) is still caught.
+let isReallyOnline = navigator.onLine;
+
+function withTimeout(ms) {
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+async function probeConnectivity() {
+  if (!navigator.onLine) return false;
+  try {
+    await fetch('https://gen.pollinations.ai/', {
+      method: 'HEAD', mode: 'no-cors', cache: 'no-store',
+      signal: withTimeout(4000)
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function updateStatusDot(){
   const dot = document.getElementById('statusDot');
-  dot.classList.toggle('online', navigator.onLine);
+  if (dot) dot.classList.toggle('online', isReallyOnline);
 }
-window.addEventListener('online', updateStatusDot);
-window.addEventListener('offline', updateStatusDot);
+async function refreshConnectivity() {
+  isReallyOnline = await probeConnectivity();
+  updateStatusDot();
+}
+window.addEventListener('online', refreshConnectivity);
+window.addEventListener('offline', () => { isReallyOnline = false; updateStatusDot(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshConnectivity(); });
+setInterval(() => { if (!document.hidden) refreshConnectivity(); }, 30000);
 
 function init(){
   applyI18n(); applyTheme(); applyFont();
@@ -779,10 +1011,10 @@ function init(){
   renderWordlistPanel();
   renderDiscoverStrip();
   updateStatusDot();
+  refreshConnectivity();
   checkDbUploadOnStart();
 }
 
-/* ---------- Header controls ---------- */
 document.getElementById('btnFontDown').onclick = ()=>{
   menuState.fontMult = Math.max(0.75, +(menuState.fontMult-0.1).toFixed(2)); saveMenu(); applyFont();
 };
@@ -800,94 +1032,25 @@ document.getElementById('btnTheme').onclick = ()=>{
 const settingsModal = document.getElementById('settingsModal');
 const settingsHeader = document.getElementById('settingsHeader');
 
-
-let settingsDraftKeys = {};
-const apiKeyInputEl = document.getElementById('apiKeyInput');
-const apiKeyStatusEl = document.getElementById('apiKeyStatus');
-const saveSettingsBtn = document.getElementById('saveSettings');
-
-
-function apiKeyFormatState(provider, raw){
-  const v = (raw || '').trim();
-  if (!v) return provider === 'pollinations' ? 'neutral' : 'empty';
-  if (/\s/.test(v)) return 'invalid';
-  if (provider === 'cloudflare') {
-    const parts = v.split(':');
-    return (parts.length === 2 && parts[0] && parts[1]) ? 'valid' : 'invalid';
-  }
-  return v.length >= 8 ? 'valid' : 'invalid';
-}
-function showApiKeyStatus(text, kind){
-
-  apiKeyStatusEl.textContent = text;
-  apiKeyStatusEl.style.display = text ? 'block' : 'none';
-  apiKeyStatusEl.style.color = kind === 'valid' ? 'var(--accent-green)'
-    : (kind === 'invalid' || kind === 'empty') ? 'var(--accent-red)'
-    : 'var(--text-dim)';
-}
-function updateApiKeyFormatHint(){
-  const provider = document.getElementById('providerSelect').value;
-  const state = apiKeyFormatState(provider, apiKeyInputEl.value);
-  if (state === 'valid') showApiKeyStatus('✓ Format sieht gültig aus', 'valid');
-  else if (state === 'invalid') showApiKeyStatus('✗ Ungültiges Format' + (provider === 'cloudflare' ? ' (erwartet "AccountID:APIToken")' : ''), 'invalid');
-  else if (state === 'empty') showApiKeyStatus('✗ Kein Schlüssel eingegeben — für diesen Anbieter erforderlich', 'empty');
-  else showApiKeyStatus('', 'neutral');
-}
-apiKeyInputEl.addEventListener('input', updateApiKeyFormatHint);
-
 document.getElementById('btnSettings').onclick = ()=>{
-  settingsDraftKeys = { ...menuState.apiKeys };
-  document.getElementById('providerSelect').value = menuState.provider;
-  apiKeyInputEl.value = settingsDraftKeys[menuState.provider] || '';
   document.getElementById('voiceProfileSelect').value = menuState.voiceProfile;
   document.getElementById('localDbIoMsg').style.display = 'none';
-  updateApiKeyFormatHint();
   settingsModal.classList.add('show');
 };
 
-
-document.getElementById('providerSelect').addEventListener('mousedown', ()=>{
-  const currentProvider = document.getElementById('providerSelect').value;
-  settingsDraftKeys[currentProvider] = apiKeyInputEl.value.trim();
-});
-document.getElementById('providerSelect').addEventListener('keydown', ()=>{
-  const currentProvider = document.getElementById('providerSelect').value;
-  settingsDraftKeys[currentProvider] = apiKeyInputEl.value.trim();
-});
-
-document.getElementById('providerSelect').addEventListener('change', ()=>{
-  const provider = document.getElementById('providerSelect').value;
-  apiKeyInputEl.value = settingsDraftKeys[provider] || '';
-  updateApiKeyFormatHint();
-});
-document.getElementById('cancelSettings').onclick = ()=> settingsModal.classList.remove('show');
-document.getElementById('saveSettings').onclick = async ()=>{
-  const provider = document.getElementById('providerSelect').value;
-  settingsDraftKeys[provider] = apiKeyInputEl.value.trim();
-  menuState.provider = provider;
-  menuState.apiKeys = { ...menuState.apiKeys, ...settingsDraftKeys };
+document.getElementById('cancelSettings').onclick = () => {
+    settingsModal.classList.remove('show');
+    settingsModal.style.transform = '';
+    settingsModal.style.left = '';
+    settingsModal.style.top = '';
+};
+document.getElementById('saveSettings').onclick = ()=>{
   menuState.voiceProfile = document.getElementById('voiceProfileSelect').value;
-
-  saveSettingsBtn.disabled = true;
-  saveSettingsBtn.textContent = 'Speichere …';
-
-
-  const vaultOk = await saveApiKeyVault();
   saveMenu();
-  saveSettingsBtn.disabled = false;
-  saveSettingsBtn.textContent = 'Speichern';
-
-  if (!VAULT_SUPPORTED) {
-    showApiKeyStatus('✓ Gespeichert (unverschlüsselt — Verschlüsselung in diesem Browser nicht verfügbar)', 'invalid');
-    setTimeout(()=> settingsModal.classList.remove('show'), 1400);
-  } else if (vaultOk) {
-    showApiKeyStatus('✓ Sicher gespeichert', 'valid');
-    setTimeout(()=> settingsModal.classList.remove('show'), 700);
-  } else {
-
-
-    showApiKeyStatus('✗ Verschlüsselung fehlgeschlagen — Schlüssel wurde unverschlüsselt gespeichert, damit er nicht verloren geht', 'invalid');
-  }
+  settingsModal.classList.remove('show');
+  settingsModal.style.transform = '';
+  settingsModal.style.left = '';
+  settingsModal.style.top = '';
 };
 
 let isDraggingSettings = false, dragOffsetX = 0, dragOffsetY = 0;
@@ -905,7 +1068,6 @@ document.addEventListener('mousemove', (e)=>{
 });
 document.addEventListener('mouseup', ()=>{ isDraggingSettings = false; });
 
-/* ---------- Local wordlist DB: clear / export / import (JSON), same UX as KI_sample ---------- */
 function showLocalDbIoMsg(text, isError){
   const el = document.getElementById('localDbIoMsg');
   el.textContent = text; el.style.display = 'block';
@@ -922,11 +1084,14 @@ document.getElementById('exportLocalDbBtn').onclick = ()=>{
     const count = Object.values(wordDB).reduce((n,list)=>n+list.length, 0);
     const payload = { app:'wlWortliste', exportedAt:new Date().toISOString(), count, wordDB };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `wortliste-datenbank-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+    const fname = `wortliste-datenbank-${new Date().toISOString().slice(0,10)}.json`;
+    if (!androidBlobDownload(blob, fname)) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fname;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+    }
     showLocalDbIoMsg(`${count} Wörter exportiert.`, false);
   }catch(e){ showLocalDbIoMsg('Export fehlgeschlagen.', true); }
 };
@@ -950,12 +1115,6 @@ document.getElementById('importLocalDbInput').addEventListener('change', async (
   }catch(err){ showLocalDbIoMsg('Import fehlgeschlagen: ungültige Datei.', true); }
 });
 
-/* ---------- sql.js loader (local-first, CDN fallback) ----------
-   Same pattern as KI_WÖRTERBUCH.html: tries the bundled offline copy
-   first (lib/sqljs/), only reaches out to the CDN if that's missing.
-   Needed so this app can also read a REAL SQLite master-database (the
-   .db produced by KI_WÖRTERBUCH's export / Db5), on top of its own
-   native JSON-envelope ".db" format below. */
 let sqlJsPromise = null;
 function loadSqlJs(){
   if (sqlJsPromise) return sqlJsPromise;
@@ -979,14 +1138,13 @@ function loadSqlJs(){
   return sqlJsPromise;
 }
 
-
 function capitalizeWord(w){ return w ? w.charAt(0).toUpperCase()+w.slice(1) : w; }
 function masterRowToEntry(row){
   let data = {};
   try { data = JSON.parse(row.data || '{}'); } catch(e){ data = {}; }
   const levels = data.levels && typeof data.levels === 'object' ? data.levels : {};
   const firstLevel = levels['A1/A2'] || levels[Object.keys(levels)[0]] || {};
-  const genus = data.genus && data.genus !== 'null' ? data.genus : null;
+  const genus = ['der','die','das'].includes(data.genus) ? data.genus : null;
   const plural = firstLevel.plural && firstLevel.plural !== '—' ? firstLevel.plural : undefined;
   const domain = (data.knowledgeField || row.knowledgeField || 'Allgemein').trim();
   const category = domain.toUpperCase() || 'ALLGEMEIN';
@@ -1028,24 +1186,32 @@ async function importSqliteMasterDb(buf){
   return count;
 }
 
-/* ---------- .db import/extract ----------
-   This is a portable JSON envelope saved/read with a ".db" extension —
-   the same structure as the JSON export above — so a wordlist can be
-   shared as a single "database file" the way KI_sample's Master-DB
-   upload flow expects, without pulling in a SQLite-WASM dependency. */
-function buildDbPayload(){
-  const count = Object.values(wordDB).reduce((n,list)=>n+list.length, 0);
-  return { app:'wlWortliste', format:'osiris-wordlist-db-v1', exportedAt:new Date().toISOString(), count, wordDB };
-}
-function extractDb(){
-  const payload = buildDbPayload();
+async function extractDb(){
+  let exportData = wordDB;
+  try {
+    const db = await openWordDbStorage();
+    const dbObj = await new Promise((resolve, reject) => {
+      const tx = db.transaction(WORDDB_STORE_NAME, 'readonly');
+      const store = tx.objectStore(WORDDB_STORE_NAME);
+      const req = store.get('data');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    if (dbObj) exportData = dbObj;
+  } catch(e) {}
+
+  const count = Object.values(exportData).reduce((n,list)=>n+list.length, 0);
+  const payload = { app:'wlWortliste', format:'osiris-wordlist-db-v1', exportedAt:new Date().toISOString(), count, wordDB: exportData };
   const blob = new Blob([JSON.stringify(payload)], { type:'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `wortliste-datenbank-${new Date().toISOString().slice(0,10)}.db`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  return payload.count;
+  const dbFname = `wortliste-datenbank-${new Date().toISOString().slice(0,10)}.db`;
+  if (!androidBlobDownload(blob, dbFname)) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = dbFname;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+  }
+  return count;
 }
 async function importDbFile(file){
   const buf = await file.arrayBuffer();
@@ -1064,14 +1230,14 @@ async function importDbFile(file){
         saveDB();
         return Object.values(imported).reduce((n,list)=>n+list.length, 0);
       }
-    } catch(e) { /* not this app's JSON format — fall through to SQLite below */ }
+    } catch(e) {  }
   }
 
   return await importSqliteMasterDb(buf);
 }
-document.getElementById('extractDbBtn').onclick = ()=>{
+document.getElementById('extractDbBtn').onclick = async ()=>{
   try{
-    const count = extractDb();
+    const count = await extractDb();
     showLocalDbIoMsg(`${count} Wörter als .db extrahiert.`, false);
   }catch(e){ showLocalDbIoMsg('Extraktion fehlgeschlagen.', true); }
 };
@@ -1087,17 +1253,12 @@ document.getElementById('importDbInput').addEventListener('change', async (e)=>{
   }catch(err){ showLocalDbIoMsg('Import fehlgeschlagen: ungültige .db-Datei.', true); }
 });
 
-/* ---------- Startup .db welcome modal ----------
-   Shown once automatically (like KI_sample's Master-DB modal), but with
-   NO "Nicht mehr anzeigen" checkbox: skipping or importing simply marks
-   it dismissed for this browser. It can always be reopened manually via
-   "Willkommens-Import erneut öffnen" in Settings. */
 async function openDbUploadModal(){
   document.getElementById('dbUploadStatusMsg').textContent = '';
   document.getElementById('dbUploadStatusMsg').style.color = 'var(--text-dim)';
   document.getElementById('dbFileInput').value = '';
   document.getElementById('dbUploadModalScrim').classList.add('show');
-  
+
   let dbToLoad = 'fachwoerterbuch_default.db';
   try {
     const manifestRes = await fetch('../db/manifest.json');
@@ -1123,7 +1284,8 @@ function closeDbUploadModal(){
   document.getElementById('dbUploadModalScrim').classList.remove('show');
 }
 function checkDbUploadOnStart(){
-  if (!localStorage.getItem('wl_db_modal_dismissed')) openDbUploadModal();
+  const count = Object.values(wordDB).reduce((n,list)=>n+list.length, 0);
+  if (count < 5 && !localStorage.getItem('wl_db_modal_dismissed')) openDbUploadModal();
 }
 document.getElementById('processDbBtn').onclick = async ()=>{
   const file = document.getElementById('dbFileInput').files[0];
@@ -1178,10 +1340,8 @@ document.getElementById('reopenDbUploadBtn').onclick = ()=>{
   openDbUploadModal();
 };
 
-/* ---------- Big loading-circle overlay (same as KI_sample) ---------- */
 function showBigLoader(){ document.getElementById('bigLoader').classList.add('show'); }
 function hideBigLoader(){ document.getElementById('bigLoader').classList.remove('show'); }
-
 
 const wlPanel = document.getElementById('wlPanel');
 const scrim = document.getElementById('scrim');
@@ -1209,7 +1369,7 @@ function renderWordlistPanel(){
       else {
         let iv = (w.icon && w.icon.value) || pickBuiltinIcon(w.domains);
         if (iv.trim().startsWith('<svg')) {
-            iv = `<img src="data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(iv)))}" style="width:100%;height:100%;object-fit:contain;">`;
+            iv = `<img src="${svgToDataUri(iv)}" style="width:100%;height:100%;object-fit:contain;">`;
         } else if (!iv.startsWith('<img') && iv.includes('<')) {
             iv = escapeHtml(iv);
         }
@@ -1249,37 +1409,38 @@ function renderWordlistPanel(){
   });
 }
 
-/* SVG update: generate a small icon (Pollinations image) for any word in
-   the DB that doesn't have a dedicated icon yet. Pollinations now requires
-   its own API key for generation requests, passed as a ?key= query param
-   since <img> requests can't carry an Authorization header. Falls back to
-   asking the user for a PNG if generation fails (e.g. no Pollinations key
-   stored). */
+let iconJobAbort = false;
 document.getElementById('updateSvgBtn').onclick = async ()=>{
   const t = I18N[uiLang];
   const status = document.getElementById('wlStatus');
-  status.textContent = t.genIcons;
-  showBigLoader();
   const jobs = [];
-  Object.values(wordDB).forEach(list=>list.forEach(w=>{
-    if (!w.icon || !w.icon._custom) jobs.push(w);
-  }));
-  const pollinationsKey = menuState.apiKeys.pollinations || '';
+  Object.values(wordDB).forEach(list=>list.forEach(w=>{ if (!w.icon || !w.icon._custom) jobs.push(w); }));
+  // 1) Real SVG update: local and free.
+  jobs.forEach(w=>{ w.icon = {type:'svg', value:pickBuiltinIcon(w.domains)}; });
+  saveDB(); renderWordlistPanel();
+  status.textContent = t.iconsLocalDone;
+  // 2) AI images only when the tick is set AND the user confirms.
+  const wantAi = document.getElementById('genPreviewImg').checked;
+  if (!wantAi || !jobs.length || !confirm(t.iconsConfirm.replace('{n}', jobs.length))){
+    setTimeout(()=>status.textContent='', 2500); return;
+  }
+  iconJobAbort = false;
+  showBigLoader();
+  const pollinationsKey = getSharedApiKey('pollinations') || '';
+  const headers = {};
+  if (pollinationsKey) headers['Authorization'] = `Bearer ${pollinationsKey}`;
+  let n = 0;
   for (const w of jobs){
+    if (iconJobAbort) break;
+    status.textContent = `${t.genIcons} ${++n}/${jobs.length}`;
     try{
       const prompt = encodeURIComponent(`simple flat line icon, ${w.token}, minimal, monochrome, vector style`);
-      const keyParam = pollinationsKey ? `&key=${encodeURIComponent(pollinationsKey)}` : '';
-      const url = `https://gen.pollinations.ai/image/${prompt}?width=128&height=128&nologo=true${keyParam}`;
-
-      await new Promise((res,rej)=>{
-        const img = new Image();
-        img.onload = ()=>{ w.icon = {type:'img', value:url, _custom:true}; res(); };
-        img.onerror = rej;
-        img.src = url;
-      });
-    }catch(e){
-      w.icon = w.icon || {type:'svg', value:pickBuiltinIcon(w.domains)};
-    }
+      const r = await fetch(`https://gen.pollinations.ai/image/${prompt}?width=256&height=256&nologo=true&model=flux`, { headers });
+      if ([401,402,429].includes(r.status)) break;            // auth / credits / rate limit: stop, don't hammer
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      w.icon = {type:'img', value:await compressImageToTinyBase64(await r.blob()), _custom:true};
+      if (n % 5 === 0) saveDB();
+    }catch(e){ /* keep the SVG icon */ }
   }
   hideBigLoader();
   saveDB(); renderWordlistPanel();
@@ -1287,10 +1448,40 @@ document.getElementById('updateSvgBtn').onclick = async ()=>{
   setTimeout(()=>status.textContent='', 2500);
 };
 
-/* ---------- Search ---------- */
 document.getElementById('btnSearch').onclick = ()=> triggerSearch();
 document.getElementById('searchInput').addEventListener('keydown', e=>{ if (e.key==='Enter') triggerSearch(); });
-document.getElementById('btnReload').onclick = ()=>{ if (selectedWord) loadWord(selectedWord, true); };
+document.getElementById('btnReload').onclick = async ()=>{ 
+  if (selectedWord) {
+    const token = selectedWord.token;
+    const status = document.getElementById('searchStatus');
+    status.textContent = 'Aktualisiere von API...';
+    showBigLoader();
+    const generated = await generateWordEntry(token, null);
+    hideBigLoader();
+    if (generated && generated !== 'ABORTED') {
+       // Merge custom icon if it exists before overwriting
+       if (selectedWord.icon && selectedWord.icon._custom) {
+           generated.icon = selectedWord.icon;
+       }
+       // Replace in DB
+       let replaced = false;
+       for (const cat in wordDB) {
+           const idx = wordDB[cat].findIndex(w => w.token === token);
+           if (idx !== -1) {
+               wordDB[cat][idx] = generated;
+               replaced = true;
+               break;
+           }
+       }
+       if (replaced) { saveDB(); renderWordlistPanel(); }
+       status.textContent = '';
+       loadWord(generated);
+    } else {
+       status.textContent = 'Aktualisierung fehlgeschlagen.';
+       setTimeout(()=>status.textContent='', 3000);
+    }
+  } 
+};
 document.getElementById('btnClear').onclick = ()=>{
   document.getElementById('searchInput').value='';
   document.getElementById('wordCard').classList.remove('show');
@@ -1335,14 +1526,11 @@ async function triggerSearch(){
   }
 }
 document.getElementById('bigLoaderCancel').onclick = ()=>{
+  iconJobAbort = true;
   if (currentSearchController) currentSearchController.abort();
   hideBigLoader();
 };
 
-/* New-word popup: shown automatically once the KI has generated an entry
-   for a word that wasn't already in the local wordlist, so the user can
-   review/adjust it before it's saved permanently (mirrors KI_sample's
-   "im permanenten Vokabelbuch speichern" confirmation step). */
 function openNewWordModal(generated){
   pendingGeneratedWord = generated;
   document.getElementById('nwCategory').value = 'GENERIERT';
@@ -1376,67 +1564,82 @@ document.getElementById('confirmNewWord').onclick = ()=>{
   pendingGeneratedWord = null;
 };
 
-/* AI generation of a new word entry (domains + per-domain definitions)
-   using the configured provider. */
-
-/* ---------- Free API auto-switching ----------
-   The provider selected in Settings is tried first; if it errors out
-   (missing/invalid key, rate limit, provider outage, timeout, ...) the
-   app automatically retries the same prompt against the next usable
-   provider in the background — no extra action needed from the user.
-   Pollinations now also requires its own free key (sk_/pk_ from
-   enter.pollinations.ai), so — like every other provider here — it's
-   only part of the chain once a key has been entered for it. */
-const PROVIDER_FAILOVER_ORDER = ['cerebras','groq','google','nvidia','github','cloudflare','openrouter','huggingface','pollinations'];
+const PROVIDER_FAILOVER_ORDER = ['cerebras','groq','google','nvidia','cloudflare','openrouter','huggingface','pollinations'];
 const PROVIDER_ENDPOINTS = {
   cerebras:'https://api.cerebras.ai/v1/chat/completions',
   openrouter:'https://openrouter.ai/api/v1/chat/completions',
   groq:'https://api.groq.com/openai/v1/chat/completions',
   google:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
   nvidia:'https://integrate.api.nvidia.com/v1/chat/completions',
-  github:'https://models.github.ai/inference/chat/completions',
   huggingface:'https://router.huggingface.co/v1/chat/completions',
   pollinations:'https://gen.pollinations.ai/v1/chat/completions'
 
 };
 
-
 const DEFAULT_MODELS = {
-  cerebras: 'llama-3.3-70b',
-  groq: 'llama3-70b-8192',
-  google: 'gemini-1.5-flash',
-  nvidia: 'deepseek-ai/deepseek-r1',
-  github: 'gpt-4o-mini',
-  cloudflare: '@cf/meta/llama-3.1-8b-instruct',
-  openrouter: 'meta-llama/llama-3-8b-instruct:free',
-  huggingface: 'meta-llama/Llama-3.1-8B-Instruct',
-  pollinations: 'openai'
+  cerebras: 'gpt-oss-120b',
+  groq: 'openai/gpt-oss-20b',
+  google: 'gemini-flash-latest',
+  nvidia: 'nvidia/nemotron-3.5-lightning-30b-a3b',
+  cloudflare: '@cf/meta/llama-4-scout-17b-16e-instruct',
+  openrouter: 'google/gemma-4-31b-it:free',
+  huggingface: 'Qwen/Qwen3.8-Flash-Next-FP8',
+  pollinations: 'openai/gpt-5.4-nano'
 };
 
+function getSharedApiKey(provider) {
+  // Since we now share the Vault properly, menuState.apiKeys contains the decrypted keys
+  if (menuState.apiKeys && menuState.apiKeys[provider]) return menuState.apiKeys[provider].trim();
+  
+  // Fallback to iaDictMenuState just in case it's an old plaintext save
+  try {
+    const m = JSON.parse(localStorage.getItem('iaDictMenuState'));
+    if (m && m.apiKeys && (m.apiKeys[provider] || '').trim()) return m.apiKeys[provider].trim();
+  } catch(e) {}
+  return '';
+}
 
 function availableProvidersInOrder(){
-  const selected = menuState.provider;
+  let mainProvider = menuState.provider;
+  try {
+    const m = JSON.parse(localStorage.getItem('iaDictMenuState'));
+    if (m && m.apiProvider) mainProvider = m.apiProvider;
+    else if (m && m.provider) mainProvider = m.provider;
+  } catch(e) {}
+  const selected = mainProvider || 'pollinations';
   const ordered = [selected, ...PROVIDER_FAILOVER_ORDER.filter(p => p !== selected)];
-  return ordered.filter(p => (menuState.apiKeys[p] || '').trim());
+  return ordered.filter(p => p === "pollinations" || getSharedApiKey(p));
 }
+
 async function callProviderRaw(provider, sys, userMsg, signal){
   if (provider === 'pollinations'){
-    const apiKey = menuState.apiKeys[provider] || '';
-    const r = await fetch(PROVIDER_ENDPOINTS.pollinations, {
+    const apiKey = getSharedApiKey('pollinations');
+    if (apiKey) {
+      const r = await fetch(PROVIDER_ENDPOINTS.pollinations, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+        body: JSON.stringify({ model: DEFAULT_MODELS.pollinations, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
+        signal
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      const text = data.choices?.[0]?.message?.content || '';
+      if (!text) throw new Error('Leere Antwort vom Anbieter.');
+      return text;
+    }
+    const r = await fetch('https://text.pollinations.ai/', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({ model: DEFAULT_MODELS.pollinations, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ model:'openai-fast', jsonMode:true, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
       signal
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const text = await r.text();
     if (!text) throw new Error('Leere Antwort vom Anbieter.');
     return text;
   }
   if (provider === 'cloudflare'){
-
-    const raw = menuState.apiKeys[provider] || '';
+    const raw = getSharedApiKey('cloudflare');
     const [accountId, token] = raw.split(':');
     if (!accountId || !token) throw new Error('Cloudflare-Schlüssel muss im Format "AccountID:APIToken" vorliegen.');
     const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`, {
@@ -1455,7 +1658,7 @@ async function callProviderRaw(provider, sys, userMsg, signal){
   if (!endpoint) throw new Error('Unbekannter API-Anbieter.');
   const r = await fetch(endpoint, {
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+(menuState.apiKeys[provider] || '')},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+getSharedApiKey(provider)},
     body: JSON.stringify({ model: DEFAULT_MODELS[provider], messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
     signal
   });
@@ -1466,8 +1669,7 @@ async function callProviderRaw(provider, sys, userMsg, signal){
   return text;
 }
 
-
-async function callWithProviderFailover(sys, userMsg, onSwitch, signal){
+async function callWithProviderFailover(sys, userMsg, onSwitch, signal, validator){
   const providers = availableProvidersInOrder();
   if (!providers.length) throw new Error('Kein nutzbarer API-Anbieter konfiguriert.');
   let lastErr = null;
@@ -1475,28 +1677,53 @@ async function callWithProviderFailover(sys, userMsg, onSwitch, signal){
     const provider = providers[i];
     try{
       const rawText = await callProviderRaw(provider, sys, userMsg, signal);
+      if (typeof validator === 'function') validator(rawText);
       return { rawText, provider };
     }catch(err){
       if (err.name === 'AbortError') throw err;
       lastErr = err;
-      console.warn(`Anbieter „${provider}" fehlgeschlagen — wechsle automatisch:`, err);
+      console.warn(`Anbieter «${provider}» fehlgeschlagen — wechsle automatisch:`, err);
       if (typeof onSwitch === 'function' && i < providers.length - 1) onSwitch(provider, providers[i+1], err);
     }
   }
   throw lastErr || new Error('Alle API-Anbieter fehlgeschlagen.');
 }
 
+function extractBalancedJson(text, openChar, closeChar) {
+  const cleaned = (text || '').replace(/```json/gi, '').replace(/```/g, '');
+  const start = cleaned.indexOf(openChar);
+  if (start === -1) throw new Error('Kein JSON in der Antwort gefunden.');
+  let depth = 0;
+  let inString = false;
+  let escapeNext = false;
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (escapeNext) { escapeNext = false; continue; }
+    if (ch === '\\') { escapeNext = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === openChar) depth++;
+    else if (ch === closeChar) {
+      depth--;
+      if (depth === 0) return cleaned.slice(start, i + 1);
+    }
+  }
+  throw new Error('Unvollständiges JSON in der Antwort gefunden.');
+}
 
 async function generateWordEntry(token, signal){
-  const sys = `Du bist ein deutsches Fachwörterbuch. Der gesuchte Begriff "${token}" ist als deutsches Wort zu behandeln — antworte ausschließlich auf Deutsch, auch wenn der Begriff wie ein Fremdwort aussieht. Bestimme das grammatische Geschlecht (Genus: "der", "die" oder "das"; falls kein Substantiv, dann null), 1 bis 3 relevante Wissensbereiche (z.B. KI, Cybersicherheit, Medizin, Finanzen...), eine kurze Definition (1-2 Sätze) je Bereich sowie die Pluralform des Begriffs OHNE Artikel (z.B. "Stethoskope", nicht "die Stethoskope"). Antworte AUSSCHLIESSLICH mit striktem JSON im Format: {"genus":"der|die|das|null","domains":["..."],"defs":{"Bereich":"Definition"},"plural":"..."}`;
+  const sys = `Du bist ein deutsches Fachwörterbuch. Der gesuchte Begriff "${token}" ist als deutsches Wort zu behandeln — antworte ausschließlich auf Deutsch, auch wenn der Begriff wie ein Fremdwort aussieht. Bestimme das grammatische Geschlecht (Genus: "der", "die" oder "das"; NUR falls es ein Substantiv ist. Bei Verben oder Adjektiven zwingend null ausgeben!), 1 bis 3 relevante Wissensbereiche (z.B. KI, Cybersicherheit, Medizin, Finanzen...), eine kurze Definition (1-2 Sätze) je Bereich sowie die Pluralform des Begriffs OHNE Artikel (z.B. "Stethoskope", nicht "die Stethoskope"). Antworte AUSSCHLIESSLICH mit striktem JSON im Format: \n{"genus":"der|die|das|null","domains":["..."],"defs":{"Bereich":"Definition"},"plural":"..."}`;
   try{
     const status = document.getElementById('searchStatus');
     const { rawText } = await callWithProviderFailover(sys, 'Begriff: '+token, (failed, next)=>{
-      if (status) status.textContent = `Anbieter „${failed}" nicht erreichbar — wechsle automatisch zu „${next}" …`;
-    }, signal);
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    const parsed = JSON.parse(jsonMatch[0]);
+      if (status) status.textContent = `Anbieter «${failed}» hat geantwortet, aber das Format war ungültig oder er war nicht erreichbar — wechsle automatisch zu «${next}» …`;
+    }, signal, (text) => {
+      const parsedStr = extractBalancedJson(text, '{', '}');
+      const parsed = JSON.parse(parsedStr);
+      if (!parsed.domains || !parsed.defs) throw new Error("Fehlende JSON-Felder");
+    });
+    const parsedStr = extractBalancedJson(rawText, '{', '}');
+    const parsed = JSON.parse(parsedStr);
     if (!parsed.domains || !parsed.defs) return null;
     const genus = ['der','die','das'].includes(parsed.genus) ? parsed.genus : null;
     return { token, genus, plural:parsed.plural||'', domains:parsed.domains, defs:parsed.defs, icon:{type:'svg', value:pickBuiltinIcon(parsed.domains)}, translations:{} };
@@ -1507,7 +1734,6 @@ async function generateWordEntry(token, signal){
   }
 }
 
-/* ---------- Word card rendering ---------- */
 function loadWord(w, forceReload){
   stopSpeech();
   resetReadAllButton();
@@ -1530,11 +1756,12 @@ function triggerIconUpload() {
         selectedWord.icon = { type: 'img', value: compressedBase64 };
         saveDB();
         renderWordCard(selectedWord);
-        renderWordlistPanel();
+        if (typeof renderWordlistPanel === 'function') renderWordlistPanel();
+        console.log("Icon updated and saved (tiny size)");
       }
-    } catch (err) {
-      console.error(err);
-      alert('Fehler beim Komprimieren des Bildes.');
+    } catch(err) {
+      console.error("Image compression failed", err);
+      alert("Fehler beim Verarbeiten des Bildes: " + err.message);
     }
   };
   input.click();
@@ -1560,7 +1787,9 @@ function compressImageToTinyBase64(file) {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#2a2a2f'; 
+        // Transparent bg to white/black if needed, but jpeg doesn't support alpha. 
+        // We will save as high compression WebP (or JPEG fallback).
+        ctx.fillStyle = '#2a2a2f'; // match dark theme placeholder
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         
@@ -1578,7 +1807,8 @@ function compressImageToTinyBase64(file) {
 function renderWordCard(w){
   const card = document.getElementById('wordCard');
   card.classList.add('show');
-  const svgData = w.icon.type === 'svg' ? 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(w.icon.value))) : w.icon.value;
+  const ic = w.icon || {type:'svg', value:pickBuiltinIcon(w.domains)};
+  const svgData = ic.type === 'svg' ? svgToDataUri(ic.value) : ic.value;
   document.getElementById('wordIcon').innerHTML = `
     <img src="${svgData}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;background:#2a2a2f;">
     <button class="edit-icon-btn" onclick="triggerIconUpload()" title="Icon bearbeiten">
@@ -1664,10 +1894,6 @@ function renderDefinitions(w){
   });
 }
 
-/* Preview: shows the (translated) definition, plus a generated PNG image
-   illustrating the definition, just under the row's preview button.
-   Clicking another preview button overwrites/replaces the previously open
-   preview instead of stacking. */
 async function previewDefinition(w, domain, box){
   document.querySelectorAll('.def-preview.show').forEach(el=>{
     if (el !== box){ el.classList.remove('show'); el.innerHTML=''; }
@@ -1680,34 +1906,48 @@ async function previewDefinition(w, domain, box){
   box.appendChild(textEl);
 
   const defText = w.defs[domain] || '';
-  const [translated] = await Promise.all([
-    translateText(defText, targetLang),
+  
+  // Image only on explicit opt-in (tick), cached per word+domain, and never blocks the translation.
+  if (document.getElementById('genPreviewImg').checked) {
+    const img = document.createElement('img');
+    img.className = 'def-preview-img';
+    img.alt = domain + ' — ' + w.token;
+    img.style.display = 'none';
+    box.appendChild(img);
+    getPreviewImage(w.token, domain, defText).then(url => {
+      if (url) { img.src = url; img.style.display = 'block'; }
+    }).catch(e => console.error("Image preview failed", e));
+  }
 
-  ]);
-  textEl.textContent = translated;
-
-  const img = document.createElement('img');
-  img.className = 'def-preview-img';
-  img.alt = domain + ' — ' + w.token;
-  img.src = buildDefinitionImageUrl(w.token, domain, defText);
-  box.appendChild(img);
+  try {
+    textEl.textContent = await translateText(defText, targetLang);
+  } catch (err) {
+    textEl.textContent = defText + ' (Übersetzung fehlgeschlagen)';
+  }
 }
 
-/* PNG image generated from the definition text itself (same authenticated
-   Pollinations image endpoint used for icon generation), so the preview
-   illustrates the actual meaning of the definition rather than just the
-   bare word. Requires a stored Pollinations key, passed as ?key= since
-   <img> requests can't carry an Authorization header. */
-function buildDefinitionImageUrl(token, domain, defText){
+const previewImgCache = new Map();
+async function getPreviewImage(token, domain, defText) {
+  const key = token + '|' + domain + '|' + (defText||'').slice(0,200);
+  if (!previewImgCache.has(key)) previewImgCache.set(key, await loadPreviewImage(token, domain, defText));
+  return previewImgCache.get(key);
+}
+
+async function loadPreviewImage(token, domain, defText) {
   const prompt = encodeURIComponent(
     `illustration for a dictionary definition, ${token} (${domain}): ${(defText||'').slice(0,200)}, simple flat style`
   );
-  const pollinationsKey = menuState.apiKeys.pollinations || '';
-  const keyParam = pollinationsKey ? `&key=${encodeURIComponent(pollinationsKey)}` : '';
-  return `https://gen.pollinations.ai/image/${prompt}?width=384&height=256&nologo=true${keyParam}`;
+  const url = `https://gen.pollinations.ai/image/${prompt}?width=384&height=256&nologo=true&model=flux`;
+  const pollinationsKey = getSharedApiKey('pollinations') || '';
+  const headers = {};
+  if (pollinationsKey) headers['Authorization'] = `Bearer ${pollinationsKey}`;
+  
+  const r = await fetch(url, { headers });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const blob = await r.blob();
+  return URL.createObjectURL(blob);
 }
 
-/* ---------- Translation (Google Translate, full-language keyless bridge, same endpoint as KI_sample) ---------- */
 async function translateText(text, targetLang){
   if (!text) return '';
   try{
@@ -1721,42 +1961,64 @@ async function translateText(text, targetLang){
   }
 }
 
-/* ---------- Read-aloud ---------- */
 let ttsActiveButton = null, ttsPaused = false, ttsSession = 0, ttsPendingCount = 0;
 
-
 const GERMAN_VOICE_HINTS = {
-  female: ['katja','anna','petra','marlene','vicki','helena','ingrid','martha'],
-  male: ['conrad','stefan','markus','yannick','hans','klaus','daniel'],
-  child: ['kind','child','junior','kids'],
-  senior: ['senior','opa','oma','greta','gustav','old']
+  female: ['katja','amala','hedda','anna','petra','marlene','vicki','helena','ingrid','martha','gisela','louisa','seraphina','de-de-x-nfh','de-de-x-dea','de-de-x-dec','female'],
+  male: ['conrad','florian','killian','stefan','markus','martin','yannick','hans','klaus','daniel','de-de-x-deg','de-de-x-deb','male'],
+  child: ['kind','child','junior','kids','gisela'],
+  senior: ['senior','opa','oma','greta','gustav','old','conrad','stefan']
 };
 const PROFILE_TUNING = {
-  female: { pitch:1.1, rate:1 },
-  male: { pitch:0.85, rate:1 },
-  child: { pitch:1.35, rate:1.05 },
-  senior: { pitch:0.72, rate:0.85 }
+  female: { pitch:1.08, rate:1.0 },
+  male: { pitch:0.82, rate:0.98 },
+  child: { pitch: 1.38, rate: 1.08 },
+  senior: { pitch:0.70, rate:0.82 }
 };
+let _cachedGermanVoices = [];
+function refreshGermanVoices(){
+  if (!('speechSynthesis' in window)) return [];
+  _cachedGermanVoices = window.speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith('de'));
+  return _cachedGermanVoices;
+}
+if ('speechSynthesis' in window) {
+  refreshGermanVoices();
+  if (typeof window.speechSynthesis.addEventListener === 'function') {
+    window.speechSynthesis.addEventListener('voiceschanged', refreshGermanVoices);
+  } else {
+    window.speechSynthesis.onvoiceschanged = refreshGermanVoices;
+  }
+}
 function pickGermanVoice(profile){
   if (!('speechSynthesis' in window)) return null;
-  const voices = window.speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith('de'));
+  const voices = _cachedGermanVoices.length ? _cachedGermanVoices : refreshGermanVoices();
   if (!voices.length) return null;
   const hints = GERMAN_VOICE_HINTS[profile] || [];
   const match = voices.find(v=>hints.some(h=>v.name.toLowerCase().includes(h)));
-  return match || voices[0];
+  return match || voices.find(v=>v.lang.toLowerCase()==='de-de') || voices[0];
 }
 
-function speak(text, lang){
+function speak(text, lang, flush = true){
+  const profile = menuState.voiceProfile || 'female';
+  const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
+  if (window.AndroidTTS) {
+    try {
+      if (typeof window.AndroidTTS.speakWithProfile === 'function') {
+        window.AndroidTTS.speakWithProfile(text, 'de-DE', !!flush, tuning.pitch, tuning.rate, profile);
+      } else {
+        window.AndroidTTS.speak(text, 'de-DE', !!flush);
+      }
+    } catch(e) {
+      window.AndroidTTS.speak(text, 'de-DE');
+    }
+    return;
+  }
   if (!('speechSynthesis' in window)) { alert('Sprachausgabe wird in diesem Browser nicht unterstützt.'); return; }
   const session = ttsSession; ttsPendingCount++;
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang || 'de-DE';
-  const profile = menuState.voiceProfile || 'female';
-  if (u.lang.toLowerCase().startsWith('de')){
-    const voice = pickGermanVoice(profile);
-    if (voice) u.voice = voice;
-  }
-  const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
+  u.lang = 'de-DE';
+  const voice = pickGermanVoice(profile);
+  if (voice) u.voice = voice;
   u.pitch = tuning.pitch; u.rate = tuning.rate;
   u.onend = u.onerror = ()=>{
     if (session !== ttsSession) return;
@@ -1766,6 +2028,7 @@ function speak(text, lang){
   window.speechSynthesis.speak(u);
 }
 function stopSpeech(){
+  if (window.AndroidTTS && typeof window.AndroidTTS.stop === 'function') { window.AndroidTTS.stop(); }
   ttsSession++; ttsPendingCount=0;
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   resetActiveReadButton();
@@ -1781,12 +2044,6 @@ function resetReadAllButton(){
   ttsActiveButton = null; ttsPaused = false;
 }
 
-/* A single button carries play / pause-resume / reset for its own row: a
-   2nd click while it's the active reader pauses it, a 3rd click resumes
-   it, and clicking any OTHER read button resets/stops this one first.
-   A small ↺ icon embedded next to it appears while this row is reading
-   or paused, letting the user restart the same definition from the
-   beginning without having to pause/resume through it. */
 function setDefReadButtonState(btn, state){
   if (!btn) return;
   if (btn.dataset.origLabel === undefined) btn.dataset.origLabel = btn.textContent;
@@ -1796,7 +2053,6 @@ function setDefReadButtonState(btn, state){
   else { btn.textContent = btn.dataset.origLabel; }
   if (btn._resetBtn) btn._resetBtn.classList.toggle('show', state === 'reading' || state === 'paused');
 }
-
 
 function resetActiveReadButton(){
   const allBtn = document.getElementById('btnReadAll');
@@ -1809,7 +2065,6 @@ function resetActiveReadButton(){
     ttsActiveButton = null; ttsPaused = false;
   }
 }
-
 
 function readSingleDefinition(w, domain, btn){
   if (ttsActiveButton === btn){
@@ -1830,7 +2085,6 @@ function readSingleDefinition(w, domain, btn){
   ttsPaused = false;
   setDefReadButtonState(btn, 'reading');
 }
-
 
 function restartSingleDefinition(w, domain, btn){
   stopSpeech();
@@ -1859,6 +2113,7 @@ document.getElementById('btnReadAll').onclick = async ()=>{
   if (!selectedWord) return;
 
   if (ttsActiveButton === btn){
+    if (window.AndroidTTS) { stopSpeech(); return; }
     if (!ttsPaused){
       window.speechSynthesis.pause(); ttsPaused=true;
       btn.classList.add('paused'); icon.innerHTML = ICON_PLAY; label.textContent = I18N[uiLang].resume;
@@ -1871,27 +2126,40 @@ document.getElementById('btnReadAll').onclick = async ()=>{
   stopSpeech();
   ttsActiveButton = btn; ttsPaused = false;
   btn.classList.remove('paused'); icon.innerHTML = ICON_PAUSE; label.textContent = I18N[uiLang].readAll;
+  let fullText = [];
   for (const domain of selectedWord.domains){
-    if (ttsActiveButton !== btn) return; // stopped/cleared mid-loop
     const text = selectedWord.defs[domain] || '';
-    if (!text) continue;
-    await new Promise(res=>{
-      const session = ttsSession;
-      const u = new SpeechSynthesisUtterance(domain + '. ' + text);
-      u.lang = 'de-DE';
-      const profile = menuState.voiceProfile || 'female';
-      const voice = pickGermanVoice(profile);
-      if (voice) u.voice = voice;
-      const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
-      u.pitch = tuning.pitch; u.rate = tuning.rate;
-      u.onend = u.onerror = ()=> res();
-      window.speechSynthesis.speak(u);
-    });
+    if (text) fullText.push(domain + '. ' + text);
   }
-  resetReadAllButton();
+  if (fullText.length > 0) {
+    if (window.AndroidTTS) {
+       const profile = menuState.voiceProfile || 'female';
+       const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
+       if (typeof window.AndroidTTS.speakWithProfile === 'function') {
+         window.AndroidTTS.speakWithProfile(fullText.join('. '), 'de-DE', true, tuning.pitch, tuning.rate, profile);
+       } else {
+         window.AndroidTTS.speak(fullText.join('. '), 'de-DE');
+       }
+    } else {
+       await new Promise(res=>{
+         const session = ttsSession;
+         const u = new SpeechSynthesisUtterance(fullText.join('. '));
+         u.lang = 'de-DE';
+         const profile = menuState.voiceProfile || 'female';
+         const voice = pickGermanVoice(profile);
+         if (voice) u.voice = voice;
+         const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
+         u.pitch = tuning.pitch; u.rate = tuning.rate;
+         u.onend = u.onerror = ()=> res();
+         window.speechSynthesis.speak(u);
+       });
+       resetReadAllButton();
+    }
+  } else {
+    resetReadAllButton();
+  }
 };
 
-/* ---------- Target-language picker (full Google Translate list, searchable) ---------- */
 const langScrim = document.getElementById('langScrim');
 const langModal = document.getElementById('langModal');
 function closeLangModal(){ langModal.classList.remove('show'); langScrim.classList.remove('show'); }
@@ -1922,7 +2190,6 @@ document.getElementById('closeLangModal').onclick = closeLangModal;
 langScrim.onclick = closeLangModal;
 document.getElementById('langSearchInput').addEventListener('input', (e)=> renderLangList(e.target.value));
 
-/* ---------- Discover strip: AI-generated related domain words, horizontally scrollable ---------- */
 async function renderDiscoverStrip(){
   const strip = document.getElementById('discoverStrip');
   strip.innerHTML = '';
@@ -1930,10 +2197,13 @@ async function renderDiscoverStrip(){
   const sys = `Schlage 8 kurze Fachbegriffe vor, die zu folgenden Bereichen oder bereits bekannten Wörtern passen (${seedWords}). Antworte auf Deutsch. Antworte AUSSCHLIESSLICH mit JSON: {"items":[{"token":"...","domain":"..."}]}`;
   try{
 
-
-    const { rawText } = await callWithProviderFailover(sys, 'Vorschläge bitte.');
-    const match = rawText.match(/\{[\s\S]*\}/);
-    const parsed = match ? JSON.parse(match[0]) : null;
+    const { rawText } = await callWithProviderFailover(sys, 'Vorschläge bitte.', null, null, (text) => {
+      const parsedStr = extractBalancedJson(text, '{', '}');
+      const parsed = JSON.parse(parsedStr);
+      if (!parsed || !Array.isArray(parsed.items)) throw new Error("Ungültiges JSON-Format");
+    });
+    const parsedStr = extractBalancedJson(rawText, '{', '}');
+    const parsed = JSON.parse(parsedStr);
     const items = parsed?.items || [];
     items.forEach(it=>{
       const card = document.createElement('div');
@@ -1948,10 +2218,6 @@ async function renderDiscoverStrip(){
   startDiscoverAutoScroll();
 }
 
-/* ---------- Bottom discover strip: slow continuous horizontal auto-scroll ----------
-   Scrolls the card strip sideways on its own at a slow, steady pace and
-   loops back to the start once it reaches the end. Pauses while the user
-   is hovering/touching it so manual browsing still works normally. */
 let discoverScrollTimer = null;
 let discoverScrollPaused = false;
 function startDiscoverAutoScroll(){
@@ -1962,27 +2228,34 @@ function startDiscoverAutoScroll(){
     if (discoverScrollPaused) return;
     if (strip.scrollWidth <= strip.clientWidth) return;
     if (strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1){
-      strip.scrollLeft = 0; // loop back to the start
+      strip.scrollLeft = 0; 
     } else {
       strip.scrollLeft += 1;
     }
   }, 45);
 }
-(function initDiscoverAutoScrollPause(){
-  const strip = document.getElementById('discoverStrip');
-  if (!strip) return;
-  strip.addEventListener('mouseenter', ()=>{ discoverScrollPaused = true; });
-  strip.addEventListener('mouseleave', ()=>{ discoverScrollPaused = false; });
-  strip.addEventListener('touchstart', ()=>{ discoverScrollPaused = true; }, {passive:true});
-  strip.addEventListener('touchend', ()=>{ discoverScrollPaused = false; }, {passive:true});
-})();
-
 
 (async function bootstrapApp(){
   const vaultWasLoaded = await loadApiKeyVault();
   await migrateLegacyPlaintextKeys(vaultWasLoaded);
+  await loadWordDb();
   init();
 })();
+
+/* ── Android native download bridge ── */
+function androidBlobDownload(blob, filename) {
+    if (typeof AndroidDownload !== 'undefined' && AndroidDownload.save) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var base64 = reader.result.split(',')[1];
+            AndroidDownload.save(filename, base64, blob.type || 'application/octet-stream');
+        };
+        reader.readAsDataURL(blob);
+        return true;
+    }
+    return false;
+}
+
 </script>
 </body>
 </html>

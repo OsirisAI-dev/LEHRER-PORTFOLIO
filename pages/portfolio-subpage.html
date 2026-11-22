@@ -1269,6 +1269,8 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .tab-color-num {
@@ -1278,7 +1280,9 @@
   }
 
   .tab-color-input {
-    width: 49px;
+    width: 100%;
+    min-width: 32px;
+    max-width: 49px;
     height: 20px;
     border: 1.5px solid rgba(19,60,56,0.35);
     border-radius: 5px;
@@ -1553,6 +1557,10 @@
           <div class="tab-color-col" data-tab-id="fixed-spezwoerterbuch" title="KI-Fachwörterbuch">
             <span class="tab-color-num" title="KI-Fachwörterbuch">5</span>
             <input type="color" class="tab-color-input" data-tab-id="fixed-spezwoerterbuch" value="#3aa65a" title="KI-Fachwörterbuch">
+          </div>
+          <div class="tab-color-col" data-tab-id="fixed-autobahnracer" title="Autobahn Racer">
+            <span class="tab-color-num" title="Autobahn Racer">6</span>
+            <input type="color" class="tab-color-input" data-tab-id="fixed-autobahnracer" value="#00529b" title="Autobahn Racer">
           </div>
           <button class="tab-color-reset-all" id="tabColorResetAll" title="Alle Tabs zurücksetzen">&#8635;</button>
         </div>
@@ -1860,6 +1868,7 @@ const FIXED_SHORTCUTS = [
   { id: 'fixed-eduhub', name: 'EDU HUB', pageSrc: 'edu-hub.html', icon: '../icons/eduhub-default.png' },
   { id: 'fixed-woerterbuch', name: 'KI-WÖRTERBUCH', pageSrc: 'woerterbuch.html', icon: '../icons/ki-woerterbuch-v2.png' },
   { id: 'fixed-spezwoerterbuch', name: 'KI-FACHWÖRTERBUCH', pageSrc: 'fachwoerterbuch.html', icon: '../icons/ki-fachwoerterbuch-v2.png' },
+  { id: 'fixed-autobahnracer', name: 'AUTOBAHN RACER', pageSrc: 'autobahn_racer.html', icon: '../icons/icon_autobahn_racer.svg' },
 ];
 
 /* Merges a FIXED_SHORTCUTS entry with any persisted override (icon, apiPowered).
@@ -2237,6 +2246,12 @@ window.addEventListener('message', (e) => {
 function normalizedFileName(name) {
   return String(name || '').trim().toLowerCase();
 }
+window.addEventListener('message', (e) => {
+  if (!e.data || e.data.type !== 'osirisOpenHomeTab') return;
+  if (e.origin !== window.location.origin) return;
+  openTabById(DEFAULT_TAB_ID);
+});
+
 window.addEventListener('message', (e) => {
   if (!e.data || e.data.type !== 'osirisNavigateToApp') return;
   if (e.origin !== window.location.origin) return;
@@ -3141,7 +3156,8 @@ const defaultTabColors = {
   'fixed-bibliothek': '#2f6feb',
   'fixed-eduhub': '#e0393f',
   'fixed-woerterbuch': '#3aa65a',
-  'fixed-spezwoerterbuch': '#3aa65a'
+  'fixed-spezwoerterbuch': '#3aa65a',
+  'fixed-autobahnracer': '#00529b'
 };
 const fontOptions = [
   { label: 'Inter', value: "'Inter', 'Segoe UI', system-ui, sans-serif" },
