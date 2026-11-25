@@ -18,7 +18,7 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v33';
+const CACHE_VERSION = 'v34';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
@@ -32,6 +32,12 @@ const AI_HOSTNAMES = [
   'api.cloudflare.com',
   'openrouter.ai',
   'router.huggingface.co',
+  'de.wiktionary.org',
+  'en.wiktionary.org',
+  'de.wikipedia.org',
+  'www.wikidata.org',
+  'www.openthesaurus.de',
+  'translate.googleapis.com',
 ];
 
 const PRECACHE_URLS = [

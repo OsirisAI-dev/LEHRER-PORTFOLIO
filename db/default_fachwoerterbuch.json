@@ -1,29 +1,33 @@
-﻿{
-  "app": "iaDictLocalDB",
+{
+  "app": "wlWortliste",
   "version": 1,
   "count": 2,
-  "words": [
-    {
-      "word": "Pädagogik",
-      "definitionPrimaryDe": "Die Wissenschaft von der Erziehung und Bildung.",
-      "levels": {
-        "A1/A2": { "synonyms": [], "antonyms": [], "examples": ["Er studiert Pädagogik."] },
-        "B1/B2": { "synonyms": [], "antonyms": [], "examples": ["Die moderne Pädagogik fordert mehr Praxisbezug."] },
-        "C1/C2": { "synonyms": [], "antonyms": [], "examples": ["In der Heilpädagogik werden spezielle Ansätze verfolgt."] }
+  "wordDB": {
+    "PÄDAGOGIK & BILDUNG": [
+      {
+        "token": "Pädagogik",
+        "genus": "die",
+        "plural": "",
+        "domains": ["Pädagogik", "Bildungswissenschaft"],
+        "defs": {
+          "Pädagogik": "Die Wissenschaft und Praxis von der Erziehung, Bildung und Begleitung von Kindern, Jugendlichen und Erwachsenen.",
+          "Bildungswissenschaft": "Fachdisziplin zur Erforschung von Lehr-, Lern- und Entwicklungsprozessen in schulischen und außerschulischen Kontexten."
+        },
+        "translations": {},
+        "source": "seed"
       },
-      "lastUpdated": 1700000000000,
-      "audioBase64": null
-    },
-    {
-      "word": "Didaktik",
-      "definitionPrimaryDe": "Lehre vom Lehren und Lernen.",
-      "levels": {
-        "A1/A2": { "synonyms": [], "antonyms": [], "examples": ["Die Didaktik ist wichtig."] },
-        "B1/B2": { "synonyms": [], "antonyms": [], "examples": ["Seine Didaktik im Unterricht ist hervorragend."] },
-        "C1/C2": { "synonyms": [], "antonyms": [], "examples": ["Mediendidaktik befasst sich mit digitalen Lehrformaten."] }
-      },
-      "lastUpdated": 1700000000000,
-      "audioBase64": null
-    }
-  ]
+      {
+        "token": "Didaktik",
+        "genus": "die",
+        "plural": "",
+        "domains": ["Didaktik", "Bildungswissenschaft"],
+        "defs": {
+          "Didaktik": "Die Theorie und Lehre vom planmäßigen Lehren und Lernen sowie der Auswahl und Aufbereitung von Unterrichtsinhalten.",
+          "Bildungswissenschaft": "Teilbereich der Pädagogik, der Ziele, Inhalte, Methoden und Medien von Bildungsprozessen systematisch untersucht."
+        },
+        "translations": {},
+        "source": "seed"
+      }
+    ]
+  }
 }

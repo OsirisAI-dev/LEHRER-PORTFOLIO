@@ -2,22 +2,21 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
 <link rel="manifest" href="../manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KI FACHWÖRTERBUCH — Osiris</title>
   <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
   <script>if (window.self !== window.top) document.documentElement.classList.add('in-portfolio-iframe');</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fonts/fonts.css">
 <style>
 :root{
   --bg-dark:#000000; --bg-panel:#1e1e1e; --bg-input:#2a2a2a;
   --text-light:#ffffff; --text-dim:#8a8a8a;
   --accent-green:#4ade80; --accent-red:#e2394a; --accent-gold:#b48645; --accent-blue:#5aa9ff;
   --border-dim:#333333; --shadow-color:rgba(0,0,0,.5);
-  --font-hand:'Kalam',cursive,'Segoe UI',sans-serif;
+  --font-hand:'Inter','Segoe UI',system-ui,sans-serif;
 }
 body.light-mode{
   --bg-dark:#ffffff; --bg-panel:#ffffff; --bg-input:#eceff3;
@@ -313,10 +312,134 @@ main{padding-bottom:132px;}
 
 .logo-container { display: flex; flex-direction: column; align-items: flex-start; width: 100%; }
 .logo-inner { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; }
+.icon-btn, .sq-btn, .wl-btn, .read-all-btn, .mini-btn { touch-action: manipulation; }
+@media (max-width: 768px) {
+    .top-section {
+        position: static;
+        box-shadow: none;
+        padding: max(14px, calc(10px + env(safe-area-inset-top, 0px))) 14px 8px;
+    }
+    .header-icons {
+        gap: 7px;
+        row-gap: 8px;
+        margin-top: 10px;
+        position: relative;
+        z-index: 20;
+    }
+    .icon-btn {
+        width: 38px;
+        height: 38px;
+    }
+    main {
+        padding: 14px 14px 20px;
+    }
+    .discover-wrap {
+        position: static;
+        margin-top: 16px;
+        padding: 10px 14px max(18px, calc(14px + env(safe-area-inset-bottom, 0px)));
+        box-shadow: none;
+    }
+    body {
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    }
+    .wl-panel { width: 88vw; }
+    .wl-head { padding-top: max(14px, calc(12px + env(safe-area-inset-top, 0px))); }
+    .wl-foot { padding-bottom: max(18px, calc(14px + env(safe-area-inset-bottom, 0px))); }
+    .settings-modal, .lang-modal {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 92vw;
+        max-height: 82vh;
+        max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+    .settings-body { max-height: 62vh; }
+    .modal-box {
+        width: 92vw;
+        max-height: 84vh;
+        max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+}
 @media (max-width: 640px) {
     .logo-container { align-items: center; }
     .logo-inner { justify-content: center; }
 }
+
+/* SmartTutor Trust Badge, Category Pill & Diagnostic Panel */
+.audit-badge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+.audit-badge.verified { display: inline-flex; color: var(--accent-green); border-color: rgba(74, 222, 128, 0.35); background: rgba(74, 222, 128, 0.08); }
+.audit-badge.auto-fixed { display: inline-flex; color: var(--accent-green); border-color: rgba(74, 222, 128, 0.45); background: rgba(74, 222, 128, 0.14); }
+.audit-badge.flagged { display: inline-flex; color: var(--accent-gold); border-color: rgba(180, 134, 69, 0.55); background: rgba(180, 134, 69, 0.14); }
+.domain-chip.cat-pill {
+  background: rgba(180, 134, 69, 0.16);
+  border-color: rgba(180, 134, 69, 0.55);
+  color: var(--accent-gold);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+.st-report-list {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.st-item {
+  background: var(--bg-input);
+  border: 1px solid rgba(136, 136, 136, 0.25);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.st-item-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-weight: bold; color: var(--text-light); }
+.st-item-src { font-size: 0.62rem; color: var(--text-dim); font-weight: normal; }
+.st-item-issues { margin: 4px 0 6px; color: var(--accent-gold); font-size: 0.68rem; }
+.st-item-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.st-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  color: var(--text-light);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+.st-mini-btn:hover { border-color: var(--accent-green); color: var(--accent-green); }
+.st-mini-btn.danger:hover { border-color: var(--accent-red); color: var(--accent-red); }
+.nw-audit-notice {
+  display: none;
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  border: 1px solid transparent;
+}
+.nw-audit-notice.ok { display: block; color: var(--accent-green); background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.35); }
+.nw-audit-notice.warn { display: block; color: var(--accent-gold); background: rgba(180, 134, 69, 0.12); border-color: rgba(180, 134, 69, 0.45); }
 </style>
 </head>
 <body>
@@ -404,6 +527,7 @@ main{padding-bottom:132px;}
     <div class="word-title-row">
       <div class="word-title-icon" id="wordIcon"></div>
       <div class="word-title" id="wordTitle"></div>
+      <span class="audit-badge" id="auditBadge" title="SmartTutor Qualitätsprüfung"></span>
     </div>
     <div class="domain-row" id="domainRow"></div>
 
@@ -469,6 +593,26 @@ main{padding-bottom:132px;}
       <button type="button" class="clear-btn" id="reopenDbUploadBtn" style="width:100%; margin-top:8px; border:1px solid var(--text-dim); color:var(--text-dim); background:transparent; border-radius:8px; padding:8px 10px; font-size:12px; cursor:pointer;">Willkommens-Import erneut öffnen</button>
       <div class="api-hint" id="localDbIoMsg" style="display:none;"></div>
     </div>
+    <div class="settings-section" id="smartTutorSection">
+      <label style="display:flex; align-items:center; gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg><span>SmartTutor — Tiefenprüfung &amp; Kategorisierung</span></label>
+      <div class="api-hint" id="smartTutorStatus">Bereit. Prüft gesuchte Fachbegriffe automatisch (Regeln, Kategorien &amp; Wiktionary).</div>
+      <div class="api-hint" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+        <input type="checkbox" id="smartTutorAutoScan" style="width:16px; height:16px; flex-shrink:0;">
+        <label for="smartTutorAutoScan" style="margin:0; cursor:pointer;">Automatischer Hintergrund-Scan (wöchentlich / bei neuen Begriffen)</label>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="clear-btn" id="stQuickScanBtn" style="flex:1; border:1px solid var(--accent-gold); color:var(--accent-gold); background:transparent; border-radius:8px; padding:8px 8px; font-size:12px; cursor:pointer;">Schnell-Scan (Offline)</button>
+        <button type="button" class="clear-btn" id="stDeepScanBtn" style="flex:1; border:1px solid var(--accent-green); color:var(--accent-green); background:transparent; border-radius:8px; padding:8px 8px; font-size:12px; cursor:pointer;">Tiefen-Scan (Wiktionary)</button>
+      </div>
+      <div id="stReportWrap" style="display:none; margin-top:10px;">
+        <div class="api-hint" id="stReportSummary" style="color:var(--text-light); font-weight:bold;"></div>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <button type="button" class="clear-btn" id="stApplyAllFixesBtn" style="display:none; flex:1; border:1px solid var(--accent-green); color:var(--accent-green); background:transparent; border-radius:8px; padding:7px 8px; font-size:12px; cursor:pointer;"><span id="stApplyAllFixesLabel">Alle sicheren Fixes</span></button>
+          <button type="button" class="clear-btn" id="stExportReportBtn" style="border:1px solid var(--text-dim); color:var(--text-light); background:transparent; border-radius:8px; padding:7px 10px; font-size:12px; cursor:pointer;">Bericht (.txt)</button>
+        </div>
+        <div class="st-report-list" id="stReportList"></div>
+      </div>
+    </div>
     <div class="settings-section">
       <button class="wl-btn primary" id="saveSettings" style="width:100%;">Speichern</button>
     </div>
@@ -490,9 +634,11 @@ main{padding-bottom:132px;}
 <div class="modal-scrim" id="newWordModalScrim">
   <div class="modal-box">
     <h3 id="newWordModalTitle">Neues Wort gefunden (KI)</h3>
-    <p class="modal-hint" id="newWordModalHint">Von der KI generiert. Prüfen und der Wortliste hinzufügen?</p>
-    <label>Kategorie</label>
-    <input type="text" id="nwCategory" placeholder="z.B. GENERIERT">
+    <p class="modal-hint" id="newWordModalHint">Von der KI generiert &amp; durch SmartTutor geprüft. Der Wortliste hinzufügen?</p>
+    <div class="nw-audit-notice" id="nwAuditNotice"></div>
+    <label>Kategorie (Fachgebiet)</label>
+    <input type="text" id="nwCategory" list="nwCategoryList" placeholder="z.B. MEDIZIN &amp; GESUNDHEIT">
+    <datalist id="nwCategoryList"></datalist>
     <label>Wort</label>
     <input type="text" id="nwWord" readonly>
     <label>Artikel (Genus)</label>
@@ -513,6 +659,7 @@ main{padding-bottom:132px;}
   </div>
 </div>
 
+<script src="../js/smart_tutor.js"></script>
 <script>
 // ─── Utility: HTML escaping ─────────────────────────────────────────────────
 function escapeHtml(s) {
@@ -575,21 +722,125 @@ const SVG_ICONS = {
   default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z"/><path d="M4 4v13a3 3 0 0 0 3 3h11"/></svg>`,
   medical: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3v6a5 5 0 0 0 10 0V3"/><circle cx="19" cy="15" r="2.5"/><path d="M11 9v3a5 5 0 0 0 5 5h.5"/></svg>`,
   ia: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg>`,
-  cybersecurity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`
+  cybersecurity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`,
+  education: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10l-10-5-10 5 10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>`,
+  finance: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  law: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M5 7h14M7 7l-3 7h6l-3-7zM17 7l-3 7h6l-3-7zM8 21h8"/></svg>`,
+  engineering: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  science: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M8 15h8"/></svg>`,
+  environment: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
+  psychology: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 2A5.5 5.5 0 0 0 4 7.5c0 2 .9 3.6 2 4.8V16a3 3 0 0 0 3 3h1v3h4v-3h1a3 3 0 0 0 3-3v-3.7c1.1-1.2 2-2.8 2-4.8A5.5 5.5 0 0 0 14.5 2c-1 0-1.9.3-2.5.8-.6-.5-1.5-.8-2.5-.8z"/></svg>`,
+  architecture: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 11h1M14 11h1M9 15h1M14 15h1"/></svg>`,
+  culture: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 15h8M9 9h.01M15 9h.01"/></svg>`
 };
-function pickBuiltinIcon(domains){
-  const d = (domains||[]).join(' ').toLowerCase();
-  if (/medizin|médecin|medicin|gesundheit|santé|health|pharma|anatom/.test(d)) return SVG_ICONS.medical;
-  if (/cyber|sicherheit|sécurité|security/.test(d)) return SVG_ICONS.cybersecurity;
-  if (/(^|[\s,\/])(ki|ia|ai)($|[\s,\/])|künstliche|intelligence|artificial|maschin|machine|informatik|computer/.test(d)) return SVG_ICONS.ia;
+
+const CANONICAL_FACH_CATEGORIES = [
+  'MEDIZIN & GESUNDHEIT',
+  'KI & INFORMATIK',
+  'CYBERSICHERHEIT',
+  'WIRTSCHAFT & FINANZEN',
+  'RECHT & POLITIK',
+  'TECHNIK & INGENIEURWESEN',
+  'NATURWISSENSCHAFTEN',
+  'UMWELT & ENERGIE',
+  'PÄDAGOGIK & BILDUNG',
+  'PSYCHOLOGIE & SOZIOLOGIE',
+  'ARCHITEKTUR & BAU',
+  'KULTUR, MEDIEN & KUNST'
+];
+
+function resolveFachCategory(domains, defs, aiCategory, token){
+  const existingCats = wordDB ? Object.keys(wordDB) : [];
+  if (window.SmartTutor && typeof window.SmartTutor.classifyFachCategory === 'function') {
+    return window.SmartTutor.classifyFachCategory(domains, defs, aiCategory, token, existingCats);
+  }
+  const first = (Array.isArray(domains) && domains.find(d => d && !/^(generiert|importiert|allgemein)$/i.test(d.trim()))) || '';
+  return (aiCategory && !/^(generiert|importiert|allgemein)$/i.test(aiCategory.trim()))
+    ? aiCategory.trim().toUpperCase()
+    : (first ? first.trim().toUpperCase() : 'FACHWISSEN');
+}
+
+function getWordCategory(wordObj){
+  if (!wordDB || !wordObj) return '';
+  for (const cat of Object.keys(wordDB)) {
+    if (Array.isArray(wordDB[cat]) && wordDB[cat].some(w => w === wordObj || (w.token && wordObj.token && w.token.toLowerCase() === wordObj.token.toLowerCase()))) {
+      return cat;
+    }
+  }
+  return wordObj.category || '';
+}
+
+function moveWordToCategory(wordObj, targetCat){
+  if (!wordDB || !wordObj || !targetCat) return;
+  const cleanTarget = targetCat.trim().toUpperCase();
+  if (!cleanTarget) return;
+  for (const cat of Object.keys(wordDB)) {
+    const list = wordDB[cat];
+    if (!Array.isArray(list)) continue;
+    const idx = list.findIndex(w => w === wordObj || (w.token && wordObj.token && w.token.toLowerCase() === wordObj.token.toLowerCase()));
+    if (idx !== -1) {
+      if (cat === cleanTarget) {
+        list[idx] = wordObj;
+        wordObj.category = cleanTarget;
+        return;
+      }
+      list.splice(idx, 1);
+      if (list.length === 0) delete wordDB[cat];
+    }
+  }
+  if (!wordDB[cleanTarget]) wordDB[cleanTarget] = [];
+  wordObj.category = cleanTarget;
+  wordDB[cleanTarget].push(wordObj);
+}
+
+function pickBuiltinIcon(domains, category){
+  const d = ((domains||[]).join(' ') + ' ' + (category||'')).toLowerCase();
+  if (/medizin|médecin|medicin|gesundheit|santé|health|pharma|anatom|chirurg|klinik|therap/.test(d)) return SVG_ICONS.medical;
+  if (/cyber|sicherheit|sécurité|security|kryptograph|datenschutz/.test(d)) return SVG_ICONS.cybersecurity;
+  if (/(^|[\s,\/&-])(ki|ia|ai|it)($|[\s,\/&-])|künstliche|intelligence|artificial|maschin|machine|informatik|computer|software|programmier/.test(d)) return SVG_ICONS.ia;
+  if (/pädagogik|didaktik|bildung|erziehung|schule|hochschule|lehre|linguistik/.test(d)) return SVG_ICONS.education;
+  if (/wirtschaft|finanz|bwl|vwl|börse|bank|steuer|marketing|management|handel|ökonom/.test(d)) return SVG_ICONS.finance;
+  if (/recht|jura|gesetz|vertrag|politik|verwaltung|gericht|compliance/.test(d)) return SVG_ICONS.law;
+  if (/technik|ingenieur|maschinenbau|elektronik|robotik|mechanik|fahrzeug|fertigung/.test(d)) return SVG_ICONS.engineering;
+  if (/physik|chemie|biologie|mathematik|naturwissenschaft|quanten|genetik|astronomie/.test(d)) return SVG_ICONS.science;
+  if (/umwelt|ökolog|klima|energie|nachhaltig|erneuerbar|recycling/.test(d)) return SVG_ICONS.environment;
+  if (/psycholog|soziolog|philosoph|ethik|kognition|verhalten/.test(d)) return SVG_ICONS.psychology;
+  if (/architektur|bauwesen|statik|städtebau|immobilien/.test(d)) return SVG_ICONS.architecture;
+  if (/kultur|medien|kunst|musik|literatur|journalismus|design|geschichte/.test(d)) return SVG_ICONS.culture;
   return SVG_ICONS.default;
 }
 // SVG-as-<img> needs an xmlns (else it renders broken) and cannot inherit currentColor (else black on dark).
 function svgToDataUri(svg){
   let s = String(svg).trim();
+  // Strip any script/event/external-resource payloads from imported SVG strings
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, '')
+       .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '')
+       .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+       .replace(/(?:xlink:)?href\s*=\s*(?:"\s*(?:https?:|javascript:|data:)[^"]*"|'\s*(?:https?:|javascript:|data:)[^']*')/gi, '')
+       .replace(/javascript\s*:/gi, '');
   if (!/xmlns=/.test(s)) s = s.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
   s = s.replace(/currentColor/g, '#b8b8c0');
   return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+}
+
+function sanitizeIconImageSrc(iconObj, fallbackSvg){
+  const fallback = svgToDataUri(fallbackSvg || SVG_ICONS.default);
+  if (!iconObj || typeof iconObj !== 'object') return fallback;
+  const val = String(iconObj.value || '').trim();
+  if (!val) return fallback;
+  if (iconObj.type === 'img') {
+    if (/^data:image\/(?:png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/i.test(val)) {
+      return val;
+    }
+    return fallback;
+  }
+  if (/^<svg[\s>]/i.test(val)) {
+    return svgToDataUri(val);
+  }
+  if (/^data:image\/(?:png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/i.test(val)) {
+    return val;
+  }
+  return fallback;
 }
 
 let wordDB = null;
@@ -608,6 +859,57 @@ function openWordDbStorage() {
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
+}
+
+function normalizeImportedWordDB(data){
+  if (!data || typeof data !== 'object') return null;
+  let imported = (data && typeof data.wordDB === 'object') ? data.wordDB : data;
+  if (imported && (imported.app === 'iaDictLocalDB' || Array.isArray(imported.words))) {
+    const converted = {};
+    const wordsArray = Array.isArray(imported.words) ? imported.words : (Array.isArray(imported) ? imported : []);
+    wordsArray.forEach(w => {
+      const word = (w.word || w.token || '').trim();
+      if (!word) return;
+      const def = (w.definitionPrimaryDe || w.def || '').trim();
+      const rawDom = Array.isArray(w.domains) && w.domains.length ? w.domains : [];
+      const tmpDefs = rawDom.length ? { [rawDom[0]]: def } : { 'Allgemein': def };
+      const cat = resolveFachCategory(rawDom, tmpDefs, w.category || '', word);
+      const niceDom = rawDom.length ? rawDom : [cat.split('&')[0].trim().replace(/^./, c => c.toUpperCase()).replace(/(?<=.).+/g, s => s.toLowerCase())];
+      const finalDefs = {};
+      finalDefs[niceDom[0]] = def;
+      const genus = ['der','die','das'].includes(String(w.genus||'').toLowerCase()) ? String(w.genus).toLowerCase() : null;
+      const plural = (w.plural && w.plural !== '—') ? String(w.plural).replace(/^(der|die|das)\s+/i, '').trim() : '';
+      const entry = {
+        token: word,
+        genus,
+        plural,
+        category: cat,
+        domains: niceDom,
+        defs: finalDefs,
+        icon: { type: 'svg', value: pickBuiltinIcon(niceDom, cat) },
+        translations: w.translations || {},
+        source: w.source || 'seed'
+      };
+      if (!converted[cat]) converted[cat] = [];
+      converted[cat].push(entry);
+    });
+    return converted;
+  }
+  if (imported && imported.app === 'wlWortliste' && imported.wordDB) {
+    imported = imported.wordDB;
+  }
+  if (imported && Object.keys(imported).length > 0 && !imported.app) {
+    // Ensure every loaded word has a fitting built-in SVG icon if none stored
+    for (const cat of Object.keys(imported)) {
+      if (!Array.isArray(imported[cat])) continue;
+      imported[cat].forEach(w => {
+        if (!w.category) w.category = cat;
+        if (!w.icon || !w.icon.value) w.icon = { type: 'svg', value: pickBuiltinIcon(w.domains, cat) };
+      });
+    }
+    return imported;
+  }
+  return null;
 }
 
 async function loadWordDb() {
@@ -634,6 +936,12 @@ async function loadWordDb() {
     } catch(e) {}
   }
 
+  // Upgrade legacy minimal 'IMPORTIERT' placeholder (only Pädagogik/Didaktik) cleanly
+  if (dbObj && Object.keys(dbObj).length === 1 && Array.isArray(dbObj['IMPORTIERT'])) {
+    const tokens = dbObj['IMPORTIERT'].map(x => String(x && x.token || '').toLowerCase()).sort().join(',');
+    if (tokens === 'didaktik,pädagogik') dbObj = null;
+  }
+
   if (!dbObj) {
     try {
       let dbToLoad = 'default_fachwoerterbuch.json';
@@ -646,34 +954,8 @@ async function loadWordDb() {
       const res = await fetch('../db/' + dbToLoad);
       if (res.ok) {
         const text = await res.text();
-        const data = JSON.parse(text);
-        let imported = (data && typeof data.wordDB === 'object') ? data.wordDB : (typeof data === 'object' ? data : null);
-
-        if (imported && (imported.app === 'iaDictLocalDB' || Array.isArray(imported.words))) {
-          const converted = { 'IMPORTIERT': [] };
-          const wordsArray = Array.isArray(imported.words) ? imported.words : (Array.isArray(imported) ? imported : []);
-
-          wordsArray.forEach(w => {
-             const word = w.word || w.token || 'Unbekannt';
-             const def = w.definitionPrimaryDe || w.def || '';
-             converted['IMPORTIERT'].push({
-               token: word,
-               genus: '',
-               plural: '',
-               domains: ['Importiert'],
-               defs: { 'Importiert': def },
-               icon: {type: 'svg', value: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a8a8a" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`},
-               translations: {}
-             });
-          });
-          imported = converted;
-        } else if (imported && imported.app === 'wlWortliste') {
-          imported = imported.wordDB;
-        }
-
-        if (imported && Object.keys(imported).length > 0 && !imported.app) {
-          dbObj = imported;
-        }
+        const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+        dbObj = normalizeImportedWordDB(data);
       }
     } catch(e) {
       console.warn("Failed to load default dictionary", e);
@@ -681,16 +963,9 @@ async function loadWordDb() {
   }
 
   wordDB = dbObj || {
-    'MEDIZIN': [
-      { token:'Stethoskop', genus:'das', plural:'Stethoskope', domains:['Medizin'], defs:{ 'Medizin':"Instrument, mit dem Ärzte innere Körpergeräusche abhören, insbesondere Herz und Lunge." }, icon:{type:'svg', value:SVG_ICONS.medical}, translations:{} }
-    ],
-    'KI & SICHERHEIT': [
-      { token:'Token', genus:'der', plural:'Token', domains:['KI','Cybersicherheit'],
-        defs:{
-          'KI':"Texteinheit (Wort, Teilwort oder Zeichen), die ein Sprachmodell zur Verarbeitung und Erzeugung von Text verwendet.",
-          'Cybersicherheit':"Datenkette (Berechtigungsnachweis), die einen Nutzer oder eine Sitzung authentifiziert, ohne das Passwort erneut preiszugeben."
-        },
-        icon:{type:'svg', value:SVG_ICONS.ia}, translations:{} }
+    'PÄDAGOGIK & BILDUNG': [
+      { token:'Pädagogik', genus:'die', plural:'', category:'PÄDAGOGIK & BILDUNG', domains:['Pädagogik','Bildungswissenschaft'], defs:{ 'Pädagogik':'Die Wissenschaft und Praxis von der Erziehung und Bildung.' }, icon:{type:'svg', value:SVG_ICONS.education}, translations:{}, source:'seed' },
+      { token:'Didaktik', genus:'die', plural:'', category:'PÄDAGOGIK & BILDUNG', domains:['Didaktik','Bildungswissenschaft'], defs:{ 'Didaktik':'Die Theorie und Lehre vom planmäßigen Lehren und Lernen.' }, icon:{type:'svg', value:SVG_ICONS.education}, translations:{}, source:'seed' }
     ]
   };
 
@@ -706,11 +981,13 @@ function saveDB() {
   }).catch(()=>{});
 }
 
-let menuState = null;
-try { menuState = JSON.parse(localStorage.getItem('wl_menu') || 'null'); } catch(e){}
-menuState = menuState || {
+const DEFAULT_WL_MENU = {
   theme:'dark', fontMult:1, fontStyle:'sans', provider:'pollinations', targetLanguage:'Französisch', voiceProfile:'female'
 };
+let parsedWlMenu = null;
+try { parsedWlMenu = JSON.parse(localStorage.getItem('wl_menu') || 'null'); } catch(e){}
+let menuState = Object.assign({}, DEFAULT_WL_MENU, (parsedWlMenu && typeof parsedWlMenu === 'object') ? parsedWlMenu : {});
+menuState.theme = menuState.theme === 'light' ? 'light' : 'dark';
 if (!menuState.targetLanguage) menuState.targetLanguage = 'Französisch';
 if (!['female','male','child','senior'].includes(menuState.voiceProfile)) menuState.voiceProfile = 'female';
 
@@ -868,9 +1145,17 @@ window.addEventListener('message', (e) => {
   } else if (e.data.type === 'osirisVaultRestoreBlob' && e.data.blob) {
     try {
       localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(e.data.blob));
-      loadApiKeyVault().then(() => { saveMenu(); });
+      loadApiKeyVault().then(() => {
+
+        if (typeof settingsModal !== 'undefined' && settingsModal.classList.contains('show')) {
+          settingsDraftKeys = { ...menuState.apiKeys };
+
+          updateApiKeyFormatHint();
+        }
+      });
     } catch (err) {  }
   } else if (e.data.type === 'osirisVaultKeys' && Array.isArray(e.data.keys)) {
+
     let applied = 0;
     e.data.keys.forEach(k => {
       const providerId = normalizeVaultProviderName(k && k.provider);
@@ -881,7 +1166,14 @@ window.addEventListener('message', (e) => {
       }
     });
     if (applied > 0) {
-      saveApiKeyVault().then(() => { saveMenu(); });
+      saveApiKeyVault().then(() => {
+        saveMenu();
+        if (typeof settingsModal !== 'undefined' && settingsModal.classList.contains('show')) {
+          settingsDraftKeys = { ...menuState.apiKeys };
+
+          updateApiKeyFormatHint();
+        }
+      });
     }
     if (e.source) e.source.postMessage({ type: 'osirisVaultKeysApplied', count: applied }, window.location.origin);
   }
@@ -980,16 +1272,8 @@ function withTimeout(ms) {
   return c.signal;
 }
 async function probeConnectivity() {
-  if (!navigator.onLine) return false;
-  try {
-    await fetch('https://gen.pollinations.ai/', {
-      method: 'HEAD', mode: 'no-cors', cache: 'no-store',
-      signal: withTimeout(4000)
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
+  // Privacy-first: rely on browser network status without unsolicited third-party heartbeat pings.
+  return Boolean(navigator.onLine);
 }
 
 function updateStatusDot(){
@@ -1029,6 +1313,19 @@ document.getElementById('btnFontStyle').onclick = ()=>{
 document.getElementById('btnTheme').onclick = ()=>{
   menuState.theme = menuState.theme==='dark' ? 'light' : 'dark'; saveMenu(); applyTheme();
 };
+function syncThemeFromStorage(){
+  try {
+    const s = JSON.parse(localStorage.getItem('wl_menu') || 'null');
+    if (s && (s.theme === 'light' || s.theme === 'dark') && s.theme !== menuState.theme) {
+      menuState.theme = s.theme;
+      applyTheme();
+    }
+  } catch (e) {}
+}
+window.addEventListener('pageshow', syncThemeFromStorage);
+window.addEventListener('storage', (e) => {
+  if (e.key === 'wl_menu') syncThemeFromStorage();
+});
 const settingsModal = document.getElementById('settingsModal');
 const settingsHeader = document.getElementById('settingsHeader');
 
@@ -1119,7 +1416,6 @@ let sqlJsPromise = null;
 function loadSqlJs(){
   if (sqlJsPromise) return sqlJsPromise;
   const LOCAL_BASE = '../lib/sqljs/v1.10.3/';
-  const CDN_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/';
   function loadScript(src){
     return new Promise((resolve, reject)=>{
       const script = document.createElement('script');
@@ -1132,13 +1428,13 @@ function loadSqlJs(){
   sqlJsPromise = (window.initSqlJs
     ? Promise.resolve(LOCAL_BASE)
     : loadScript(LOCAL_BASE+'sql-wasm.js').then(()=>LOCAL_BASE)
-        .catch(()=>loadScript(CDN_BASE+'sql-wasm.js').then(()=>CDN_BASE))
   ).then(base=>window.initSqlJs({ locateFile: f=>base+f }))
-   .catch(()=>{ throw new Error('sql.js konnte nicht geladen werden (weder lokal noch über CDN — Internet nötig oder lib/sqljs/ fehlt).'); });
+   .catch(()=>{ throw new Error('Lokale sql.js-Engine konnte nicht geladen werden (lib/sqljs/v1.10.3/ prüfen).'); });
   return sqlJsPromise;
 }
 
 function capitalizeWord(w){ return w ? w.charAt(0).toUpperCase()+w.slice(1) : w; }
+function capitalize(w){ return w ? w.charAt(0).toUpperCase()+w.slice(1) : w; }
 function masterRowToEntry(row){
   let data = {};
   try { data = JSON.parse(row.data || '{}'); } catch(e){ data = {}; }
@@ -1284,8 +1580,8 @@ function closeDbUploadModal(){
   document.getElementById('dbUploadModalScrim').classList.remove('show');
 }
 function checkDbUploadOnStart(){
-  const count = Object.values(wordDB).reduce((n,list)=>n+list.length, 0);
-  if (count < 5 && !localStorage.getItem('wl_db_modal_dismissed')) openDbUploadModal();
+  const count = Object.values(wordDB || {}).reduce((n,list)=>n+(Array.isArray(list)?list.length:0), 0);
+  if (count === 0 && !localStorage.getItem('wl_db_modal_dismissed')) openDbUploadModal();
 }
 document.getElementById('processDbBtn').onclick = async ()=>{
   const file = document.getElementById('dbFileInput').files[0];
@@ -1312,15 +1608,29 @@ document.getElementById('processDbBtn').onclick = async ()=>{
 
 document.getElementById('importDefaultDbBtn').onclick = async (e)=>{
   const statusMsg = document.getElementById('dbUploadStatusMsg');
-  const targetDb = e.target.dataset.autoDb || 'fachwoerterbuch_default.db';
+  const targetDb = e.target.dataset.autoDb || 'default_fachwoerterbuch.json';
   statusMsg.style.color = 'var(--text-dim)';
   statusMsg.textContent = `Lade ${targetDb}...`;
   try {
     const res = await fetch('../db/' + targetDb);
     if (!res.ok) throw new Error('Nicht gefunden.');
-    const buf = await res.arrayBuffer();
-    const fakeFile = { arrayBuffer: async () => buf };
-    const count = await importDbFile(fakeFile);
+    let count = 0;
+    if (/\.json$/i.test(targetDb)) {
+      const text = await res.text();
+      const parsed = normalizeImportedWordDB(JSON.parse(text.replace(/^\uFEFF/, '')));
+      if (!parsed) throw new Error('Ungültige JSON-Datenbank.');
+      for (const cat of Object.keys(parsed)) {
+        if (!wordDB[cat]) wordDB[cat] = [];
+        parsed[cat].forEach(w => {
+          if (!findWordByToken(w.token)) { wordDB[cat].push(w); count++; }
+        });
+      }
+      saveDB();
+    } else {
+      const buf = await res.arrayBuffer();
+      const fakeFile = { arrayBuffer: async () => buf };
+      count = await importDbFile(fakeFile);
+    }
     localStorage.setItem('wl_db_modal_dismissed', 'true');
     renderWordlistPanel(); renderDiscoverStrip();
     statusMsg.style.color = 'var(--accent-green)';
@@ -1353,28 +1663,25 @@ function closeWlPanel(){ wlPanel.classList.remove('open'); scrim.classList.remov
 function renderWordlistPanel(){
   const body = document.getElementById('wlBody');
   body.innerHTML = '';
-  Object.keys(wordDB).forEach(cat=>{
+  Object.keys(wordDB || {}).sort((a,b) => a.localeCompare(b, 'de')).forEach(cat=>{
+    if (!Array.isArray(wordDB[cat]) || !wordDB[cat].length) return;
     const catWrap = document.createElement('div');
     catWrap.className = 'wl-cat';
     const title = document.createElement('div');
     title.className = 'wl-cat-title';
-    title.textContent = cat;
+    title.textContent = `${cat} (${wordDB[cat].length})`;
     catWrap.appendChild(title);
     wordDB[cat].forEach(w=>{
       const row = document.createElement('div');
       row.className = 'wl-word' + (selectedWord && selectedWord.token===w.token ? ' selected' : '');
       const iconWrap = document.createElement('div');
       iconWrap.className = 'wl-icon';
-      if (w.icon && w.icon.type==='img') { const img=document.createElement('img'); img.src=w.icon.value; iconWrap.appendChild(img); }
-      else {
-        let iv = (w.icon && w.icon.value) || pickBuiltinIcon(w.domains);
-        if (iv.trim().startsWith('<svg')) {
-            iv = `<img src="${svgToDataUri(iv)}" style="width:100%;height:100%;object-fit:contain;">`;
-        } else if (!iv.startsWith('<img') && iv.includes('<')) {
-            iv = escapeHtml(iv);
-        }
-        iconWrap.innerHTML = iv;
-      }
+      const iconImg = document.createElement('img');
+      iconImg.src = sanitizeIconImageSrc(w.icon, pickBuiltinIcon(w.domains, cat));
+      iconImg.style.width = '100%';
+      iconImg.style.height = '100%';
+      iconImg.style.objectFit = 'contain';
+      iconWrap.appendChild(iconImg);
       const chk = document.createElement('input');
       chk.type='checkbox'; chk.title='In globales "Alles vorlesen" einbeziehen';
       chk.checked = w._included !== false;
@@ -1414,28 +1721,32 @@ document.getElementById('updateSvgBtn').onclick = async ()=>{
   const t = I18N[uiLang];
   const status = document.getElementById('wlStatus');
   const jobs = [];
-  Object.values(wordDB).forEach(list=>list.forEach(w=>{ if (!w.icon || !w.icon._custom) jobs.push(w); }));
+  Object.keys(wordDB || {}).forEach(cat=>wordDB[cat].forEach(w=>{ if (!w.icon || !w.icon._custom) jobs.push({w, cat}); }));
   // 1) Real SVG update: local and free.
-  jobs.forEach(w=>{ w.icon = {type:'svg', value:pickBuiltinIcon(w.domains)}; });
+  jobs.forEach(({w, cat})=>{ w.icon = {type:'svg', value:pickBuiltinIcon(w.domains, cat)}; });
   saveDB(); renderWordlistPanel();
   status.textContent = t.iconsLocalDone;
-  // 2) AI images only when the tick is set AND the user confirms.
+  // 2) AI images only when the tick is set, a Pollinations API key is configured, AND the user confirms.
   const wantAi = document.getElementById('genPreviewImg').checked;
-  if (!wantAi || !jobs.length || !confirm(t.iconsConfirm.replace('{n}', jobs.length))){
+  const pollinationsKey = getSharedApiKey('pollinations') || '';
+  if (!wantAi || !pollinationsKey || !jobs.length || !confirm(t.iconsConfirm.replace('{n}', jobs.length))){
     setTimeout(()=>status.textContent='', 2500); return;
   }
   iconJobAbort = false;
   showBigLoader();
-  const pollinationsKey = getSharedApiKey('pollinations') || '';
-  const headers = {};
-  if (pollinationsKey) headers['Authorization'] = `Bearer ${pollinationsKey}`;
+  const headers = { 'Authorization': `Bearer ${pollinationsKey}` };
   let n = 0;
-  for (const w of jobs){
+  for (const {w} of jobs){
     if (iconJobAbort) break;
     status.textContent = `${t.genIcons} ${++n}/${jobs.length}`;
     try{
       const prompt = encodeURIComponent(`simple flat line icon, ${w.token}, minimal, monochrome, vector style`);
-      const r = await fetch(`https://gen.pollinations.ai/image/${prompt}?width=256&height=256&nologo=true&model=flux`, { headers });
+      const r = await fetch(`https://gen.pollinations.ai/image/${prompt}?width=256&height=256&nologo=true&model=flux`, {
+        headers,
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        cache: 'no-store'
+      });
       if ([401,402,429].includes(r.status)) break;            // auth / credits / rate limit: stop, don't hammer
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       w.icon = {type:'img', value:await compressImageToTinyBase64(await r.blob()), _custom:true};
@@ -1450,37 +1761,31 @@ document.getElementById('updateSvgBtn').onclick = async ()=>{
 
 document.getElementById('btnSearch').onclick = ()=> triggerSearch();
 document.getElementById('searchInput').addEventListener('keydown', e=>{ if (e.key==='Enter') triggerSearch(); });
-document.getElementById('btnReload').onclick = async ()=>{ 
+document.getElementById('btnReload').onclick = async ()=>{
   if (selectedWord) {
     const token = selectedWord.token;
+    const prevSource = (selectedWord.source || '').startsWith('api:') ? selectedWord.source.slice(4) : null;
     const status = document.getElementById('searchStatus');
-    status.textContent = 'Aktualisiere von API...';
+    status.textContent = 'Aktualisiere von API & prüfe mit SmartTutor...';
     showBigLoader();
-    const generated = await generateWordEntry(token, null);
+    const generated = await generateWordEntry(token, null, prevSource);
     hideBigLoader();
     if (generated && generated !== 'ABORTED') {
-       // Merge custom icon if it exists before overwriting
        if (selectedWord.icon && selectedWord.icon._custom) {
            generated.icon = selectedWord.icon;
        }
-       // Replace in DB
-       let replaced = false;
-       for (const cat in wordDB) {
-           const idx = wordDB[cat].findIndex(w => w.token === token);
-           if (idx !== -1) {
-               wordDB[cat][idx] = generated;
-               replaced = true;
-               break;
-           }
-       }
-       if (replaced) { saveDB(); renderWordlistPanel(); }
+       const curCat = getWordCategory(selectedWord);
+       const isGen = window.SmartTutor && window.SmartTutor.isGenericFachLabel(curCat);
+       const targetCat = (!curCat || isGen) ? (generated.category || resolveFachCategory(generated.domains, generated.defs, '', generated.token)) : (generated.category || curCat);
+       moveWordToCategory(generated, targetCat);
+       saveDB(); renderWordlistPanel();
        status.textContent = '';
        loadWord(generated);
     } else {
        status.textContent = 'Aktualisierung fehlgeschlagen.';
        setTimeout(()=>status.textContent='', 3000);
     }
-  } 
+  }
 };
 document.getElementById('btnClear').onclick = ()=>{
   document.getElementById('searchInput').value='';
@@ -1531,15 +1836,67 @@ document.getElementById('bigLoaderCancel').onclick = ()=>{
   hideBigLoader();
 };
 
+function populateCategoryDatalist(){
+  const dl = document.getElementById('nwCategoryList');
+  if (!dl) return;
+  const set = new Set(CANONICAL_FACH_CATEGORIES);
+  Object.keys(wordDB || {}).forEach(c => {
+    if (c && !(window.SmartTutor && window.SmartTutor.isGenericFachLabel(c))) set.add(c);
+  });
+  dl.innerHTML = '';
+  Array.from(set).sort((a,b) => a.localeCompare(b, 'de')).forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    dl.appendChild(opt);
+  });
+}
+
 function openNewWordModal(generated){
   pendingGeneratedWord = generated;
-  document.getElementById('nwCategory').value = 'GENERIERT';
+  populateCategoryDatalist();
+  const realCat = generated.category || resolveFachCategory(generated.domains, generated.defs, '', generated.token);
+  document.getElementById('nwCategory').value = realCat;
   document.getElementById('nwWord').value = generated.token;
   document.getElementById('nwGenus').value = generated.genus || '';
   document.getElementById('nwPlural').value = generated.plural || '';
   document.getElementById('nwDomains').value = (generated.domains || []).join(', ');
-  document.getElementById('newWordModalScrim').classList.add('show');
 
+  const isOpenSrc = typeof generated.source === 'string' && (generated.source.startsWith('wiktionary') || generated.source.startsWith('wikipedia'));
+  const modalTitle = document.getElementById('newWordModalTitle');
+  const modalHint = document.getElementById('newWordModalHint');
+  if (modalTitle) {
+    modalTitle.textContent = isOpenSrc ? 'Neuer Fachbegriff gefunden (Open-Source)' : 'Neues Wort gefunden (KI)';
+  }
+  if (modalHint) {
+    modalHint.textContent = isOpenSrc
+      ? 'Über vertrauenswürdige Open-Source-Quellen (Wiktionary / Wikipedia, ohne KI-Schlüssel & ohne Tracking) geladen. Der Wortliste dauerhaft hinzufügen?'
+      : 'Von der KI generiert & durch SmartTutor geprüft. Der Wortliste hinzufügen?';
+  }
+
+  const notice = document.getElementById('nwAuditNotice');
+  if (notice) {
+    notice.className = 'nw-audit-notice';
+    const st = generated._auditStatus;
+    const iss = Array.isArray(generated._auditIssues) ? generated._auditIssues : [];
+    if (st === 'verified') {
+      notice.classList.add('ok');
+      notice.textContent = generated._wikiVerified
+        ? `✓ SmartTutor: Durch deutsche Sprachregeln & Wiktionary verifiziert (${realCat}).`
+        : `✓ SmartTutor: Durch deutsche Sprachregeln geprüft (${realCat}).`;
+    } else if (st === 'auto-fixed') {
+      notice.classList.add('ok');
+      notice.textContent = `✓ SmartTutor: Artikel, Plural oder Kategorie automatisch korrigiert (${realCat}).`;
+    } else if (st === 'flagged') {
+      notice.classList.add('warn');
+      notice.textContent = iss.length
+        ? `⚠ SmartTutor-Hinweis: ${iss.join(' · ')}`
+        : '⚠ SmartTutor: Bitte Angaben kurz prüfen.';
+    } else {
+      notice.textContent = '';
+    }
+  }
+
+  document.getElementById('newWordModalScrim').classList.add('show');
   renderWordCard(generated);
 }
 document.getElementById('cancelNewWord').onclick = ()=>{
@@ -1548,16 +1905,30 @@ document.getElementById('cancelNewWord').onclick = ()=>{
 };
 document.getElementById('confirmNewWord').onclick = ()=>{
   if (!pendingGeneratedWord) return;
-  const cat = document.getElementById('nwCategory').value.trim() || 'GENERIERT';
   const domains = document.getElementById('nwDomains').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const w = {
+  const finalDomains = domains.length ? domains : (pendingGeneratedWord.domains || []);
+  let cat = document.getElementById('nwCategory').value.trim().toUpperCase();
+  if (!cat || (window.SmartTutor && window.SmartTutor.isGenericFachLabel(cat))) {
+    cat = resolveFachCategory(finalDomains, pendingGeneratedWord.defs, '', pendingGeneratedWord.token);
+  }
+  let w = {
     ...pendingGeneratedWord,
+    category: cat,
     genus: document.getElementById('nwGenus').value || null,
-    plural: document.getElementById('nwPlural').value.trim(),
-    domains: domains.length ? domains : pendingGeneratedWord.domains
+    plural: document.getElementById('nwPlural').value.trim().replace(/^(der|die|das)\s+/i, ''),
+    domains: finalDomains
   };
-  if (!wordDB[cat]) wordDB[cat] = [];
-  wordDB[cat].push(w);
+  if (!w.icon || !w.icon._custom) {
+    w.icon = { type: 'svg', value: pickBuiltinIcon(w.domains, cat) };
+  }
+  if (window.SmartTutor) {
+    const localAudit = window.SmartTutor.auditFachEntry(w, cat, Object.keys(wordDB || {}));
+    const fixed = window.SmartTutor.applyFachSafeFixes(w, { ...localAudit, wikiChecked: !!w._wikiVerified });
+    w = fixed.entry;
+    if (fixed.targetCategory) cat = fixed.targetCategory;
+    w.category = cat;
+  }
+  moveWordToCategory(w, cat);
   saveDB(); renderWordlistPanel(); renderDiscoverStrip();
   loadWord(w);
   document.getElementById('newWordModalScrim').classList.remove('show');
@@ -1599,6 +1970,10 @@ function getSharedApiKey(provider) {
   return '';
 }
 
+function hasConfiguredFachAiKeys(){
+  return PROVIDER_FAILOVER_ORDER.some(p => !!getSharedApiKey(p));
+}
+
 function availableProvidersInOrder(){
   let mainProvider = menuState.provider;
   try {
@@ -1608,43 +1983,43 @@ function availableProvidersInOrder(){
   } catch(e) {}
   const selected = mainProvider || 'pollinations';
   const ordered = [selected, ...PROVIDER_FAILOVER_ORDER.filter(p => p !== selected)];
-  return ordered.filter(p => p === "pollinations" || getSharedApiKey(p));
+  // Privacy & Keyless Guard: only send prompts to AI providers with an explicitly configured API key.
+  return ordered.filter(p => p !== "wiktionary" && !!getSharedApiKey(p));
 }
 
 async function callProviderRaw(provider, sys, userMsg, signal){
   if (provider === 'pollinations'){
     const apiKey = getSharedApiKey('pollinations');
-    if (apiKey) {
-      const r = await fetch(PROVIDER_ENDPOINTS.pollinations, {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
-        body: JSON.stringify({ model: DEFAULT_MODELS.pollinations, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
-        signal
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      const text = data.choices?.[0]?.message?.content || '';
-      if (!text) throw new Error('Leere Antwort vom Anbieter.');
-      return text;
+    if (!apiKey) {
+      throw new Error('Pollinations erfordert einen konfigurierten API-Schlüssel.');
     }
-    const r = await fetch('https://text.pollinations.ai/', {
+    const r = await fetch(PROVIDER_ENDPOINTS.pollinations, {
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ model:'openai-fast', jsonMode:true, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
+      credentials:'omit',
+      referrerPolicy:'no-referrer',
+      cache:'no-store',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+      body: JSON.stringify({ model: DEFAULT_MODELS.pollinations, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
       signal
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const text = await r.text();
+    const data = await r.json();
+    const text = data.choices?.[0]?.message?.content || '';
     if (!text) throw new Error('Leere Antwort vom Anbieter.');
     return text;
   }
   if (provider === 'cloudflare'){
     const raw = getSharedApiKey('cloudflare');
     const [accountId, token] = raw.split(':');
-    if (!accountId || !token) throw new Error('Cloudflare-Schlüssel muss im Format "AccountID:APIToken" vorliegen.');
-    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`, {
+    if (!accountId || !token || !/^[A-Za-z0-9_-]{8,64}$/.test(accountId.trim())) {
+      throw new Error('Cloudflare-Schlüssel muss im Format "AccountID:APIToken" vorliegen.');
+    }
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId.trim())}/ai/v1/chat/completions`, {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      credentials:'omit',
+      referrerPolicy:'no-referrer',
+      cache:'no-store',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token.trim()},
       body: JSON.stringify({ model: DEFAULT_MODELS.cloudflare, messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
       signal
     });
@@ -1658,6 +2033,9 @@ async function callProviderRaw(provider, sys, userMsg, signal){
   if (!endpoint) throw new Error('Unbekannter API-Anbieter.');
   const r = await fetch(endpoint, {
     method:'POST',
+    credentials:'omit',
+    referrerPolicy:'no-referrer',
+    cache:'no-store',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+getSharedApiKey(provider)},
     body: JSON.stringify({ model: DEFAULT_MODELS[provider], messages:[{role:'system',content:sys},{role:'user',content:userMsg}] }),
     signal
@@ -1669,8 +2047,11 @@ async function callProviderRaw(provider, sys, userMsg, signal){
   return text;
 }
 
-async function callWithProviderFailover(sys, userMsg, onSwitch, signal, validator){
-  const providers = availableProvidersInOrder();
+async function callWithProviderFailover(sys, userMsg, onSwitch, signal, validator, skipProvider){
+  let providers = availableProvidersInOrder();
+  if (skipProvider && providers.length > 1) {
+    providers = providers.filter(p => p !== skipProvider).concat([skipProvider]);
+  }
   if (!providers.length) throw new Error('Kein nutzbarer API-Anbieter konfiguriert.');
   let lastErr = null;
   for (let i = 0; i < providers.length; i++){
@@ -1711,25 +2092,146 @@ function extractBalancedJson(text, openChar, closeChar) {
   throw new Error('Unvollständiges JSON in der Antwort gefunden.');
 }
 
-async function generateWordEntry(token, signal){
-  const sys = `Du bist ein deutsches Fachwörterbuch. Der gesuchte Begriff "${token}" ist als deutsches Wort zu behandeln — antworte ausschließlich auf Deutsch, auch wenn der Begriff wie ein Fremdwort aussieht. Bestimme das grammatische Geschlecht (Genus: "der", "die" oder "das"; NUR falls es ein Substantiv ist. Bei Verben oder Adjektiven zwingend null ausgeben!), 1 bis 3 relevante Wissensbereiche (z.B. KI, Cybersicherheit, Medizin, Finanzen...), eine kurze Definition (1-2 Sätze) je Bereich sowie die Pluralform des Begriffs OHNE Artikel (z.B. "Stethoskope", nicht "die Stethoskope"). Antworte AUSSCHLIESSLICH mit striktem JSON im Format: \n{"genus":"der|die|das|null","domains":["..."],"defs":{"Bereich":"Definition"},"plural":"..."}`;
+async function buildFachEntryFromFreeLexicon(token, signal, statusMsgPrefix){
+  if (!window.SmartTutor || typeof window.SmartTutor.fetchWiktionaryRecord !== 'function') return null;
+  const isOnlineNow = (typeof isReallyOnline !== 'undefined' && isReallyOnline) || navigator.onLine;
+  if (!isOnlineNow) return null;
+  const status = document.getElementById('searchStatus');
+  if (status && statusMsgPrefix) status.textContent = statusMsgPrefix;
+  const wikiRec = await window.SmartTutor.fetchWiktionaryRecord(token, signal);
+  if (!wikiRec) return null;
+  if (typeof isReallyOnline !== 'undefined' && !isReallyOnline) {
+    isReallyOnline = true;
+    if (typeof updateStatusDot === 'function') updateStatusDot();
+  }
+  const rawCat = wikiRec.category || 'FACHWISSEN';
+  const defsObj = {};
+  defsObj[rawCat] = wikiRec.definitionPrimaryDe;
+  const resolvedCategory = resolveFachCategory([rawCat], defsObj, rawCat, wikiRec.correctedWord || token);
+  if (resolvedCategory !== rawCat) {
+    delete defsObj[rawCat];
+    defsObj[resolvedCategory] = wikiRec.definitionPrimaryDe;
+  }
+  const cleanPl = String(wikiRec.plural || '').replace(/^(der|die|das)\s+/i, '').trim();
+  const plural = (cleanPl === '—' || cleanPl === '-') ? '' : cleanPl;
+  const fachEntry = {
+    token: wikiRec.genus ? capitalize(wikiRec.correctedWord || token) : (wikiRec.correctedWord || token),
+    genus: wikiRec.genus || null,
+    plural,
+    category: resolvedCategory,
+    domains: [resolvedCategory],
+    defs: defsObj,
+    icon: { type: 'svg', value: pickBuiltinIcon([resolvedCategory], resolvedCategory) },
+    translations: {},
+    source: wikiRec.source || 'wiktionary:de',
+    _auditStatus: 'verified',
+    _wikiVerified: true
+  };
+  if (status) status.textContent = 'Eintrag über Wiktionary / Wikipedia geladen (kostenlos & ohne API-Schlüssel).';
+  return fachEntry;
+}
+
+async function generateWordEntry(token, signal, skipProvider){
+  let selectedProvider = menuState.provider;
+  try {
+    const m = JSON.parse(localStorage.getItem('iaDictMenuState'));
+    if (m && m.apiProvider) selectedProvider = m.apiProvider;
+    else if (m && m.provider) selectedProvider = m.provider;
+  } catch (e) {}
+
+  if (!hasConfiguredFachAiKeys() || (selectedProvider === 'wiktionary' && skipProvider !== 'wiktionary')) {
+    try {
+      const directWiki = await buildFachEntryFromFreeLexicon(
+        token,
+        signal,
+        'Lade Fachbegriff über vertrauenswürdige Open-Source-Quellen (Wiktionary / Wikipedia — ohne KI-Schlüssel) …'
+      );
+      if (directWiki) return directWiki;
+      if (!hasConfiguredFachAiKeys()) return null;
+    } catch (wDirectErr) {
+      if (wDirectErr && wDirectErr.name === 'AbortError') return 'ABORTED';
+      if (!hasConfiguredFachAiKeys()) return null;
+    }
+  }
+
+  const catListStr = CANONICAL_FACH_CATEGORIES.join(', ');
+  const sys = `Du bist ein präzises deutsches Fachwörterbuch. Der gesuchte Begriff "${token}" ist als deutsches Fachwort zu behandeln — antworte ausschließlich auf Deutsch, auch wenn der Begriff ein Fremdwort oder Anglizismus ist.
+1. Bestimme die passende Hauptkategorie ("category") — wähle bevorzugt eine aus [${catListStr}] oder ein ebenso präzises deutsches Fachgebiet (NIEMALS "Allgemein", "Generiert" oder "Sonstiges").
+2. Bestimme das grammatische Geschlecht ("genus": "der", "die" oder "das"; NUR falls es ein Substantiv ist — bei Verben oder Adjektiven zwingend null).
+3. Nenne 1 bis 3 konkrete Fachbereiche ("domains", z.B. Medizin, Kardiologie, KI, Cybersicherheit, Steuerrecht...).
+4. Gib je Fachbereich eine präzise Definition (1-2 Sätze) in "defs" an.
+5. Gib die Pluralform OHNE Artikel in "plural" an (z.B. "Stethoskope", nicht "die Stethoskope"; falls kein Plural existiert: "").
+Antworte AUSSCHLIESSLICH mit striktem JSON:
+{"category":"...","genus":"der|die|das|null","domains":["..."],"defs":{"Bereich":"Definition"},"plural":"..."}`;
   try{
     const status = document.getElementById('searchStatus');
-    const { rawText } = await callWithProviderFailover(sys, 'Begriff: '+token, (failed, next)=>{
+    const { rawText, provider } = await callWithProviderFailover(sys, 'Begriff: '+token, (failed, next)=>{
       if (status) status.textContent = `Anbieter «${failed}» hat geantwortet, aber das Format war ungültig oder er war nicht erreichbar — wechsle automatisch zu «${next}» …`;
     }, signal, (text) => {
       const parsedStr = extractBalancedJson(text, '{', '}');
       const parsed = JSON.parse(parsedStr);
       if (!parsed.domains || !parsed.defs) throw new Error("Fehlende JSON-Felder");
-    });
+    }, skipProvider);
     const parsedStr = extractBalancedJson(rawText, '{', '}');
     const parsed = JSON.parse(parsedStr);
     if (!parsed.domains || !parsed.defs) return null;
-    const genus = ['der','die','das'].includes(parsed.genus) ? parsed.genus : null;
-    return { token, genus, plural:parsed.plural||'', domains:parsed.domains, defs:parsed.defs, icon:{type:'svg', value:pickBuiltinIcon(parsed.domains)}, translations:{} };
+
+    const genus = ['der','die','das'].includes(String(parsed.genus || '').trim().toLowerCase())
+      ? String(parsed.genus).trim().toLowerCase()
+      : null;
+    const rawPlural = String(parsed.plural || '').replace(/^(der|die|das)\s+/i, '').trim();
+    const plural = (rawPlural === '—' || rawPlural === '-' || /^null$/i.test(rawPlural)) ? '' : rawPlural;
+    const cleanDomains = (Array.isArray(parsed.domains) ? parsed.domains : Object.keys(parsed.defs || {}))
+      .map(d => String(d || '').trim())
+      .filter(d => d && !(window.SmartTutor && window.SmartTutor.isGenericFachLabel(d)));
+    const domains = cleanDomains.length ? cleanDomains : Object.keys(parsed.defs || {}).filter(Boolean);
+    const resolvedCategory = resolveFachCategory(domains, parsed.defs, parsed.category || '', token);
+
+    let entry = {
+      token: genus ? capitalize(token) : token,
+      genus,
+      plural,
+      category: resolvedCategory,
+      domains,
+      defs: parsed.defs,
+      icon: { type:'svg', value:pickBuiltinIcon(domains, resolvedCategory) },
+      translations: {},
+      source: 'api:' + (provider || 'ai')
+    };
+
+    // Real-time SmartTutor Deep Check (Tier 1 German rules & categorization + Tier 2 Wiktionary cross-check)
+    if (window.SmartTutor) {
+      try {
+        if (status) status.textContent = 'SmartTutor prüft Begriff & Kategorie …';
+        const existingCats = Object.keys(wordDB || {});
+        const isOnlineNow = (typeof isReallyOnline !== 'undefined') ? isReallyOnline : navigator.onLine;
+        const audit = isOnlineNow
+          ? await window.SmartTutor.verifyFachOnline(entry, resolvedCategory, existingCats)
+          : window.SmartTutor.auditFachEntry(entry, resolvedCategory, existingCats);
+        const healed = window.SmartTutor.applyFachSafeFixes(entry, audit);
+        entry = healed.entry;
+        if (healed.targetCategory) entry.category = healed.targetCategory;
+        entry.icon = { type:'svg', value:pickBuiltinIcon(entry.domains, entry.category) };
+      } catch (auditErr) {
+        console.warn('SmartTutor Echtzeit-Prüfung (Fachwörterbuch) übersprungen:', auditErr);
+      }
+    }
+
+    return entry;
   }catch(e){
     if (e.name === 'AbortError') return 'ABORTED';
-    console.error('generateWordEntry failed', e);
+    console.warn('generateWordEntry AI failed, trying free Wiktionary/Wikipedia fallback:', e);
+    try {
+      const fallbackEntry = await buildFachEntryFromFreeLexicon(
+        token,
+        signal,
+        'KI nicht erreichbar / kein Schlüssel — lade über Wiktionary & Wikipedia …'
+      );
+      if (fallbackEntry) return fallbackEntry;
+    } catch (wErr) {
+      if (wErr && wErr.name === 'AbortError') return 'ABORTED';
+      console.warn('Wiktionary Fach fallback failed:', wErr);
+    }
     return null;
   }
 }
@@ -1804,22 +2306,72 @@ function compressImageToTinyBase64(file) {
   });
 }
 
+function renderAuditBadge(w){
+  const badge = document.getElementById('auditBadge');
+  if (!badge) return;
+  badge.className = 'audit-badge';
+  badge.textContent = '';
+  badge.title = '';
+  if (!w) return;
+  let status = w._auditStatus;
+  let issues = Array.isArray(w._auditIssues) ? w._auditIssues : [];
+  if (!status && window.SmartTutor) {
+    const cat = getWordCategory(w);
+    const quick = window.SmartTutor.auditFachEntry(w, cat, Object.keys(wordDB || {}));
+    status = quick.status;
+    issues = (quick.issues || []).map(i => i.msg);
+  }
+  if (status === 'verified') {
+    badge.classList.add('verified');
+    badge.textContent = w._wikiVerified ? '✓ Geprüft · Wiki' : '✓ Geprüft';
+    badge.title = w._wikiVerified
+      ? 'SmartTutor: Durch Regeln, Kategorie-Check & deutsches Wiktionary verifiziert.'
+      : 'SmartTutor: Durch deutsche Sprachregeln & Kategorie-Check geprüft.';
+  } else if (status === 'auto-fixed') {
+    badge.classList.add('auto-fixed');
+    badge.textContent = '✓ Korrigiert';
+    badge.title = 'SmartTutor hat Artikel, Plural oder Kategorie automatisch korrigiert.';
+  } else if (status === 'flagged') {
+    badge.classList.add('flagged');
+    badge.textContent = '⚠ Prüfen';
+    badge.title = issues.length
+      ? ('SmartTutor-Hinweis:\n• ' + issues.join('\n• ') + '\n(Klicken für SmartTutor-Scan oder ↻ Neu laden)')
+      : 'SmartTutor: Eintrag sollte überprüft werden.';
+  }
+}
+
 function renderWordCard(w){
   const card = document.getElementById('wordCard');
   card.classList.add('show');
-  const ic = w.icon || {type:'svg', value:pickBuiltinIcon(w.domains)};
-  const svgData = ic.type === 'svg' ? svgToDataUri(ic.value) : ic.value;
-  document.getElementById('wordIcon').innerHTML = `
-    <img src="${svgData}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;background:#2a2a2f;">
-    <button class="edit-icon-btn" onclick="triggerIconUpload()" title="Icon bearbeiten">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-    </button>
-  `;
+  const wordCat = getWordCategory(w) || w.category || resolveFachCategory(w.domains, w.defs, '', w.token);
+  const ic = w.icon || {type:'svg', value:pickBuiltinIcon(w.domains, wordCat)};
+  const safeIconSrc = sanitizeIconImageSrc(ic, pickBuiltinIcon(w.domains, wordCat));
+  const wordIconEl = document.getElementById('wordIcon');
+  wordIconEl.innerHTML = '';
+  const cardImg = document.createElement('img');
+  cardImg.src = safeIconSrc;
+  cardImg.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:6px;background:#2a2a2f;';
+  const editIconBtn = document.createElement('button');
+  editIconBtn.className = 'edit-icon-btn';
+  editIconBtn.type = 'button';
+  editIconBtn.title = 'Icon bearbeiten';
+  editIconBtn.onclick = triggerIconUpload;
+  editIconBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+  wordIconEl.appendChild(cardImg);
+  wordIconEl.appendChild(editIconBtn);
   document.getElementById('wordTitle').textContent = w.token;
+  renderAuditBadge(w);
 
   const domainRow = document.getElementById('domainRow');
   domainRow.innerHTML = '';
-  w.domains.forEach(d=>{
+  if (wordCat) {
+    const catChip = document.createElement('span');
+    catChip.className = 'domain-chip cat-pill';
+    catChip.title = 'Kategorie (Fachgebiet)';
+    catChip.textContent = wordCat;
+    domainRow.appendChild(catChip);
+  }
+  (w.domains || []).forEach(d=>{
     const chip = document.createElement('span');
     chip.className='domain-chip'; chip.textContent=d;
     domainRow.appendChild(chip);
@@ -1934,15 +2486,17 @@ async function getPreviewImage(token, domain, defText) {
 }
 
 async function loadPreviewImage(token, domain, defText) {
+  const pollinationsKey = getSharedApiKey('pollinations') || '';
+  if (!pollinationsKey) {
+    throw new Error('Vorschaubilder erfordern einen konfigurierten Pollinations-API-Schlüssel (Datenschutz-Modus ohne KI-Schlüssel aktiv).');
+  }
   const prompt = encodeURIComponent(
     `illustration for a dictionary definition, ${token} (${domain}): ${(defText||'').slice(0,200)}, simple flat style`
   );
   const url = `https://gen.pollinations.ai/image/${prompt}?width=384&height=256&nologo=true&model=flux`;
-  const pollinationsKey = getSharedApiKey('pollinations') || '';
-  const headers = {};
-  if (pollinationsKey) headers['Authorization'] = `Bearer ${pollinationsKey}`;
+  const headers = { 'Authorization': `Bearer ${pollinationsKey}` };
   
-  const r = await fetch(url, { headers });
+  const r = await fetch(url, { headers, credentials: 'omit', referrerPolicy: 'no-referrer' });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const blob = await r.blob();
   return URL.createObjectURL(blob);
@@ -1950,9 +2504,23 @@ async function loadPreviewImage(token, domain, defText) {
 
 async function translateText(text, targetLang){
   if (!text) return '';
+  if (window.SmartTutor && typeof window.SmartTutor.fetchWikidataTranslation === 'function' && typeof selectedWord !== 'undefined' && selectedWord && selectedWord.token) {
+    try {
+      const wd = await window.SmartTutor.fetchWikidataTranslation(selectedWord.token, targetLang);
+      if (wd && (wd.term || wd.definition)) {
+        if (!hasConfiguredFachAiKeys()) {
+          return wd.definition ? `${wd.term || selectedWord.token}: ${wd.definition}` : `${wd.term} — ${text}`;
+        }
+      }
+    } catch (_) {}
+  }
+  if (!hasConfiguredFachAiKeys()) {
+    return text + ' (Nur Open-Source-Quellen ohne KI-Schlüssel aktiv)';
+  }
   try{
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-    const r = await fetch(url);
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     return data[0].map(seg=>seg[0]).join('');
   }catch(e){
@@ -2190,13 +2758,47 @@ document.getElementById('closeLangModal').onclick = closeLangModal;
 langScrim.onclick = closeLangModal;
 document.getElementById('langSearchInput').addEventListener('input', (e)=> renderLangList(e.target.value));
 
+const LOCAL_DISCOVER_SUGGESTIONS = [
+  { token: 'Binnendifferenzierung', domain: 'Didaktik' },
+  { token: 'Kompetenzorientierung', domain: 'Pädagogik' },
+  { token: 'Photosynthese', domain: 'Biologie' },
+  { token: 'Algorithmus', domain: 'Informatik' },
+  { token: 'Anamnese', domain: 'Medizin' },
+  { token: 'Thermodynamik', domain: 'Physik' },
+  { token: 'Gewaltenteilung', domain: 'Recht & Politik' },
+  { token: 'Inflation', domain: 'Wirtschaft' },
+  { token: 'Ökosystem', domain: 'Umwelt' },
+  { token: 'Epistemologie', domain: 'Philosophie' }
+];
+
 async function renderDiscoverStrip(){
   const strip = document.getElementById('discoverStrip');
   strip.innerHTML = '';
+  const titleEl = document.getElementById('discoverTitle');
+  const existingSet = new Set(Object.values(wordDB || {}).flat().map(w => String(w.token || '').toLowerCase()));
+  const renderItems = (items) => {
+    strip.innerHTML = '';
+    items.forEach(it => {
+      const card = document.createElement('div');
+      card.className = 'discover-card';
+      card.innerHTML = `<div class="dc-token">${escapeHtml(it.token)}</div><div class="dc-domain">${escapeHtml(it.domain || '')}</div>`;
+      card.onclick = () => { document.getElementById('searchInput').value = it.token; triggerSearch(); };
+      strip.appendChild(card);
+    });
+  };
+
+  if (!hasConfiguredFachAiKeys()) {
+    if (titleEl) titleEl.textContent = 'Fachbegriffe entdecken (Open-Source / Wiktionary)';
+    const localItems = LOCAL_DISCOVER_SUGGESTIONS.filter(it => !existingSet.has(it.token.toLowerCase())).slice(0, 8);
+    renderItems(localItems.length ? localItems : LOCAL_DISCOVER_SUGGESTIONS.slice(0, 8));
+    startDiscoverAutoScroll();
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = 'Weitere Wörter entdecken (KI)';
   const seedWords = Object.values(wordDB).flat().map(w=>w.token).slice(0,5).join(', ') || 'KI, Cybersicherheit';
   const sys = `Schlage 8 kurze Fachbegriffe vor, die zu folgenden Bereichen oder bereits bekannten Wörtern passen (${seedWords}). Antworte auf Deutsch. Antworte AUSSCHLIESSLICH mit JSON: {"items":[{"token":"...","domain":"..."}]}`;
   try{
-
     const { rawText } = await callWithProviderFailover(sys, 'Vorschläge bitte.', null, null, (text) => {
       const parsedStr = extractBalancedJson(text, '{', '}');
       const parsed = JSON.parse(parsedStr);
@@ -2205,15 +2807,10 @@ async function renderDiscoverStrip(){
     const parsedStr = extractBalancedJson(rawText, '{', '}');
     const parsed = JSON.parse(parsedStr);
     const items = parsed?.items || [];
-    items.forEach(it=>{
-      const card = document.createElement('div');
-      card.className='discover-card';
-      card.innerHTML = `<div class="dc-token">${escapeHtml(it.token)}</div><div class="dc-domain">${escapeHtml(it.domain||'')}</div>`;
-      card.onclick = ()=>{ document.getElementById('searchInput').value = it.token; triggerSearch(); };
-      strip.appendChild(card);
-    });
+    renderItems(items);
   }catch(e){
-    console.error('renderDiscoverStrip failed', e);
+    console.warn('renderDiscoverStrip AI fallback to local suggestions:', e);
+    renderItems(LOCAL_DISCOVER_SUGGESTIONS.slice(0, 8));
   }
   startDiscoverAutoScroll();
 }
@@ -2235,11 +2832,278 @@ function startDiscoverAutoScroll(){
   }, 45);
 }
 
+/* ── SmartTutor Self-Diagnosing & Deep-Check UI Controller (Fachwörterbuch) ── */
+(function setupFachSmartTutorUI() {
+  const statusEl = document.getElementById('smartTutorStatus');
+  const autoChk = document.getElementById('smartTutorAutoScan');
+  const quickBtn = document.getElementById('stQuickScanBtn');
+  const deepBtn = document.getElementById('stDeepScanBtn');
+  const reportWrap = document.getElementById('stReportWrap');
+  const summaryEl = document.getElementById('stReportSummary');
+  const applyAllBtn = document.getElementById('stApplyAllFixesBtn');
+  const exportBtn = document.getElementById('stExportReportBtn');
+  const listEl = document.getElementById('stReportList');
+  const badgeEl = document.getElementById('auditBadge');
+  if (!statusEl || !quickBtn || !deepBtn) return;
+
+  const PREF_AUTO_KEY = 'wlSmartTutorAuto';
+  const LAST_SCAN_KEY = 'wlSmartTutorLastScan';
+  const LAST_SUMMARY_KEY = 'wlSmartTutorLastSummary';
+  let lastReport = null;
+
+  if (autoChk) {
+    autoChk.checked = localStorage.getItem(PREF_AUTO_KEY) !== 'false';
+    autoChk.addEventListener('change', () => {
+      try { localStorage.setItem(PREF_AUTO_KEY, autoChk.checked ? 'true' : 'false'); } catch (e) {}
+    });
+  }
+  const savedSummary = localStorage.getItem(LAST_SUMMARY_KEY);
+  if (savedSummary) statusEl.textContent = savedSummary;
+
+  if (badgeEl) {
+    badgeEl.addEventListener('click', () => {
+      const searchSt = document.getElementById('searchStatus');
+      if (badgeEl.title && searchSt) {
+        searchSt.textContent = badgeEl.title.replace(/\n/g, ' ');
+      }
+      if (badgeEl.classList.contains('flagged') && settingsModal) {
+        settingsModal.classList.add('show');
+        const sec = document.getElementById('smartTutorSection');
+        if (sec) sec.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  }
+
+  function applyItemFix(item) {
+    if (!window.SmartTutor || !wordDB) return false;
+    const targetEntry = findWordByToken(item.word);
+    if (!targetEntry) return false;
+    const oldCat = getWordCategory(targetEntry) || item.category;
+    const healed = window.SmartTutor.applyFachSafeFixes(targetEntry, {
+      issues: item.issues,
+      fixes: item.fixes,
+      wikiChecked: item.wikiChecked
+    });
+    const newEntry = healed.entry;
+    const finalCat = healed.targetCategory || oldCat || resolveFachCategory(newEntry.domains, newEntry.defs, '', newEntry.token);
+    if (!newEntry.icon || !newEntry.icon._custom) {
+      newEntry.icon = { type: 'svg', value: pickBuiltinIcon(newEntry.domains, finalCat) };
+    }
+    moveWordToCategory(newEntry, finalCat);
+    if (selectedWord && selectedWord.token && selectedWord.token.toLowerCase() === item.word.toLowerCase()) {
+      selectedWord = newEntry;
+      renderWordCard(newEntry);
+    }
+    return true;
+  }
+
+  function renderReport(report) {
+    lastReport = report;
+    if (!reportWrap || !summaryEl || !listEl) return;
+    const sumText = `Geprüft: ${report.totalScanned} · OK: ${report.verified} · Korrigierbar: ${report.fixable} · Markiert: ${report.flagged}`;
+    summaryEl.textContent = sumText;
+    statusEl.textContent = `Letzter Scan (${new Date().toLocaleDateString('de-DE')}): ${sumText}`;
+    try {
+      localStorage.setItem(LAST_SCAN_KEY, String(Date.now()));
+      localStorage.setItem(LAST_SUMMARY_KEY, statusEl.textContent);
+    } catch (e) {}
+
+    reportWrap.style.display = 'block';
+    const fixableItems = report.findings.filter(f => f.canAutoFix);
+    if (applyAllBtn) {
+      applyAllBtn.style.display = fixableItems.length ? 'inline-flex' : 'none';
+      const lbl = document.getElementById('stApplyAllFixesLabel');
+      if (lbl) lbl.textContent = `Alle ${fixableItems.length} sicheren Fixes`;
+    }
+
+    listEl.innerHTML = '';
+    if (!report.findings.length) {
+      const okDiv = document.createElement('div');
+      okDiv.className = 'api-hint';
+      okDiv.style.color = 'var(--accent-green)';
+      okDiv.textContent = '✓ Alle Fachbegriffe & Kategorien sind in Ordnung.';
+      listEl.appendChild(okDiv);
+      return;
+    }
+
+    report.findings.forEach((item) => {
+      const card = document.createElement('div');
+      card.className = 'st-item';
+
+      const head = document.createElement('div');
+      head.className = 'st-item-head';
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = item.displayWord;
+      const srcSpan = document.createElement('span');
+      srcSpan.className = 'st-item-src';
+      srcSpan.textContent = item.category || item.source;
+      head.appendChild(titleSpan);
+      head.appendChild(srcSpan);
+
+      const issDiv = document.createElement('div');
+      issDiv.className = 'st-item-issues';
+      issDiv.textContent = (item.issues || []).map(i => '• ' + i.msg).join(' ');
+
+      const actions = document.createElement('div');
+      actions.className = 'st-item-actions';
+
+      if (item.canAutoFix) {
+        const fixBtn = document.createElement('button');
+        fixBtn.type = 'button';
+        fixBtn.className = 'st-mini-btn';
+        fixBtn.textContent = '✓ Korrigieren';
+        fixBtn.addEventListener('click', () => {
+          if (applyItemFix(item)) {
+            saveDB();
+            renderWordlistPanel();
+            card.remove();
+            statusEl.textContent = `✓ „${item.displayWord}“ korrigiert & einsortiert.`;
+          }
+        });
+        actions.appendChild(fixBtn);
+      }
+
+      const reloadBtn = document.createElement('button');
+      reloadBtn.type = 'button';
+      reloadBtn.className = 'st-mini-btn';
+      reloadBtn.textContent = '↻ Mit anderer KI laden';
+      reloadBtn.addEventListener('click', async () => {
+        const onlineNow = (typeof isReallyOnline !== 'undefined') ? isReallyOnline : navigator.onLine;
+        if (!onlineNow) { statusEl.textContent = 'Offline — Neu laden nicht möglich.'; return; }
+        const existing = findWordByToken(item.word);
+        if (settingsModal) settingsModal.classList.remove('show');
+        const prevSrc = (item.source || '').startsWith('api:') ? item.source.slice(4) : null;
+        showBigLoader();
+        const generated = await generateWordEntry(item.word, null, prevSrc);
+        hideBigLoader();
+        if (generated && generated !== 'ABORTED') {
+          if (existing && existing.icon && existing.icon._custom) generated.icon = existing.icon;
+          moveWordToCategory(generated, generated.category || resolveFachCategory(generated.domains, generated.defs, '', generated.token));
+          saveDB(); renderWordlistPanel(); loadWord(generated);
+        }
+      });
+      actions.appendChild(reloadBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'st-mini-btn danger';
+      delBtn.textContent = '✕ Löschen';
+      delBtn.addEventListener('click', () => {
+        if (!confirm(`Begriff „${item.displayWord}“ aus dem Fachwörterbuch löschen?`)) return;
+        for (const c of Object.keys(wordDB || {})) {
+          const idx = wordDB[c].findIndex(w => w.token && w.token.toLowerCase() === item.word.toLowerCase());
+          if (idx !== -1) {
+            wordDB[c].splice(idx, 1);
+            if (!wordDB[c].length) delete wordDB[c];
+            break;
+          }
+        }
+        saveDB(); renderWordlistPanel();
+        card.remove();
+        statusEl.textContent = `„${item.displayWord}“ gelöscht.`;
+      });
+      actions.appendChild(delBtn);
+
+      card.appendChild(head);
+      card.appendChild(issDiv);
+      card.appendChild(actions);
+      listEl.appendChild(card);
+    });
+  }
+
+  async function runScan(online) {
+    if (!window.SmartTutor) { statusEl.textContent = 'SmartTutor-Modul nicht geladen.'; return null; }
+    const onlineNow = (typeof isReallyOnline !== 'undefined') ? isReallyOnline : navigator.onLine;
+    if (online && !onlineNow) { statusEl.textContent = 'Offline — bitte Schnell-Scan (Offline) nutzen.'; return null; }
+    quickBtn.disabled = true;
+    deepBtn.disabled = true;
+    statusEl.textContent = online ? 'Starte Tiefen-Scan (Regeln, Kategorien & Wiktionary) …' : 'Starte Offline-Schnell-Scan …';
+    try {
+      const report = await window.SmartTutor.scanFachWordDB(wordDB, {
+        online: !!online,
+        onProgress: (msgText) => { statusEl.textContent = msgText; }
+      });
+      renderReport(report);
+      return report;
+    } catch (err) {
+      statusEl.textContent = 'Scan fehlgeschlagen: ' + (err.message || String(err));
+      return null;
+    } finally {
+      quickBtn.disabled = false;
+      deepBtn.disabled = false;
+    }
+  }
+
+  quickBtn.addEventListener('click', () => runScan(false));
+  deepBtn.addEventListener('click', () => runScan(true));
+
+  if (applyAllBtn) {
+    applyAllBtn.addEventListener('click', async () => {
+      if (!lastReport || !window.SmartTutor) return;
+      const fixables = lastReport.findings.filter(f => f.canAutoFix);
+      let fixedCount = 0;
+      for (const item of fixables) {
+        if (applyItemFix(item)) fixedCount++;
+      }
+      saveDB();
+      renderWordlistPanel();
+      statusEl.textContent = `${fixedCount} sichere Korrekturen angewendet.`;
+      applyAllBtn.style.display = 'none';
+      await runScan(false);
+    });
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      if (!lastReport || !window.SmartTutor) return;
+      const txt = window.SmartTutor.formatReportText(lastReport);
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const stamp = new Date().toISOString().slice(0, 10);
+      const fname = `smarttutor-fachwoerterbuch-${stamp}.txt`;
+      if (!androidBlobDownload(blob, fname)) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fname;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      }
+    });
+  }
+
+  window._scheduleFachSmartTutorAutoScan = function () {
+    if (!window.SmartTutor || localStorage.getItem(PREF_AUTO_KEY) === 'false') return;
+    const runner = async () => {
+      try {
+        const lastTs = Number(localStorage.getItem(LAST_SCAN_KEY) || 0);
+        const weekMs = 7 * 24 * 60 * 60 * 1000;
+        const allEntries = Object.values(wordDB || {}).flat();
+        const unauditedApi = allEntries.filter(w => w && typeof w.source === 'string' && w.source.startsWith('api:') && !w._auditedAt).length;
+        if (lastTs && (Date.now() - lastTs) < weekMs && unauditedApi < 5) return;
+        const report = await window.SmartTutor.scanFachWordDB(wordDB, { online: false }); // Privacy-first: offline Tier 1 background scan only
+        const sumText = `Auto-Scan (${new Date().toLocaleDateString('de-DE')}): Geprüft ${report.totalScanned} · OK ${report.verified} · Markiert ${report.flagged}`;
+        statusEl.textContent = sumText;
+        try {
+          localStorage.setItem(LAST_SCAN_KEY, String(Date.now()));
+          localStorage.setItem(LAST_SUMMARY_KEY, sumText);
+        } catch (e) {}
+      } catch (e) {}
+    };
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => runner(), { timeout: 6000 });
+    } else {
+      setTimeout(runner, 4500);
+    }
+  };
+})();
+
 (async function bootstrapApp(){
   const vaultWasLoaded = await loadApiKeyVault();
   await migrateLegacyPlaintextKeys(vaultWasLoaded);
   await loadWordDb();
   init();
+  if (typeof window._scheduleFachSmartTutorAutoScan === 'function') {
+    window._scheduleFachSmartTutorAutoScan();
+  }
 })();
 
 /* ── Android native download bridge ── */
