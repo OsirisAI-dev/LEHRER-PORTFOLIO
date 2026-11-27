@@ -18,7 +18,7 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v34';
+const CACHE_VERSION = 'v36';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
@@ -66,6 +66,7 @@ const PRECACHE_URLS = [
   './pages/api-anleitung.html',
   './pages/portfolio-subpage.html',
   './pages/lehrskizze-editor.html',
+  './pages/cahier-notes.html',
 
   './assets/library-bg.webp',
   './assets/wiki-globe.webp',

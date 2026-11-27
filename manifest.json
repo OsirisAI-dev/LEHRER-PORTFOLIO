@@ -157,6 +157,19 @@
           "type": "image/svg+xml"
         }
       ]
+    },
+    {
+      "name": "Cahier de Notes Pro",
+      "short_name": "Notes",
+      "description": "Gestionnaire de notes trimestrielles Excel & Word",
+      "url": "./pages/cahier-notes.html",
+      "icons": [
+        {
+          "src": "./icons/dashboard-graph-analytics-report-svgrepo-com.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ],
   "prefer_related_applications": false

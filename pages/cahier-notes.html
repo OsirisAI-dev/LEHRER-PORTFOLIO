@@ -1,0 +1,4361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Cahier de Notes Pro – Accueil Word &amp; Grille Excel</title>
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="../icons/dashboard-graph-analytics-report-svgrepo-com.svg" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <link rel="stylesheet" href="../fonts/fonts.css" />
+  <script>if (window.self !== window.top) document.documentElement.classList.add('in-portfolio-iframe');</script>
+  <!-- Offline Local Vendor Libraries (0 CDN dependency) -->
+  <script src="../lib/chart/v4.5.1/chart.umd.min.js"></script>
+  <script src="../lib/mammoth/v1/mammoth.browser.js"></script>
+  <script src="../lib/pdf/v1/pdf.min.js"></script>
+  <script src="../js/core/portfolio-ocr.js"></script>
+
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1e3a8a;
+      --primary-light: #dbeafe;
+      --primary-soft: rgba(30, 64, 175, 0.09);
+      --grid-border: #cbd5e1;
+      --header-bg: #f1f5f9;
+      --bg-page: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mono { font-family: var(--font-mono); }
+    .hidden { display: none !important; }
+
+    html.in-portfolio-iframe .hub-back-btn { display: none !important; }
+
+    button, input, select, textarea { font-family: inherit; }
+    button { cursor: pointer; }
+
+    /* ==================== TOP RIBBON HEADER ==================== */
+    .app-header {
+      background-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.16);
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 35;
+    }
+
+    @media (min-width: 980px) {
+      .app-header.in-workbook {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+      }
+      .app-header.in-workbook .header-left { justify-self: start; }
+      .app-header.in-workbook .workbook-ctx { justify-self: center; }
+      .app-header.in-workbook .header-right { justify-self: end; }
+    }
+
+    .header-left, .header-right, .workbook-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header-right { justify-content: flex-end; margin-left: auto; }
+
+    .workbook-ctx {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    @media (max-width: 979px) {
+      .workbook-ctx {
+        width: 100%;
+        order: 3;
+        padding-top: 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+      }
+    }
+
+    .svg-ico {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .svg-ico.sm { width: 13px; height: 13px; }
+    .svg-ico.lg { width: 18px; height: 18px; }
+
+    .btn-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 7px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+    .btn-ribbon:hover { background: rgba(255, 255, 255, 0.24); }
+    .btn-ribbon.active-home { background: rgba(255, 255, 255, 0.30); }
+    .btn-ribbon-white {
+      background: #ffffff;
+      color: var(--primary);
+      border-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+    .btn-ribbon-white:hover { background: #f1f5f9; }
+    .btn-ribbon-emerald {
+      background: #10b981;
+      border-color: #059669;
+      color: #ffffff;
+    }
+    .btn-ribbon-emerald:hover { background: #059669; }
+    .btn-ribbon-dark {
+      background: rgba(0, 0, 0, 0.24);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    .btn-ribbon-dark:hover { background: rgba(0, 0, 0, 0.36); }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 15.5px;
+      letter-spacing: -0.01em;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .brand-mark:hover { background: rgba(255, 255, 255, 0.12); }
+    .brand-mark span { font-weight: 500; opacity: 0.9; }
+
+    .school-switcher-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 2px;
+      background: rgba(0, 0, 0, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 5px 14px;
+      border-radius: 10px;
+      min-width: 220px;
+    }
+    .hdr-school-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: rgba(255, 255, 255, 0.84);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .workbook-select {
+      background: transparent;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      max-width: 300px;
+      text-align: center;
+    }
+    .workbook-select option { color: #0f172a; background: #ffffff; }
+    .workbook-select optgroup { color: #334155; background: #f8fafc; font-weight: 700; }
+
+    .icon-inline-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      padding: 4px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .icon-inline-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
+
+    .color-swatch-label {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+    }
+    .color-swatch-label input[type="color"] {
+      width: 22px;
+      height: 22px;
+      border: none;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    /* Dropdown Menu (DB & Memory) */
+    .dropdown-wrap { position: relative; }
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      width: 250px;
+      background: #ffffff;
+      color: #1e293b;
+      border-radius: 12px;
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e2e8f0;
+      padding: 6px 0;
+      z-index: 60;
+      font-size: 12.5px;
+    }
+    .dropdown-item {
+      width: 100%;
+      text-align: left;
+      padding: 9px 14px;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+    }
+    .dropdown-item:hover { background: #f1f5f9; }
+    .dropdown-item.danger { color: #b91c1c; }
+    .dropdown-item.danger:hover { background: #fef2f2; }
+    .dropdown-sep { border-top: 1px solid #e2e8f0; margin: 4px 0; }
+
+    /* ==================== 1. WORD-STYLE HOMEPAGE ==================== */
+    .home-view {
+      flex: 1;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 18px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .home-hero {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 22px 26px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #1d4ed8;
+      background: #eff6ff;
+      padding: 4px 11px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    .home-hero h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .home-hero p {
+      margin: 6px 0 0;
+      font-size: 13.5px;
+      color: #475569;
+      max-width: 640px;
+      line-height: 1.45;
+    }
+
+    .hero-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box { position: relative; }
+    .search-box input {
+      padding: 10px 12px 10px 34px;
+      font-size: 13.5px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 11px;
+      width: 240px;
+      outline: none;
+      color: #0f172a;
+    }
+    .search-box input:focus { border-color: var(--primary); background: #ffffff; }
+    .search-box svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .btn-primary-lg {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 11px;
+      padding: 10px 16px;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 2px 6px rgba(30, 64, 175, 0.25);
+    }
+    .btn-primary-lg:hover { background: var(--primary-dark); }
+
+    .schools-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .school-group { display: flex; flex-direction: column; gap: 12px; }
+
+    .school-header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 8px;
+    }
+
+    .school-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .school-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #1e3a8a;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .school-title-wrap h2 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      color: #1e293b;
+    }
+    .school-sub { font-size: 12px; color: #64748b; font-weight: 500; }
+
+    .btn-add-in-school {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .btn-add-in-school:hover { background: #dbeafe; }
+
+    .class-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 16px;
+    }
+    @media (min-width: 600px) { .class-cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 900px) { .class-cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 1180px) { .class-cards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    .doc-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+    .doc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.12);
+    }
+
+    .card-accent { height: 9px; width: 100%; }
+    .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .card-classname { font-size: 20px; font-weight: 800; line-height: 1.15; }
+    .card-trim-pill {
+      font-size: 11px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .card-school-sub {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .card-stats {
+      margin-top: 14px;
+      padding-top: 11px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .card-stat-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .effectif-pill {
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-weight: 700;
+    }
+    .card-footer {
+      background: #f8fafc;
+      padding: 8px 14px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    .card-actions { display: flex; align-items: center; gap: 4px; }
+    .card-icon-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 4px;
+      border-radius: 6px;
+      display: inline-flex;
+    }
+    .card-icon-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .card-icon-btn.del:hover { background: #fee2e2; color: #dc2626; }
+
+    .empty-home-box {
+      background: #ffffff;
+      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 48px 20px;
+      text-align: center;
+    }
+
+    /* ==================== 2. WORKBOOK VIEW (EXCEL TOOLBAR & GRID) ==================== */
+    .workbook-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sheet-toolbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 9px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toolbar-main-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .toolbar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .subsettings-row {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .btn-tool {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .btn-tool-dark { background: #1e293b; color: #ffffff; }
+    .btn-tool-dark:hover { background: #0f172a; }
+    .btn-tool-theme { background: var(--primary); color: #ffffff; }
+    .btn-tool-theme:hover { background: var(--primary-dark); }
+
+    .chip-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .chip-toggle.amber {
+      background: #fffbeb;
+      border-color: #fcd34d;
+      color: #92400e;
+    }
+
+    .class-avg-pill {
+      background: var(--primary-soft);
+      border: 1px solid rgba(30, 64, 175, 0.25);
+      color: var(--primary);
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Top-right subsettings bar */
+    .subsettings-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 11px;
+      padding: 6px 10px;
+    }
+    .subsettings-title {
+      display: flex;
+      flex-direction: column;
+      padding-right: 4px;
+    }
+    .subsettings-title strong {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .subsettings-title span { font-size: 10px; color: #94a3b8; }
+    .eval-weights-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+    .eval-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    .eval-pill-name { font-size: 12px; font-weight: 700; color: #1e293b; }
+    .eval-mini-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 5px;
+      border-radius: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .eval-mini-box.val { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .eval-mini-box.nb { background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; }
+    .eval-mini-box input {
+      width: 40px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 1px 2px;
+      outline: none;
+    }
+    .eval-quick-plus {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .eval-quick-plus:hover { background: var(--primary); color: #ffffff; }
+
+    .workspace-main {
+      flex: 1;
+      padding: 12px 14px 72px;
+      width: 100%;
+    }
+
+    /* Excel Grid Responsive Container */
+    .excel-wrapper {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100vh - 245px);
+      border: 1px solid var(--grid-border);
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table.excel-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+      font-size: 13.5px;
+    }
+    table.excel-table th, table.excel-table td {
+      border-right: 1px solid var(--grid-border);
+      border-bottom: 1px solid var(--grid-border);
+      padding: 0;
+      vertical-align: middle;
+    }
+    table.excel-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background-color: var(--header-bg);
+      font-weight: 600;
+      color: #1e293b;
+      user-select: none;
+    }
+
+    /* Sticky Left Columns */
+    .sticky-col-1 {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+      background-color: #ffffff;
+      width: 38px;
+      min-width: 38px;
+      max-width: 38px;
+      text-align: center;
+    }
+    .sticky-col-2 {
+      position: sticky;
+      left: 38px;
+      z-index: 15;
+      background-color: #ffffff;
+      width: 210px;
+      min-width: 210px;
+      max-width: 210px;
+    }
+    .sticky-col-3 {
+      position: sticky;
+      left: 248px;
+      z-index: 15;
+      background-color: #ffffff;
+      width: 48px;
+      min-width: 48px;
+      max-width: 48px;
+      border-right: 2px solid #94a3b8 !important;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .sticky-col-1 { width: 34px; min-width: 34px; max-width: 34px; }
+      .sticky-col-2 { left: 34px; width: 144px; min-width: 144px; max-width: 144px; }
+      .sticky-col-3 { left: 178px; width: 42px; min-width: 42px; max-width: 42px; }
+      .excel-wrapper { max-height: calc(100vh - 300px); }
+      .workspace-main { padding: 8px 8px 72px; }
+      .toolbar-right { margin-left: 0; justify-content: flex-start; width: 100%; }
+      .subsettings-row { justify-content: flex-start; }
+      .subsettings-bar { width: 100%; }
+    }
+
+    thead th.sticky-col-1, thead th.sticky-col-2, thead th.sticky-col-3 {
+      z-index: 30;
+      background-color: #e2e8f0;
+    }
+
+    tbody tr:hover td { background-color: #f8fafc; }
+
+    .col-header-cell { min-width: 150px; padding: 6px !important; text-align: center; }
+    .col-header-cell.is-bonus { background-color: #ecfdf5 !important; }
+    .col-header-cell.is-malus { background-color: #fff1f2 !important; }
+    .col-header-cell.is-bonus,
+    .col-header-cell.is-malus,
+    td.td-bonus,
+    td.td-malus {
+      width: 84px;
+      min-width: 84px;
+      max-width: 88px;
+    }
+    .col-header-cell.is-bonus,
+    .col-header-cell.is-malus {
+      padding: 6px 4px !important;
+    }
+    .col-header-cell.is-bonus .col-header-top,
+    .col-header-cell.is-malus .col-header-top {
+      gap: 2px;
+    }
+    .col-header-cell.is-bonus .col-type-label,
+    .col-header-cell.is-malus .col-type-label {
+      font-size: 10px;
+    }
+    .col-header-cell.is-bonus .col-select,
+    .col-header-cell.is-malus .col-select {
+      font-size: 11px;
+      padding: 4px 2px;
+      text-overflow: ellipsis;
+    }
+    .td-bonus .cell-input,
+    .td-malus .cell-input {
+      padding: 0 4px;
+    }
+    @media (max-width: 640px) {
+      .col-header-cell { min-width: 138px; }
+      .col-header-cell.is-bonus,
+      .col-header-cell.is-malus,
+      td.td-bonus,
+      td.td-malus {
+        width: 84px;
+        min-width: 84px;
+        max-width: 86px;
+      }
+    }
+    .col-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .col-type-label { font-size: 10.5px; color: #64748b; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .col-badge { font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; white-space: nowrap; }
+    .col-badge.coeff { background: #dbeafe; color: #1e40af; font-family: var(--font-mono); }
+    .col-badge.bonus { background: #d1fae5; color: #065f46; }
+    .col-badge.malus { background: #ffe4e6; color: #9f1239; }
+    .col-del-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1;
+      padding: 0 3px;
+    }
+    .col-del-btn:hover { color: #e11d48; }
+    .col-select {
+      width: 100%;
+      font-size: 12px;
+      font-weight: 600;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 4px 5px;
+      outline: none;
+      color: #0f172a;
+    }
+    .col-select:focus { border-color: var(--primary); }
+    .col-custom-input {
+      margin-top: 4px;
+      width: 100%;
+      font-size: 11.5px;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 5px;
+      padding: 3px 6px;
+      outline: none;
+      color: #0f172a;
+    }
+
+    .cell-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 8px;
+      border: 2px solid transparent;
+      background: transparent;
+      outline: none;
+      font-size: 13.5px;
+      color: #0f172a;
+    }
+    .cell-input:focus {
+      border-color: var(--primary);
+      background-color: #ffffff;
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+    .cell-grade {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    .td-bonus { background-color: rgba(236, 253, 245, 0.55); }
+    .td-malus { background-color: rgba(255, 241, 242, 0.55); }
+    .td-editing { background-color: #fffbeb !important; }
+    .td-avg { border-left: 2px solid #94a3b8; background: #f8fafc; padding: 0 8px !important; min-width: 136px; }
+    .td-avg.manual { background: #fef3c7 !important; }
+    .td-cross { background: rgba(238, 242, 255, 0.45); text-align: center; min-width: 82px; padding: 0 6px !important; }
+    .td-cross-ann { background: rgba(236, 253, 245, 0.55); text-align: center; min-width: 92px; padding: 0 6px !important; }
+
+    .student-name-display {
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gender-badge-cell {
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+    .gender-F { background: #fdf2f8; color: #be185d; }
+    .gender-G { background: #eff6ff; color: #1d4ed8; }
+
+    .manual-avg-input {
+      width: 74px;
+      height: 28px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+      background: #ffffff;
+      border: 1.5px solid #d97706;
+      border-radius: 5px;
+      color: #78350f;
+      outline: none;
+    }
+
+    .grid-legend {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .legend-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .legend-box { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+    /* ==================== ANNUAL VIEW & CHARTS ==================== */
+    .annual-view { display: flex; flex-direction: column; gap: 18px; }
+    .annual-top-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 1024px) {
+      .annual-top-grid { grid-template-columns: 7fr 5fr; }
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (min-width: 640px) { .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    .kpi-card, .panel-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+    .kpi-label { font-size: 11.5px; color: #64748b; font-weight: 600; }
+    .kpi-val { font-size: 20px; font-weight: 800; font-family: var(--font-mono); margin-top: 4px; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 1024px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
+    .chart-canvas-wrap { position: relative; height: 260px; width: 100%; }
+
+    .annual-table-wrap {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+    .annual-table-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .annual-table-head h3 { margin: 0; font-size: 14px; font-weight: 700; color: #1e293b; }
+    .annual-scroll { overflow-x: auto; }
+    .annual-scroll table th, .annual-scroll table td { padding: 8px 10px !important; }
+
+    /* ==================== EXCEL BOTTOM SHEET TABS ==================== */
+    .sheet-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #e2e8f0;
+      border-top: 1px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      z-index: 40;
+    }
+    .sheet-tabs-bar { display: flex; align-items: center; overflow-x: auto; }
+    .sheet-tab {
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-right: 1px solid #cbd5e1;
+      background: #e2e8f0;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+    }
+    .sheet-tab:hover { background: #f1f5f9; color: #0f172a; }
+    .sheet-tab.active {
+      background: #ffffff;
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+    .dot-emerald {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #10b981;
+      display: inline-block;
+    }
+    .autosave-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #047857;
+      padding-right: 10px;
+    }
+    @media (max-width: 640px) { .autosave-pill { display: none; } }
+
+    /* ==================== MODALS ==================== */
+    .modal-scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.58);
+      backdrop-filter: blur(2px);
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.25);
+      border: 1px solid #e2e8f0;
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-card.wide { max-width: 720px; }
+    .modal-card.narrow { max-width: 470px; }
+
+    .modal-head {
+      background: var(--primary);
+      color: #ffffff;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .modal-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 22px;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-close:hover { color: #ffffff; }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      font-size: 13.5px;
+    }
+    .field-label { display: block; font-weight: 600; color: #334155; margin-bottom: 5px; font-size: 13px; }
+    .field-input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-size: 13.5px;
+      outline: none;
+      color: #0f172a;
+      background: #ffffff;
+    }
+    .field-input:focus { border-color: var(--primary); }
+
+    .form-grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 560px) { .form-grid-2 { grid-template-columns: 1fr 1fr; } }
+    .form-grid-evals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    @media (min-width: 560px) { .form-grid-evals { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    .setup-eval-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .setup-eval-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 12px;
+    }
+    .setup-eval-card .title { font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+    .setup-eval-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 4px; }
+    .setup-eval-row input {
+      width: 44px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 2px;
+    }
+    .stepper-mini {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      border-radius: 4px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .stepper-mini:hover { background: #e2e8f0; }
+
+    .modal-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .btn-secondary {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn-secondary:hover { background: #f8fafc; }
+    .btn-modal-primary {
+      background: var(--primary);
+      border: none;
+      color: #ffffff;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn-modal-primary:hover { background: var(--primary-dark); }
+    .btn-modal-emerald {
+      background: #059669;
+      border: none;
+      color: #ffffff;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-modal-emerald:hover { background: #047857; }
+
+    .dropzone-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      display: block;
+    }
+    .dropzone-box:hover { border-color: var(--primary); background: #eff6ff; }
+
+    .preview-table-wrap {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      max-height: 210px;
+      overflow-y: auto;
+      background: #ffffff;
+    }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .preview-table th { background: #e2e8f0; padding: 6px 8px; text-align: left; position: sticky; top: 0; }
+    .preview-table td { border-top: 1px solid #e2e8f0; padding: 5px 8px; }
+
+    /* Checkdot pills for Printable Reports */
+    .checkdot-list {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 11px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .checkdot-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+    }
+    .checkdot-item input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .mem-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mem-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .mem-chip button { background: none; border: none; color: #94a3b8; font-weight: 700; font-size: 14px; padding: 0; }
+    .mem-chip button:hover { color: #e11d48; }
+
+    /* ==================== TOAST & PRINT ==================== */
+    #toast-container {
+      position: fixed;
+      bottom: 58px;
+      right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast-msg {
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+      transition: opacity 0.28s ease;
+    }
+    .toast-success { background: #059669; }
+    .toast-error { background: #e11d48; }
+    .toast-info { background: #1e293b; }
+
+    .color-text-good { color: #047857; }
+    .color-text-bad { color: #e11d48; }
+    .color-text-muted { color: #94a3b8; }
+
+    #print-area { display: none; }
+
+    @media print {
+      body > *:not(#print-area) { display: none !important; }
+      #print-area {
+        display: block !important;
+        width: 100%;
+        background: #ffffff !important;
+        color: #0f172a;
+        padding: 12px;
+      }
+      table.print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+        margin-bottom: 16px;
+      }
+      table.print-table th, table.print-table td {
+        border: 1px solid #334155;
+        padding: 5px 6px;
+      }
+      table.print-table th {
+        background-color: #e2e8f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .print-charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        border: 1px solid #cbd5e1;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        page-break-inside: avoid;
+      }
+      .print-charts-grid img { width: 100%; height: 180px; object-fit: contain; }
+      .print-signatures {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 26px;
+        font-size: 12px;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== GLOBAL TOP RIBBON HEADER ==================== -->
+  <header id="app-header" class="app-header no-print">
+    <div class="header-left">
+      <button type="button" id="btn-portfolio-back" class="btn-ribbon hub-back-btn" title="Retour au Portfolio" onclick="navigateToPortfolioHub()">
+        <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        <span>Hub</span>
+      </button>
+
+      <!-- Word-Style Home Button -->
+      <button type="button" onclick="goToHome()" id="btn-home" class="btn-ribbon" title="Retourner à l'accueil (Établissements &amp; Classes)">
+        <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5L12 3l9 7.5M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5"/>
+        </svg>
+        <span>Accueil</span>
+      </button>
+
+      <!-- App Brand (Homepage Only) -->
+      <div id="brand-title" onclick="goToHome()" class="brand-mark">
+        <svg class="svg-ico lg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5V6.5A2.5 2.5 0 016.5 4H20v16H6.5A2.5 2.5 0 014 19.5zM9 8h6M9 12h6"/>
+        </svg>
+        Mon Cahier <span>de Notes</span>
+      </div>
+
+      <!-- New Class Button (Left in Workbook, Right or here cleanly) -->
+      <button type="button" onclick="openSetupModal(false)" class="btn-ribbon btn-ribbon-white">
+        <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+        <span>Nouvelle Classe</span>
+      </button>
+    </div>
+
+    <!-- Center Active Workbook Context: School Name + Class & Gender/Total Summary -->
+    <div id="workbook-header-context" class="workbook-ctx hidden">
+      <div class="school-switcher-box">
+        <div id="hdr-school-name" class="hdr-school-label">Établissement</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+          <select id="workbook-switcher" onchange="switchWorkbook(this.value)" class="workbook-select"></select>
+          <button type="button" onclick="openSetupModal(true)" title="Paramètres de cette classe" class="icon-inline-btn">
+            <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Further Right: Import, Reports, Base & Memory, Theme -->
+    <div class="header-right">
+      <div id="workbook-header-actions" class="workbook-actions hidden">
+        <button type="button" onclick="openImportRosterModal()" class="btn-ribbon">
+          <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          <span>Importer Liste</span>
+        </button>
+
+        <button type="button" onclick="openPrintModal()" class="btn-ribbon btn-ribbon-emerald">
+          <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/>
+          </svg>
+          <span>Rapports</span>
+        </button>
+      </div>
+
+      <!-- Database & Memory Menu -->
+      <div class="dropdown-wrap">
+        <button type="button" id="btn-db-toggle" onclick="toggleDbMenu()" class="btn-ribbon btn-ribbon-dark">
+          <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+          </svg>
+          <span>Base &amp; Mémoire</span>
+        </button>
+        <div id="db-menu" class="dropdown-menu hidden">
+          <button type="button" onclick="exportDatabase(); toggleDbMenu()" class="dropdown-item">
+            <svg class="svg-ico" style="color:#2563eb;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Exporter la base (.JSON)
+          </button>
+          <label class="dropdown-item">
+            <svg class="svg-ico" style="color:#059669;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Importer une base (.JSON)
+            <input type="file" accept=".json" onchange="importDatabase(event); toggleDbMenu()" class="hidden" />
+          </label>
+          <button type="button" onclick="openMemoryModal(); toggleDbMenu()" class="dropdown-item">
+            <svg class="svg-ico" style="color:#7c3aed;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 2A4.5 4.5 0 005 6.5c0 .4.05.78.15 1.15A4 4 0 003 11.5a4 4 0 002.1 3.53A4.5 4.5 0 009.5 20h1V2h-1zM14.5 2A4.5 4.5 0 0119 6.5c0 .4-.05.78-.15 1.15A4 4 0 0121 11.5a4 4 0 01-2.1 3.53A4.5 4.5 0 0114.5 20h-1V2h1z"/></svg>
+            Mémoire active &amp; suggestions
+          </button>
+          <div class="dropdown-sep"></div>
+          <button type="button" onclick="loadDemoData(); toggleDbMenu()" class="dropdown-item">
+            <svg class="svg-ico" style="color:#475569;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8M3 3v5h5"/></svg>
+            Charger un exemple démo
+          </button>
+          <button type="button" onclick="deleteAllDatabase(); toggleDbMenu()" class="dropdown-item danger">
+            <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            Supprimer toute la base
+          </button>
+        </div>
+      </div>
+
+      <label id="theme-picker-label" title="Changer la couleur de la page" class="color-swatch-label hidden">
+        <input type="color" id="quick-color-picker" onchange="updateThemeColor(this.value)" />
+      </label>
+    </div>
+  </header>
+
+  <!-- ==================== 1. WORD-STYLE HOMEPAGE VIEW ==================== -->
+  <section id="home-view" class="home-view no-print">
+    <div class="home-hero">
+      <div>
+        <div class="hero-tag">
+          <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          Espace Enseignant • 100 % Hors-Ligne
+        </div>
+        <h1>Mes Établissements &amp; Cahiers de Notes</h1>
+        <p>Sélectionnez une classe ci-dessous pour ouvrir sa grille Excel trimestrielle, ou créez un nouveau cahier. Toutes vos notes, moyennes et préférences sont enregistrées automatiquement localement.</p>
+      </div>
+      <div class="hero-controls">
+        <div class="search-box">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" id="home-search-input" oninput="renderHomeView()" placeholder="Rechercher classe ou école..." />
+        </div>
+        <button type="button" onclick="openSetupModal(false)" class="btn-primary-lg">
+          <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+          <span>Créer une Classe</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="home-schools-container" class="schools-stack"></div>
+  </section>
+
+  <!-- ==================== 2. WORKBOOK VIEW ==================== -->
+  <div id="workbook-view" class="workbook-view hidden">
+    <div id="sheet-toolbar" class="sheet-toolbar no-print">
+      <div id="trimester-left-controls" class="toolbar-main-row">
+        <div class="toolbar-left">
+          <button type="button" onclick="addStudentRow()" class="btn-tool btn-tool-dark">
+            <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/></svg>
+            <span>Ajouter Élève</span>
+          </button>
+          <button type="button" onclick="addEvaluationColumn()" class="btn-tool btn-tool-theme">
+            <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+            <span>Colonne Éval.</span>
+          </button>
+        </div>
+
+        <!-- Further Right: Name/Gender Edit, Cross-Sheet Preview, Live Class Average -->
+        <div class="toolbar-right">
+          <label class="chip-toggle amber" title="Déverrouiller tous les noms et genres pour correction rapide">
+            <input type="checkbox" id="toggle-bulk-student-edit" onchange="toggleBulkStudentEdit(this.checked)" />
+            <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>Éditer Noms/Genres</span>
+          </label>
+
+          <label class="chip-toggle" title="Afficher les moyennes des autres trimestres et la moyenne générale sans changer d'onglet">
+            <input type="checkbox" id="toggle-cross-preview" onchange="toggleCrossPreview(this.checked)" />
+            <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Aperçu autres trimestres</span>
+          </label>
+
+          <div class="class-avg-pill">
+            <span>Moy. Classe :</span>
+            <span id="live-sheet-avg" class="mono">-- / 20</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP-RIGHT EDGE SUB-SETTINGS -->
+      <div id="top-right-subsettings-row" class="subsettings-row">
+        <div id="top-right-subsettings" class="subsettings-bar">
+          <div class="subsettings-title">
+            <strong>
+              <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+              Types d'évaluations
+            </strong>
+            <span>Val (Coeff) &amp; Nb colonnes / trim.</span>
+          </div>
+          <div id="eval-weights-container" class="eval-weights-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <main class="workspace-main">
+      <!-- TRIMESTER EXCEL GRID VIEW -->
+      <div id="trimester-view">
+        <div class="excel-wrapper">
+          <table class="excel-table" id="grade-grid">
+            <thead id="grid-head"></thead>
+            <tbody id="grid-body"></tbody>
+          </table>
+        </div>
+        <div class="grid-legend no-print">
+          <div style="display:inline-flex;align-items:center;gap:6px;">
+            <svg class="svg-ico sm" style="color:#2563eb;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4M12 8h.01"/></svg>
+            <span>Cochez <strong>Éditer Noms/Genres</strong> ci-dessus pour corriger les élèves, ou la case sur une moyenne pour la saisir manuellement.</span>
+          </div>
+          <div class="legend-tags">
+            <span><span class="legend-box" style="background:#d1fae5;border:1px solid #34d399;"></span>Bonus (+)</span>
+            <span><span class="legend-box" style="background:#ffe4e6;border:1px solid #fb7185;"></span>Malus (-)</span>
+            <span><span class="legend-box" style="background:#fef3c7;border:1px solid #f59e0b;"></span>Édition manuelle</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANNUAL SUMMARY & CHARTS VIEW -->
+      <div id="annual-view" class="annual-view hidden">
+        <div class="annual-top-grid">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Moyenne Annuelle Classe</div>
+              <div id="kpi-annual-avg" class="kpi-val" style="color:var(--primary);">-- / 20</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Taux de Réussite (≥10)</div>
+              <div id="kpi-pass-rate" class="kpi-val color-text-good">-- %</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Plus Forte Moyenne</div>
+              <div id="kpi-max-avg" class="kpi-val">-- / 20</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Plus Faible Moyenne</div>
+              <div id="kpi-min-avg" class="kpi-val color-text-bad">-- / 20</div>
+            </div>
+          </div>
+
+          <div class="panel-box" style="display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;text-transform:uppercase;color:#475569;">Coefficients des Trimestres</span>
+              <span id="annual-formula-preview" class="mono" style="font-size:11px;color:#475569;background:#f1f5f9;padding:3px 8px;border-radius:6px;">((T1×1)+(T2×2)+(T3×2))/5</span>
+            </div>
+            <div id="trimester-weights-inputs" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="panel-box">
+            <h3 style="margin:0 0 10px;font-size:13.5px;font-weight:700;">Évolution Trimestrielle &amp; Annuelle (Filles vs Garçons)</h3>
+            <div class="chart-canvas-wrap">
+              <canvas id="trimesterComparisonChart"></canvas>
+            </div>
+          </div>
+          <div class="panel-box">
+            <h3 style="margin:0 0 10px;font-size:13.5px;font-weight:700;">Distribution des Moyennes Annuelles par Tranche</h3>
+            <div class="chart-canvas-wrap">
+              <canvas id="gradeDistributionChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="annual-table-wrap">
+          <div class="annual-table-head">
+            <h3>Tableau Récapitulatif Annuel &amp; Classement</h3>
+            <button type="button" onclick="openPrintModal()" class="btn-tool btn-tool-theme">Exporter / Imprimer ce bilan</button>
+          </div>
+          <div class="annual-scroll">
+            <table class="excel-table" style="width:100%;" id="annual-table">
+              <thead id="annual-head"></thead>
+              <tbody id="annual-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- BOTTOM EXCEL SHEET TABS -->
+    <footer class="sheet-footer no-print">
+      <div id="sheet-tabs-bar" class="sheet-tabs-bar"></div>
+      <div class="autosave-pill" id="autosave-status">
+        <span class="dot-emerald"></span> Sauvegarde auto active
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. NEW / EDIT WORKBOOK SETUP MODAL -->
+  <div id="setup-modal" class="modal-scrim hidden no-print">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="setup-modal-title">Configurer une Nouvelle Classe</h2>
+        <button type="button" onclick="closeModal('setup-modal')" class="modal-close">&times;</button>
+      </div>
+      <form id="setup-form" onsubmit="saveWorkbookSetup(event)" class="modal-body">
+        <input type="hidden" id="setup-is-edit" value="false" />
+
+        <div>
+          <label class="field-label" for="setup-school">Établissement / École</label>
+          <input type="text" id="setup-school" list="memory-schools" required placeholder="Ex: Lycée Moderne de Katiola" class="field-input" />
+          <datalist id="memory-schools"></datalist>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-label" for="setup-class">Classe</label>
+            <input type="text" id="setup-class" list="memory-classes" required placeholder="Ex: 5e1, 1ère A..." class="field-input" />
+            <datalist id="memory-classes"></datalist>
+          </div>
+          <div>
+            <label class="field-label" for="setup-trimesters">Nombre de Trimestres</label>
+            <select id="setup-trimesters" class="field-input">
+              <option value="3" selected>3 Trimestres (Standard)</option>
+              <option value="2">2 Semestres / Trimestres</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-label" for="setup-default-weight">Valeur / Coefficient par défaut</label>
+            <input type="number" id="setup-default-weight" step="0.25" min="0.25" value="1" required class="field-input mono" />
+          </div>
+          <div>
+            <label class="field-label" for="setup-color">Couleur de la page (Optionnel)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="setup-color" value="#1e40af" style="height:36px;width:54px;border-radius:6px;border:1px solid #cbd5e1;cursor:pointer;" />
+              <div style="display:flex;gap:6px;">
+                <button type="button" onclick="document.getElementById('setup-color').value='#1e40af'" style="width:22px;height:22px;border-radius:999px;background:#1e40af;border:1px solid #cbd5e1;"></button>
+                <button type="button" onclick="document.getElementById('setup-color').value='#0f766e'" style="width:22px;height:22px;border-radius:999px;background:#0f766e;border:1px solid #cbd5e1;"></button>
+                <button type="button" onclick="document.getElementById('setup-color').value='#7c3aed'" style="width:22px;height:22px;border-radius:999px;background:#7c3aed;border:1px solid #cbd5e1;"></button>
+                <button type="button" onclick="document.getElementById('setup-color').value='#b45309'" style="width:22px;height:22px;border-radius:999px;background:#b45309;border:1px solid #cbd5e1;"></button>
+                <button type="button" onclick="document.getElementById('setup-color').value='#be123c'" style="width:22px;height:22px;border-radius:999px;background:#be123c;border:1px solid #cbd5e1;"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label" for="setup-subtitle">Sous-titre d'en-tête pour impression (Optionnel)</label>
+          <input type="text" id="setup-subtitle" list="memory-subtitles" placeholder="Ex: Année Scolaire 2026-2027 • Allemand" class="field-input" />
+          <datalist id="memory-subtitles"></datalist>
+        </div>
+
+        <!-- Initial Columns per Trimester Structure -->
+        <div id="setup-initial-columns-box" class="setup-eval-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+            <strong style="font-size:12px;color:#334155;">Structure par trimestre (Nb colonnes &amp; Valeur) :</strong>
+            <span id="setup-total-cols-preview" class="mono" style="font-size:11px;font-weight:700;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:999px;">5 colonnes</span>
+          </div>
+          <div class="form-grid-evals">
+            <div class="setup-eval-card">
+              <div class="title">Interro / Quiz</div>
+              <div class="setup-eval-row">
+                <span>Nb:</span>
+                <div style="display:flex;align-items:center;gap:2px;">
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-quiz-count', -1)">-</button>
+                  <input type="number" id="init-quiz-count" min="0" max="20" value="2" oninput="updateSetupColTotal()" />
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-quiz-count', 1)">+</button>
+                </div>
+              </div>
+              <div class="setup-eval-row">
+                <span>Val:</span>
+                <input type="number" id="init-quiz-val" step="0.25" min="0.25" value="0.5" />
+              </div>
+            </div>
+
+            <div class="setup-eval-card">
+              <div class="title">Test</div>
+              <div class="setup-eval-row">
+                <span>Nb:</span>
+                <div style="display:flex;align-items:center;gap:2px;">
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-test-count', -1)">-</button>
+                  <input type="number" id="init-test-count" min="0" max="20" value="2" oninput="updateSetupColTotal()" />
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-test-count', 1)">+</button>
+                </div>
+              </div>
+              <div class="setup-eval-row">
+                <span>Val:</span>
+                <input type="number" id="init-test-val" step="0.25" min="0.25" value="1" />
+              </div>
+            </div>
+
+            <div class="setup-eval-card">
+              <div class="title">Devoir</div>
+              <div class="setup-eval-row">
+                <span>Nb:</span>
+                <div style="display:flex;align-items:center;gap:2px;">
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-devoir-count', -1)">-</button>
+                  <input type="number" id="init-devoir-count" min="0" max="20" value="0" oninput="updateSetupColTotal()" />
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-devoir-count', 1)">+</button>
+                </div>
+              </div>
+              <div class="setup-eval-row">
+                <span>Val:</span>
+                <input type="number" id="init-devoir-val" step="0.25" min="0.25" value="2" />
+              </div>
+            </div>
+
+            <div class="setup-eval-card">
+              <div class="title">Oral</div>
+              <div class="setup-eval-row">
+                <span>Nb:</span>
+                <div style="display:flex;align-items:center;gap:2px;">
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-oral-count', -1)">-</button>
+                  <input type="number" id="init-oral-count" min="0" max="20" value="1" oninput="updateSetupColTotal()" />
+                  <button type="button" class="stepper-mini" onclick="stepSetupCount('init-oral-count', 1)">+</button>
+                </div>
+              </div>
+              <div class="setup-eval-row">
+                <span>Val:</span>
+                <input type="number" id="init-oral-val" step="0.25" min="0.25" value="1" />
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-top:6px;">Vous pourrez toujours ajouter des colonnes avec <strong>+</strong> ou ajuster Nb/Val en haut à droite de chaque feuille.</div>
+        </div>
+
+        <div>
+          <label class="field-label" for="setup-custom-evals">Types d'évaluations spécifiques (séparés par des virgules)</label>
+          <input type="text" id="setup-custom-evals" list="memory-evals" placeholder="Ex: Interrogation Écrite, Exposé, TP" oninput="updateSetupColTotal()" class="field-input" />
+          <datalist id="memory-evals"></datalist>
+          <div style="font-size:11px;color:#64748b;margin-top:4px;">Mémorisés automatiquement pour l'auto-suggestion dans les listes déroulantes et formulaires.</div>
+        </div>
+
+        <label class="checkdot-item" style="font-size:12.5px;">
+          <input type="checkbox" id="setup-cap-20" checked />
+          <span>Plafonner les moyennes à 20,00 / 20 après ajout des bonus</span>
+        </label>
+
+        <div class="modal-foot">
+          <button type="button" onclick="closeModal('setup-modal')" class="btn-secondary">Annuler</button>
+          <button type="submit" class="btn-modal-primary">Enregistrer &amp; Ouvrir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. IMPORT WORD (.DOCX) / PDF / OCR CLASS LIST MODAL -->
+  <div id="import-roster-modal" class="modal-scrim hidden no-print">
+    <div class="modal-card wide">
+      <div class="modal-head">
+        <h2>Importer une Liste de Classe (Word .docx / PDF / Image OCR / Texte)</h2>
+        <button type="button" onclick="closeModal('import-roster-modal')" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <label class="dropzone-box">
+            <div style="margin-bottom:6px;color:var(--primary);display:flex;justify-content:center;">
+              <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            </div>
+            <div style="font-weight:700;color:#1e293b;">Word (.docx), PDF (.pdf) ou Image (OCR)</div>
+            <div style="font-size:11.5px;color:#64748b;margin-top:3px;">Extraction tableaux, colonnes et sexe (F/G/M) + OCR local hors-ligne si PDF scanné</div>
+            <input type="file" id="roster-file-input" accept=".docx,.pdf,.png,.jpg,.jpeg,.webp,.txt,.csv" onchange="handleRosterFileUpload(event)" class="hidden" />
+          </label>
+
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:12px;font-weight:700;color:#334155;">Ou coller directement la liste :</span>
+            <textarea id="roster-paste-area" rows="4" placeholder="1. KOUASSI Aya (F)&#10;2. KONÉ Mamadou (M)&#10;3. TRAORÉ Mariam" oninput="parseRawRosterText(this.value)" class="field-input" style="font-size:12px;"></textarea>
+          </div>
+        </div>
+
+        <div id="import-ocr-status" class="hidden" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;"></div>
+
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+            <span style="font-size:12px;font-weight:700;text-transform:uppercase;color:#475569;">Aperçu des élèves détectés</span>
+            <span id="import-preview-stats" class="mono" style="font-size:12px;font-weight:700;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:999px;">0 F, 0 G | T : 0</span>
+          </div>
+          <div class="preview-table-wrap">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th style="width:42px;">N°</th>
+                  <th>Nom &amp; Prénoms</th>
+                  <th style="width:86px;text-align:center;">Sexe</th>
+                  <th style="width:52px;text-align:center;">Suppr.</th>
+                </tr>
+              </thead>
+              <tbody id="import-preview-tbody">
+                <tr><td colspan="4" style="padding:24px;text-align:center;color:#94a3b8;">Chargez un fichier .docx / .pdf / image ou collez une liste ci-dessus.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-foot" style="justify-content:space-between;">
+          <label class="checkdot-item" style="font-size:12px;">
+            <input type="checkbox" id="import-replace-existing" checked />
+            <span>Remplacer la liste actuelle</span>
+          </label>
+          <div style="display:flex;gap:8px;">
+            <button type="button" onclick="closeModal('import-roster-modal')" class="btn-secondary">Fermer</button>
+            <button type="button" onclick="confirmImportRoster()" class="btn-modal-primary">Importer dans la classe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PRINT / EXPORT REPORT CONFIGURATION MODAL -->
+  <div id="print-modal" class="modal-scrim hidden no-print">
+    <div class="modal-card narrow">
+      <div class="modal-head">
+        <h2>Exporter / Imprimer un Rapport</h2>
+        <button type="button" onclick="closeModal('print-modal')" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0;font-size:12.5px;color:#475569;">Cochez les trimestres et options à inclure dans le relevé imprimable ou exportable en PDF :</p>
+
+        <div id="print-trimester-checkboxes" class="checkdot-list"></div>
+
+        <div class="checkdot-list">
+          <label class="checkdot-item">
+            <input type="checkbox" id="print-opt-details" />
+            <span>Inclure le détail des notes du trimestre actif</span>
+          </label>
+          <label class="checkdot-item">
+            <input type="checkbox" id="print-opt-annual" checked />
+            <span>Inclure la Moyenne Annuelle &amp; le Rang</span>
+          </label>
+          <label class="checkdot-item">
+            <input type="checkbox" id="print-opt-charts" checked />
+            <span>Inclure les graphiques statistiques (Chart.js)</span>
+          </label>
+        </div>
+
+        <div class="modal-foot">
+          <button type="button" onclick="closeModal('print-modal')" class="btn-secondary">Annuler</button>
+          <button type="button" onclick="executePrintReport()" class="btn-modal-emerald">
+            <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>
+            <span>Générer &amp; Imprimer (PDF)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ACTIVE MEMORY MANAGER MODAL -->
+  <div id="memory-modal" class="modal-scrim hidden no-print">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Mémoire Active (Auto-Suggestions)</h2>
+        <button type="button" onclick="closeModal('memory-modal')" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size:12.5px;">
+        <p style="margin:0;color:#475569;">Les établissements, classes et types d'évaluations ci-dessous accélèrent la création de nouvelles feuilles et l'auto-complétion :</p>
+        <div>
+          <div style="font-weight:700;color:#334155;margin-bottom:6px;">Établissements mémorisés :</div>
+          <div id="mem-list-schools" class="mem-chips"></div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#334155;margin-bottom:6px;">Classes mémorisées :</div>
+          <div id="mem-list-classes" class="mem-chips"></div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#334155;margin-bottom:6px;">Types d'évaluations personnalisés :</div>
+          <div id="mem-list-evals" class="mem-chips"></div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" onclick="closeModal('memory-modal')" class="btn-tool btn-tool-dark">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEDICATED PRINT CONTAINER -->
+  <div id="print-area"></div>
+
+  <!-- OFFSCREEN CHART CANVAS BUFFER FOR RELIABLE PRINTING FROM ANY TAB -->
+  <div id="offscreen-print-charts" style="position:fixed;left:-9999px;top:-9999px;width:720px;height:340px;pointer-events:none;opacity:0;" aria-hidden="true">
+    <canvas id="printChartCompCanvas" width="720" height="320"></canvas>
+    <canvas id="printChartDistCanvas" width="720" height="320"></canvas>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="no-print"></div>
+
+  <script>
+    'use strict';
+
+    if (window.pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '../lib/pdf/v1/pdf.worker.min.js';
+    }
+
+    const STORAGE_KEY = 'notebook_office_gradebook_v2';
+    const DEFAULT_EVAL_TYPES = ['Test', 'Devoir', 'Interro / Quiz', 'Oral'];
+    const MAX_JSON_BYTES = 10 * 1024 * 1024;
+    const MAX_ROSTER_BYTES = 25 * 1024 * 1024;
+    const MAX_OCR_IMAGE_EDGE = 2000;
+    const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+    function isSafeKey(k) {
+      return typeof k === 'string' && k.length > 0 && k.length <= 120 && !FORBIDDEN_KEYS.has(k);
+    }
+
+    function sanitizeHexColor(hexColor) {
+      return /^#[0-9A-Fa-f]{6}$/.test(hexColor || '') ? hexColor : '#1e40af';
+    }
+
+    function sanitizeNumber(raw, min, max, fallback) {
+      const n = Number(raw);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, n));
+    }
+
+    function makeUniqueId(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function navigateToPortfolioHub() {
+      if (window.self !== window.top && window.location.origin && window.location.origin !== 'null') {
+        try {
+          window.parent.postMessage({ type: 'osirisOpenHomeTab' }, window.location.origin);
+          return;
+        } catch (_) {}
+      }
+      window.location.href = '../index.html';
+    }
+
+    function sanitizeWorkbook(rawId, rawWb) {
+      if (!rawWb || typeof rawWb !== 'object' || Array.isArray(rawWb)) return null;
+      const id = isSafeKey(rawWb.id) ? rawWb.id : (isSafeKey(rawId) ? rawId : makeUniqueId('wb'));
+      const school = String(rawWb.school || 'Établissement').trim().slice(0, 140) || 'Établissement';
+      const className = String(rawWb.className || 'Classe').trim().slice(0, 80) || 'Classe';
+      const reportSubtitle = String(rawWb.reportSubtitle || '').trim().slice(0, 160);
+      const themeColor = sanitizeHexColor(rawWb.themeColor);
+      const trimesterCount = Math.round(sanitizeNumber(rawWb.trimesterCount, 1, 6, 3));
+      const defaultWeight = sanitizeNumber(rawWb.defaultWeight, 0.1, 20, 1);
+      const capAt20 = rawWb.capAt20 !== false;
+
+      const trimesterWeights = {};
+      const rawTw = (rawWb.trimesterWeights && typeof rawWb.trimesterWeights === 'object' && !Array.isArray(rawWb.trimesterWeights))
+        ? rawWb.trimesterWeights : {};
+      for (let t = 1; t <= trimesterCount; t++) {
+        const tKey = String(t);
+        trimesterWeights[tKey] = sanitizeNumber(rawTw[tKey], 0.1, 20, t === 1 ? 1 : 2);
+      }
+
+      const students = [];
+      const seenStudentIds = new Set();
+      if (Array.isArray(rawWb.students)) {
+        rawWb.students.slice(0, 500).forEach((s, idx) => {
+          if (!s || typeof s !== 'object') return;
+          let sid = isSafeKey(s.id) ? s.id : `st_${idx + 1}_${Date.now()}`;
+          if (seenStudentIds.has(sid)) sid = makeUniqueId('st');
+          seenStudentIds.add(sid);
+          const name = String(s.name || `ÉLÈVE ${idx + 1}`).trim().slice(0, 160) || `ÉLÈVE ${idx + 1}`;
+          const gender = s.gender === 'F' ? 'F' : 'G';
+          students.push({ id: sid, name, gender });
+        });
+      }
+
+      const trimesters = {};
+      const rawTrims = (rawWb.trimesters && typeof rawWb.trimesters === 'object' && !Array.isArray(rawWb.trimesters))
+        ? rawWb.trimesters : {};
+      for (let t = 1; t <= trimesterCount; t++) {
+        const tKey = String(t);
+        const rt = (rawTrims[tKey] && typeof rawTrims[tKey] === 'object' && !Array.isArray(rawTrims[tKey]))
+          ? rawTrims[tKey] : {};
+
+        const evalWeights = {};
+        if (rt.evalWeights && typeof rt.evalWeights === 'object' && !Array.isArray(rt.evalWeights)) {
+          Object.keys(rt.evalWeights).forEach(k => {
+            if (!isSafeKey(k)) return;
+            const w = Number(rt.evalWeights[k]);
+            if (Number.isFinite(w) && w > 0 && w <= 100) evalWeights[k] = w;
+          });
+        }
+
+        const columns = [];
+        const seenColIds = new Set();
+        if (Array.isArray(rt.columns)) {
+          rt.columns.slice(0, 50).forEach((c, cIdx) => {
+            if (!c || typeof c !== 'object') return;
+            let cid = isSafeKey(c.id) ? c.id : `c${t}_${cIdx + 1}`;
+            if (seenColIds.has(cid)) cid = makeUniqueId(`c${t}`);
+            seenColIds.add(cid);
+            const type = String(c.type || 'Test').trim().slice(0, 80) || 'Test';
+            const customLabel = String(c.customLabel || '').trim().slice(0, 80);
+            columns.push({ id: cid, type, customLabel });
+          });
+        }
+        if (columns.length === 0) {
+          columns.push({ id: makeUniqueId(`c${t}`), type: 'Test', customLabel: '' });
+          if (evalWeights['Test'] === undefined) evalWeights['Test'] = defaultWeight;
+        }
+
+        const grades = {};
+        if (rt.grades && typeof rt.grades === 'object' && !Array.isArray(rt.grades)) {
+          Object.keys(rt.grades).forEach(sId => {
+            if (!isSafeKey(sId) || !rt.grades[sId] || typeof rt.grades[sId] !== 'object' || Array.isArray(rt.grades[sId])) return;
+            const cleanRow = {};
+            Object.keys(rt.grades[sId]).forEach(cId => {
+              if (!isSafeKey(cId)) return;
+              const rawVal = rt.grades[sId][cId];
+              if (rawVal === '' || rawVal === null || rawVal === undefined) return;
+              const num = Number(rawVal);
+              if (Number.isFinite(num)) cleanRow[cId] = Math.min(40, Math.max(0, num));
+            });
+            grades[sId] = cleanRow;
+          });
+        }
+
+        const manualOverrides = {};
+        if (rt.manualOverrides && typeof rt.manualOverrides === 'object' && !Array.isArray(rt.manualOverrides)) {
+          Object.keys(rt.manualOverrides).forEach(sId => {
+            if (!isSafeKey(sId)) return;
+            const ov = rt.manualOverrides[sId];
+            if (!ov || typeof ov !== 'object') return;
+            const enabled = !!ov.enabled;
+            const maxVal = capAt20 ? 20 : 40;
+            const val = (ov.value === null || ov.value === '' || ov.value === undefined)
+              ? null
+              : (Number.isFinite(Number(ov.value)) ? Math.min(maxVal, Math.max(0, Number(ov.value))) : null);
+            manualOverrides[sId] = { enabled, value: val };
+          });
+        }
+
+        trimesters[tKey] = { evalWeights, columns, grades, manualOverrides };
+      }
+
+      return {
+        id,
+        school,
+        className,
+        reportSubtitle,
+        themeColor,
+        trimesterCount,
+        defaultWeight,
+        capAt20,
+        trimesterWeights,
+        students,
+        trimesters
+      };
+    }
+
+    function sanitizeStringList(arr, fallback = []) {
+      if (!Array.isArray(arr)) return [...fallback];
+      const out = [];
+      const seen = new Set();
+      arr.slice(0, 100).forEach(item => {
+        const clean = String(item || '').trim().slice(0, 140);
+        if (clean && !seen.has(clean)) {
+          seen.add(clean);
+          out.push(clean);
+        }
+      });
+      return out;
+    }
+
+    function sanitizeAppState(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+      if (!raw.workbooks || typeof raw.workbooks !== 'object' || Array.isArray(raw.workbooks)) return null;
+
+      const workbooks = {};
+      Object.keys(raw.workbooks).forEach(k => {
+        if (!isSafeKey(k)) return;
+        const cleanWb = sanitizeWorkbook(k, raw.workbooks[k]);
+        if (cleanWb) workbooks[cleanWb.id] = cleanWb;
+      });
+
+      const rawMem = (raw.activeMemory && typeof raw.activeMemory === 'object' && !Array.isArray(raw.activeMemory))
+        ? raw.activeMemory : {};
+      const memEvalWeights = {};
+      if (rawMem.evalWeights && typeof rawMem.evalWeights === 'object' && !Array.isArray(rawMem.evalWeights)) {
+        Object.keys(rawMem.evalWeights).forEach(k => {
+          if (!isSafeKey(k)) return;
+          const w = Number(rawMem.evalWeights[k]);
+          if (Number.isFinite(w) && w > 0 && w <= 100) memEvalWeights[k] = w;
+        });
+      }
+
+      const activeWorkbookId = isSafeKey(raw.activeWorkbookId) && workbooks[raw.activeWorkbookId]
+        ? raw.activeWorkbookId : null;
+      const currentView = raw.currentView === 'workbook' && activeWorkbookId ? 'workbook' : 'home';
+      const activeTab = raw.activeTab === 'annual'
+        ? 'annual'
+        : String(Math.round(sanitizeNumber(raw.activeTab, 1, 6, 1)));
+
+      return {
+        currentView,
+        activeWorkbookId,
+        activeTab,
+        showCrossPreview: !!raw.showCrossPreview,
+        bulkEditStudents: !!raw.bulkEditStudents,
+        activeMemory: {
+          schools: sanitizeStringList(rawMem.schools, appState.activeMemory.schools),
+          classes: sanitizeStringList(rawMem.classes, appState.activeMemory.classes),
+          customEvalTypes: sanitizeStringList(rawMem.customEvalTypes, appState.activeMemory.customEvalTypes),
+          evalWeights: Object.keys(memEvalWeights).length ? memEvalWeights : { ...appState.activeMemory.evalWeights },
+          subtitles: sanitizeStringList(rawMem.subtitles, appState.activeMemory.subtitles)
+        },
+        workbooks
+      };
+    }
+
+    let appState = {
+      currentView: 'home',
+      activeWorkbookId: null,
+      activeTab: '1',
+      showCrossPreview: false,
+      bulkEditStudents: false,
+      activeMemory: {
+        schools: ['Lycée Moderne de Katiola', 'Lycée Moderne Gaston Ouassenan Koné'],
+        classes: ['5e1', '5e2', '1ère A', '1ère D', 'Tle A'],
+        customEvalTypes: ['Interrogation', 'Devoir Surveillé', 'Exposé Oral'],
+        evalWeights: { 'Test': 1, 'Devoir': 2, 'Interro / Quiz': 0.5, 'Oral': 1 },
+        subtitles: ['Année Scolaire 2026-2027 • Allemand']
+      },
+      workbooks: {}
+    };
+
+    let parsedImportBuffer = [];
+    let chartInstances = { comparison: null, distribution: null };
+
+    // ==================== INITIALIZATION & PERSISTENCE ====================
+    function initApp() {
+      let saved = null;
+      try {
+        saved = localStorage.getItem(STORAGE_KEY);
+      } catch (e) {
+        console.error('Stockage local indisponible:', e);
+      }
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          const clean = sanitizeAppState(parsed);
+          if (clean) {
+            appState = clean;
+          } else {
+            seedDefaultWorkbooks();
+          }
+        } catch (e) {
+          console.error('Erreur lecture sauvegarde:', e);
+          seedDefaultWorkbooks();
+        }
+      } else {
+        seedDefaultWorkbooks();
+      }
+
+      normalizeActiveWorkbook();
+
+      document.getElementById('toggle-cross-preview').checked = !!appState.showCrossPreview;
+      document.getElementById('toggle-bulk-student-edit').checked = !!appState.bulkEditStudents;
+      bindDelegatedListeners();
+      renderAll();
+    }
+
+    function normalizeActiveWorkbook(keys = Object.keys(appState.workbooks || {})) {
+      if (keys.length === 0) {
+        appState.activeWorkbookId = null;
+        appState.currentView = 'home';
+      } else if (!appState.activeWorkbookId || !appState.workbooks[appState.activeWorkbookId]) {
+        appState.activeWorkbookId = keys[0];
+      }
+    }
+
+    function toggleHidden(id, hide) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden', !!hide);
+    }
+
+    function pushUniqueMemory(key, val) {
+      if (!isSafeKey(key)) return false;
+      const clean = String(val || '').trim().slice(0, 140);
+      if (!clean) return false;
+      if (!Array.isArray(appState.activeMemory[key])) appState.activeMemory[key] = [];
+      if (appState.activeMemory[key].includes(clean) || appState.activeMemory[key].length >= 100) return false;
+      appState.activeMemory[key].push(clean);
+      return true;
+    }
+
+    function ensureEvalWeight(wb, trim, evalType) {
+      if (!evalType || evalType === 'Autre...' || isBonusType(evalType) || isMalusType(evalType)) return;
+      if (trim.evalWeights[evalType] === undefined) {
+        trim.evalWeights[evalType] = appState.activeMemory.evalWeights?.[evalType] ?? wb.defaultWeight ?? 1;
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        const status = document.getElementById('autosave-status');
+        if (status) status.innerHTML = '<span class="dot-emerald"></span> Enregistré';
+      } catch (e) {
+        showToast('Erreur de sauvegarde locale', 'error');
+      }
+    }
+
+    function getActiveWorkbook() {
+      return appState.activeWorkbookId ? appState.workbooks[appState.activeWorkbookId] : null;
+    }
+
+    function goToHome() {
+      appState.currentView = 'home';
+      saveState();
+      renderAll();
+    }
+
+    function openWorkbookFromHome(wbId) {
+      if (!appState.workbooks[wbId]) return;
+      appState.activeWorkbookId = wbId;
+      appState.currentView = 'workbook';
+      appState.activeTab = '1';
+      saveState();
+      renderAll();
+    }
+
+    function seedDefaultWorkbooks() {
+      const now = Date.now();
+      const wb1 = 'wb_' + now;
+      const wb2 = 'wb_' + (now + 1);
+
+      appState.workbooks[wb1] = {
+        id: wb1,
+        school: 'Lycée Moderne de Katiola',
+        className: '5e1',
+        reportSubtitle: 'Année Scolaire 2026-2027',
+        themeColor: '#1e40af',
+        trimesterCount: 3,
+        defaultWeight: 1,
+        capAt20: true,
+        trimesterWeights: { '1': 1, '2': 2, '3': 2 },
+        students: [
+          { id: 'st_1', name: 'KOUASSI Affoué Grace', gender: 'F' },
+          { id: 'st_2', name: 'KONÉ Sekou', gender: 'G' },
+          { id: 'st_3', name: 'YAO Akissi Marie-Ange', gender: 'F' },
+          { id: 'st_4', name: 'TRAORÉ Ibrahim', gender: 'G' },
+          { id: 'st_5', name: "N'GUESSAN Adjoua Clarisse", gender: 'F' },
+          { id: 'st_6', name: 'OUATTARA Fatoumata', gender: 'F' },
+          { id: 'st_7', name: 'DIALLO Mamadou', gender: 'G' },
+          { id: 'st_8', name: 'KOFFI Amenan Esther', gender: 'F' }
+        ],
+        trimesters: {
+          '1': {
+            evalWeights: { 'Test': 1, 'Interro / Quiz': 0.5, 'Oral': 1 },
+            columns: [
+              { id: 'c1_1', type: 'Test', customLabel: '' },
+              { id: 'c1_2', type: 'Interro / Quiz', customLabel: '' },
+              { id: 'c1_3', type: 'Bonus (+)', customLabel: 'Participation' }
+            ],
+            grades: {
+              'st_1': { 'c1_1': 14, 'c1_2': 16, 'c1_3': 1 },
+              'st_2': { 'c1_1': 11, 'c1_2': 12, 'c1_3': 0.5 },
+              'st_3': { 'c1_1': 15.5, 'c1_2': 14, 'c1_3': 1 },
+              'st_4': { 'c1_1': 8.5, 'c1_2': 9, 'c1_3': 0 },
+              'st_5': { 'c1_1': 13, 'c1_2': 15, 'c1_3': 0.5 },
+              'st_6': { 'c1_1': 10, 'c1_2': 11, 'c1_3': 0 },
+              'st_7': { 'c1_1': 7, 'c1_2': 8.5, 'c1_3': 0 },
+              'st_8': { 'c1_1': 16, 'c1_2': 17, 'c1_3': 1 }
+            },
+            manualOverrides: {}
+          },
+          '2': {
+            evalWeights: { 'Devoir': 2, 'Test': 1 },
+            columns: [
+              { id: 'c2_1', type: 'Devoir', customLabel: '' },
+              { id: 'c2_2', type: 'Test', customLabel: '' }
+            ],
+            grades: {
+              'st_1': { 'c2_1': 15, 'c2_2': 16 },
+              'st_2': { 'c2_1': 10.5, 'c2_2': 12 },
+              'st_3': { 'c2_1': 14, 'c2_2': 15 },
+              'st_4': { 'c2_1': 9.5, 'c2_2': 10 },
+              'st_5': { 'c2_1': 12.5, 'c2_2': 13.5 },
+              'st_6': { 'c2_1': 11, 'c2_2': 10 },
+              'st_7': { 'c2_1': 8, 'c2_2': 9 },
+              'st_8': { 'c2_1': 17, 'c2_2': 16.5 }
+            },
+            manualOverrides: {}
+          },
+          '3': {
+            evalWeights: { 'Devoir': 2, 'Interro / Quiz': 0.5 },
+            columns: [
+              { id: 'c3_1', type: 'Devoir', customLabel: '' },
+              { id: 'c3_2', type: 'Interro / Quiz', customLabel: '' }
+            ],
+            grades: {
+              'st_1': { 'c3_1': 16, 'c3_2': 15 },
+              'st_2': { 'c3_1': 12, 'c3_2': 11 },
+              'st_3': { 'c3_1': 14.5, 'c3_2': 16 },
+              'st_4': { 'c3_1': 10, 'c3_2': 10.5 },
+              'st_5': { 'c3_1': 13, 'c3_2': 14 },
+              'st_6': { 'c3_1': 11.5, 'c3_2': 12 },
+              'st_7': { 'c3_1': 8.5, 'c3_2': 8 },
+              'st_8': { 'c3_1': 17.5, 'c3_2': 18 }
+            },
+            manualOverrides: {}
+          }
+        }
+      };
+
+      appState.workbooks[wb2] = {
+        id: wb2,
+        school: 'Lycée Moderne de Katiola',
+        className: '1ère A',
+        reportSubtitle: 'Année Scolaire 2026-2027',
+        themeColor: '#0f766e',
+        trimesterCount: 3,
+        defaultWeight: 1,
+        capAt20: true,
+        trimesterWeights: { '1': 1, '2': 2, '3': 2 },
+        students: [
+          { id: 'st_201', name: 'BAMBA Mariam', gender: 'F' },
+          { id: 'st_202', name: 'COULIBALY Lacina', gender: 'G' },
+          { id: 'st_203', name: 'SILUÉ Chantal', gender: 'F' },
+          { id: 'st_204', name: 'SORO Drissa', gender: 'G' }
+        ],
+        trimesters: {
+          '1': {
+            evalWeights: { 'Devoir': 2, 'Interro / Quiz': 0.5 },
+            columns: [
+              { id: 'c201_1', type: 'Devoir', customLabel: '' },
+              { id: 'c201_2', type: 'Interro / Quiz', customLabel: '' }
+            ],
+            grades: { 'st_201': { 'c201_1': 14, 'c201_2': 15 }, 'st_202': { 'c201_1': 11, 'c201_2': 10 } },
+            manualOverrides: {}
+          },
+          '2': { evalWeights: { 'Devoir': 2 }, columns: [{ id: 'c202_1', type: 'Devoir', customLabel: '' }], grades: {}, manualOverrides: {} },
+          '3': { evalWeights: { 'Devoir': 2 }, columns: [{ id: 'c203_1', type: 'Devoir', customLabel: '' }], grades: {}, manualOverrides: {} }
+        }
+      };
+
+      appState.activeWorkbookId = wb1;
+      appState.currentView = 'home';
+      saveState();
+    }
+
+    // ==================== EVENT DELEGATION (NO INLINE QUOTING BUGS) ====================
+    function bindDelegatedListeners() {
+      document.getElementById('home-schools-container').addEventListener('click', (e) => {
+        const addBtn = e.target.closest('[data-add-school]');
+        if (addBtn) {
+          e.stopPropagation();
+          openSetupModalForSchool(addBtn.dataset.addSchool);
+          return;
+        }
+        const editBtn = e.target.closest('[data-edit-wb]');
+        if (editBtn) {
+          e.stopPropagation();
+          appState.activeWorkbookId = editBtn.dataset.editWb;
+          openSetupModal(true);
+          return;
+        }
+        const delBtn = e.target.closest('[data-del-wb]');
+        if (delBtn) {
+          e.stopPropagation();
+          deleteWorkbookById(delBtn.dataset.delWb);
+          return;
+        }
+        const card = e.target.closest('[data-open-wb]');
+        if (card) {
+          openWorkbookFromHome(card.dataset.openWb);
+        }
+      });
+
+      const subBar = document.getElementById('eval-weights-container');
+      subBar.addEventListener('change', (e) => {
+        const wInput = e.target.closest('[data-eval-weight]');
+        if (wInput) {
+          updateEvalTypeWeight(appState.activeTab, wInput.dataset.evalWeight, wInput.value);
+          return;
+        }
+        const nbInput = e.target.closest('[data-eval-count]');
+        if (nbInput) {
+          setEvaluationTypeColumnCount(appState.activeTab, nbInput.dataset.evalCount, nbInput.value);
+        }
+      });
+      subBar.addEventListener('click', (e) => {
+        const plusBtn = e.target.closest('[data-eval-plus]');
+        if (plusBtn) {
+          const effType = plusBtn.dataset.evalPlus;
+          const wb = getActiveWorkbook();
+          const trim = wb && wb.trimesters[appState.activeTab];
+          if (!trim) return;
+          const current = trim.columns.filter(c => !isBonusType(c.type) && !isMalusType(c.type) && getEffectiveColumnType(c) === effType).length;
+          setEvaluationTypeColumnCount(appState.activeTab, effType, current + 1);
+        }
+      });
+
+      const grid = document.getElementById('grade-grid');
+      grid.addEventListener('click', (e) => {
+        const delCol = e.target.closest('[data-del-col]');
+        if (delCol) {
+          removeEvaluationColumn(appState.activeTab, delCol.dataset.delCol);
+          return;
+        }
+        const delStu = e.target.closest('[data-del-student]');
+        if (delStu) {
+          removeStudentRow(delStu.dataset.delStudent);
+        }
+      });
+      grid.addEventListener('change', (e) => {
+        const typeSel = e.target.closest('[data-col-type-select]');
+        if (typeSel) {
+          changeColumnType(appState.activeTab, typeSel.dataset.colTypeSelect, typeSel.value);
+          return;
+        }
+        const customLbl = e.target.closest('[data-col-custom-label]');
+        if (customLbl) {
+          updateCustomColumnLabel(appState.activeTab, customLbl.dataset.colCustomLabel, customLbl.value);
+          return;
+        }
+        const stuNameInp = e.target.closest('[data-student-name]');
+        if (stuNameInp) {
+          updateStudentField(stuNameInp.dataset.studentName, 'name', stuNameInp.value);
+          return;
+        }
+        const stuGenderSel = e.target.closest('[data-student-gender]');
+        if (stuGenderSel) {
+          updateStudentField(stuGenderSel.dataset.studentGender, 'gender', stuGenderSel.value);
+          return;
+        }
+        const avgChk = e.target.closest('[data-manual-avg-toggle]');
+        if (avgChk) {
+          toggleManualAverage(appState.activeTab, avgChk.dataset.manualAvgToggle, avgChk.checked);
+        }
+      });
+      grid.addEventListener('input', (e) => {
+        const gradeInp = e.target.closest('[data-grade-col]');
+        if (gradeInp) {
+          handleGradeInput(appState.activeTab, gradeInp.dataset.gradeStudent, gradeInp.dataset.gradeCol, gradeInp.value);
+          return;
+        }
+        const manAvgInp = e.target.closest('[data-manual-avg-input]');
+        if (manAvgInp) {
+          updateManualAverageValue(appState.activeTab, manAvgInp.dataset.manualAvgInput, manAvgInp.value);
+        }
+      });
+      grid.addEventListener('keydown', (e) => {
+        const gradeInp = e.target.closest('[data-grade-col]');
+        if (gradeInp) {
+          handleGridKeydown(e, Number(gradeInp.dataset.row), Number(gradeInp.dataset.col));
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        const menu = document.getElementById('db-menu');
+        if (menu && !menu.classList.contains('hidden') && !e.target.closest('#db-menu') && !e.target.closest('#btn-db-toggle')) {
+          menu.classList.add('hidden');
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          ['setup-modal', 'import-roster-modal', 'print-modal', 'memory-modal'].forEach(id => toggleHidden(id, true));
+          toggleHidden('db-menu', true);
+        }
+      });
+
+      const importPreviewTbody = document.getElementById('import-preview-tbody');
+      if (importPreviewTbody) {
+        importPreviewTbody.addEventListener('change', (e) => {
+          const nameInp = e.target.closest('[data-import-name]');
+          if (nameInp) {
+            const idx = Number(nameInp.dataset.importName);
+            if (parsedImportBuffer[idx]) parsedImportBuffer[idx].name = nameInp.value;
+            return;
+          }
+          const genderSel = e.target.closest('[data-import-gender]');
+          if (genderSel) {
+            const idx = Number(genderSel.dataset.importGender);
+            if (parsedImportBuffer[idx]) {
+              parsedImportBuffer[idx].gender = genderSel.value === 'F' ? 'F' : 'G';
+              renderImportPreview();
+            }
+          }
+        });
+        importPreviewTbody.addEventListener('click', (e) => {
+          const delBtn = e.target.closest('[data-import-remove]');
+          if (delBtn) {
+            const idx = Number(delBtn.dataset.importRemove);
+            if (Number.isInteger(idx) && idx >= 0 && idx < parsedImportBuffer.length) {
+              parsedImportBuffer.splice(idx, 1);
+              renderImportPreview();
+            }
+          }
+        });
+      }
+    }
+
+    // ==================== WORD-STYLE HOMEPAGE ====================
+    function renderHomeView() {
+      const container = document.getElementById('home-schools-container');
+      const query = (document.getElementById('home-search-input')?.value || '').trim().toLowerCase();
+      const allWorkbooks = Object.values(appState.workbooks);
+
+      const grouped = {};
+      allWorkbooks.forEach(wb => {
+        const schoolName = wb.school || 'Établissement sans nom';
+        if (query && !schoolName.toLowerCase().includes(query) && !wb.className.toLowerCase().includes(query)) return;
+        if (!grouped[schoolName]) grouped[schoolName] = [];
+        grouped[schoolName].push(wb);
+      });
+
+      const schoolNames = Object.keys(grouped);
+      if (schoolNames.length === 0) {
+        container.innerHTML = `
+          <div class="empty-home-box">
+            <div style="margin-bottom:10px;color:#64748b;display:flex;justify-content:center;">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg>
+            </div>
+            <h3 style="margin:0;font-size:16px;font-weight:700;color:#1e293b;">Aucune classe enregistrée</h3>
+            <p style="font-size:13px;color:#64748b;margin:6px 0 16px;">Créez votre première classe ou ajustez votre recherche.</p>
+            <button type="button" onclick="openSetupModal(false)" class="btn-primary-lg">+ Créer une Nouvelle Classe</button>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = schoolNames.map(schoolName => {
+        const classes = grouped[schoolName];
+        return `
+          <div class="school-group">
+            <div class="school-header-bar">
+              <div class="school-title-wrap">
+                <div class="school-icon-box">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2>${escapeHtml(schoolName)}</h2>
+                  <span class="school-sub">${classes.length} classe${classes.length > 1 ? 's' : ''} enregistrée${classes.length > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <button type="button" data-add-school="${escapeHtml(schoolName)}" class="btn-add-in-school">+ Ajouter une classe ici</button>
+            </div>
+
+            <div class="class-cards-grid">
+              ${classes.map(wb => {
+                const { fCount, gCount, total } = getGenderCounts(wb);
+                const color = sanitizeHexColor(wb.themeColor);
+
+                let t1Sum = 0, t1Cnt = 0, annSum = 0, annCnt = 0;
+                wb.students.forEach(s => {
+                  const v1 = getFinalTrimesterAverage(wb, '1', s.id);
+                  if (v1 !== null) { t1Sum += v1; t1Cnt++; }
+                  const va = calculateAnnualAverage(wb, s.id);
+                  if (va !== null) { annSum += va; annCnt++; }
+                });
+                const t1AvgStr = t1Cnt > 0 ? `${(t1Sum / t1Cnt).toFixed(2)}/20` : '--';
+                const annAvgStr = annCnt > 0 ? `${(annSum / annCnt).toFixed(2)}/20` : '--';
+
+                return `
+                  <div data-open-wb="${escapeHtml(wb.id)}" class="doc-card">
+                    <div class="card-accent" style="background-color:${color}"></div>
+                    <div class="card-body">
+                      <div>
+                        <div class="card-top">
+                          <span class="card-classname" style="color:${color}">${escapeHtml(wb.className)}</span>
+                          <span class="card-trim-pill">${wb.trimesterCount} Trim.</span>
+                        </div>
+                        <div class="card-school-sub">${escapeHtml(wb.school)}</div>
+                      </div>
+                      <div class="card-stats">
+                        <div class="card-stat-row">
+                          <span style="color:#64748b;font-weight:500;">Effectif :</span>
+                          <span class="mono effectif-pill">${fCount} F, ${gCount} G | T:${total}</span>
+                        </div>
+                        <div class="card-stat-row">
+                          <span style="color:#64748b;font-weight:500;">Moy. Trim 1 :</span>
+                          <span class="mono color-text-good" style="font-weight:700;">${t1AvgStr}</span>
+                        </div>
+                        <div class="card-stat-row">
+                          <span style="color:#64748b;font-weight:500;">Moy. Annuelle :</span>
+                          <span class="mono" style="font-weight:700;color:${color};">${annAvgStr}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-footer">
+                      <span style="font-weight:700;color:${color};">Ouvrir le cahier →</span>
+                      <div class="card-actions">
+                        <button type="button" data-edit-wb="${escapeHtml(wb.id)}" title="Paramètres de la classe" class="card-icon-btn">
+                          <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button type="button" data-del-wb="${escapeHtml(wb.id)}" title="Supprimer cette classe" class="card-icon-btn del">
+                          <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ==================== LOGIC 2: WEIGHTED MATHS & OVERRIDES ====================
+    function isBonusType(type) { return type === 'Bonus (+)'; }
+    function isMalusType(type) { return type === 'Malus (-)'; }
+
+    function getEffectiveColumnType(col) {
+      if (col.type === 'Autre...') {
+        return col.customLabel && col.customLabel.trim() ? col.customLabel.trim() : 'Autre';
+      }
+      return col.type;
+    }
+
+    function calculateFormulaTrimesterAverage(wb, trimKey, studentId) {
+      const trim = wb.trimesters[trimKey];
+      if (!trim) return null;
+
+      const studentGrades = trim.grades[studentId] || {};
+      let weightedSum = 0;
+      let totalWeight = 0;
+      let bonusSum = 0;
+      let malusSum = 0;
+      let hasStandardGrade = false;
+      let hasAnyGrade = false;
+
+      trim.columns.forEach(col => {
+        const rawVal = studentGrades[col.id];
+        if (rawVal === undefined || rawVal === null || rawVal === '') return;
+        const val = Number(rawVal);
+        if (!Number.isFinite(val)) return;
+        hasAnyGrade = true;
+
+        if (isBonusType(col.type)) {
+          bonusSum += val;
+        } else if (isMalusType(col.type)) {
+          malusSum += val;
+        } else {
+          hasStandardGrade = true;
+          const effType = getEffectiveColumnType(col);
+          const rawWeight = Number(trim.evalWeights[effType] ?? wb.defaultWeight ?? 1);
+          const weight = (Number.isFinite(rawWeight) && rawWeight > 0) ? rawWeight : 1;
+          weightedSum += val * weight;
+          totalWeight += weight;
+        }
+      });
+
+      if (!hasAnyGrade) return null;
+
+      let rawAvg = totalWeight === 0
+        ? (bonusSum - malusSum)
+        : ((weightedSum + bonusSum - malusSum) / totalWeight);
+
+      rawAvg = Math.max(0, rawAvg);
+      if (wb.capAt20 !== false) rawAvg = Math.min(20, rawAvg);
+      return Math.round(rawAvg * 100) / 100;
+    }
+
+    function getFinalTrimesterAverage(wb, trimKey, studentId) {
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim) return null;
+      const override = trim.manualOverrides?.[studentId];
+      if (override && override.enabled && override.value !== null && override.value !== '' && Number.isFinite(Number(override.value))) {
+        return Math.round(Number(override.value) * 100) / 100;
+      }
+      return calculateFormulaTrimesterAverage(wb, trimKey, studentId);
+    }
+
+    function calculateAnnualAverage(wb, studentId) {
+      let weightedSum = 0;
+      let totalTrimWeight = 0;
+      for (let t = 1; t <= wb.trimesterCount; t++) {
+        const tKey = String(t);
+        const avg = getFinalTrimesterAverage(wb, tKey, studentId);
+        if (avg !== null && !isNaN(avg)) {
+          const w = Number(wb.trimesterWeights[tKey] ?? 1);
+          weightedSum += avg * w;
+          totalTrimWeight += w;
+        }
+      }
+      if (totalTrimWeight === 0) return null;
+      return Math.round((weightedSum / totalTrimWeight) * 100) / 100;
+    }
+
+    function computeRanks(studentAveragesMap) {
+      const entries = Object.entries(studentAveragesMap)
+        .filter(([, avg]) => avg !== null && !isNaN(avg))
+        .sort((a, b) => b[1] - a[1]);
+
+      const ranks = {};
+      entries.forEach(([studentId, avg], idx) => {
+        if (idx > 0 && Math.abs(entries[idx - 1][1] - avg) < 0.001) {
+          const prevRankNum = parseInt(ranks[entries[idx - 1][0]], 10);
+          ranks[studentId] = `${prevRankNum}e ex`;
+          if (!ranks[entries[idx - 1][0]].includes('ex')) {
+            ranks[entries[idx - 1][0]] = prevRankNum === 1 ? '1er ex' : `${prevRankNum}e ex`;
+          }
+        } else {
+          const pos = idx + 1;
+          ranks[studentId] = pos === 1 ? '1er' : `${pos}e`;
+        }
+      });
+      return ranks;
+    }
+
+    // ==================== THEME & MASTER RENDER ====================
+    function applyTheme(hexColor) {
+      const color = sanitizeHexColor(hexColor);
+      document.documentElement.style.setProperty('--primary', color);
+      document.documentElement.style.setProperty('--primary-dark', shadeColor(color, -18));
+      document.documentElement.style.setProperty('--primary-soft', hexToRgba(color, 0.09));
+      const quickPicker = document.getElementById('quick-color-picker');
+      if (quickPicker) quickPicker.value = color;
+    }
+
+    function updateThemeColor(newColor) {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      const safeColor = sanitizeHexColor(newColor);
+      wb.themeColor = safeColor;
+      applyTheme(safeColor);
+      saveState();
+      if (appState.currentView === 'workbook' && appState.activeTab === 'annual') renderAnnualView();
+    }
+
+    function shadeColor(color, percent) {
+      let R = parseInt(color.substring(1, 3), 16);
+      let G = parseInt(color.substring(3, 5), 16);
+      let B = parseInt(color.substring(5, 7), 16);
+      R = Math.min(255, Math.max(0, parseInt((R * (100 + percent)) / 100, 10)));
+      G = Math.min(255, Math.max(0, parseInt((G * (100 + percent)) / 100, 10)));
+      B = Math.min(255, Math.max(0, parseInt((B * (100 + percent)) / 100, 10)));
+      return '#' + [R, G, B].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function hexToRgba(hex, alpha) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function avgColorClass(val) {
+      return val === null || isNaN(val) ? 'color-text-muted' : val >= 10 ? 'color-text-good' : 'color-text-bad';
+    }
+
+    function buildAnnualMap(wb) {
+      const map = {};
+      (wb.students || []).forEach(s => { map[s.id] = calculateAnnualAverage(wb, s.id); });
+      return map;
+    }
+
+    function renderAll() {
+      const wb = getActiveWorkbook();
+      const isHome = appState.currentView === 'home' || !wb;
+      const hdr = document.getElementById('app-header');
+
+      applyTheme(isHome ? '#1e40af' : wb.themeColor);
+      if (hdr) hdr.classList.toggle('in-workbook', !isHome);
+      toggleHidden('brand-title', !isHome);
+      toggleHidden('home-view', !isHome);
+      toggleHidden('workbook-view', isHome);
+      toggleHidden('workbook-header-context', isHome);
+      toggleHidden('workbook-header-actions', isHome);
+      toggleHidden('theme-picker-label', isHome);
+      document.getElementById('btn-home').classList.toggle('active-home', isHome);
+
+      if (isHome) {
+        renderHomeView();
+        return;
+      }
+
+      if (appState.activeTab !== 'annual') {
+        const tNum = parseInt(appState.activeTab, 10);
+        if (isNaN(tNum) || tNum < 1 || tNum > wb.trimesterCount || !wb.trimesters[appState.activeTab]) {
+          appState.activeTab = '1';
+        }
+      }
+
+      renderHeaderBar(wb);
+      renderSheetTabs(wb);
+
+      const isAnnual = appState.activeTab === 'annual';
+      toggleHidden('trimester-view', isAnnual);
+      toggleHidden('trimester-left-controls', isAnnual);
+      toggleHidden('top-right-subsettings-row', isAnnual);
+      toggleHidden('annual-view', !isAnnual);
+
+      if (isAnnual) {
+        renderAnnualView();
+      } else {
+        renderTopRightSubSettings(wb, appState.activeTab);
+        renderTrimesterGrid(wb, appState.activeTab);
+      }
+    }
+
+    function getGenderCounts(listOrWb) {
+      const students = Array.isArray(listOrWb) ? listOrWb : (listOrWb?.students || []);
+      let fCount = 0, gCount = 0;
+      students.forEach(s => { if (s.gender === 'F') fCount++; else gCount++; });
+      return { fCount, gCount, total: students.length };
+    }
+
+    function renderHeaderBar(wb) {
+      document.getElementById('hdr-school-name').textContent = wb.school;
+      const switcher = document.getElementById('workbook-switcher');
+      const bySchool = {};
+      Object.values(appState.workbooks).forEach(w => {
+        const sKey = w.school || 'Autre établissement';
+        if (!bySchool[sKey]) bySchool[sKey] = [];
+        bySchool[sKey].push(w);
+      });
+      switcher.innerHTML = Object.entries(bySchool).map(([schoolName, list]) => {
+        const opts = list.map(w => {
+          const c = getGenderCounts(w);
+          const summary = `${w.className} — F: ${c.fCount}, G: ${c.gCount} / T: ${c.total}`;
+          return `<option value="${escapeHtml(w.id)}" ${w.id === wb.id ? 'selected' : ''}>${escapeHtml(summary)}</option>`;
+        }).join('');
+        return `<optgroup label="${escapeHtml(schoolName)}">${opts}</optgroup>`;
+      }).join('');
+    }
+
+    function renderSheetTabs(wb) {
+      const bar = document.getElementById('sheet-tabs-bar');
+      const sheetIco = '<svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>';
+      const chartIco = '<svg class="svg-ico sm" style="color:#059669;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 20V10M12 20V4M6 20v-6"/></svg>';
+      let html = '';
+      for (let t = 1; t <= wb.trimesterCount; t++) {
+        const tKey = String(t);
+        const active = appState.activeTab === tKey ? 'active' : '';
+        html += `<button type="button" onclick="switchSheetTab('${tKey}')" class="sheet-tab ${active}">${sheetIco} Trimestre ${t}</button>`;
+      }
+      const isAnn = appState.activeTab === 'annual' ? 'active' : '';
+      html += `<button type="button" onclick="switchSheetTab('annual')" class="sheet-tab ${isAnn}">${chartIco} Bilan Annuel &amp; Graphiques</button>`;
+      bar.innerHTML = html;
+    }
+
+    function switchSheetTab(tabKey) {
+      appState.activeTab = tabKey;
+      saveState();
+      renderAll();
+    }
+
+    function switchWorkbook(wbId) {
+      appState.activeWorkbookId = wbId;
+      appState.activeTab = '1';
+      saveState();
+      renderAll();
+    }
+
+    // ==================== TOP-RIGHT SUBSETTINGS ====================
+    function renderTopRightSubSettings(wb, trimKey) {
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim) return;
+      const container = document.getElementById('eval-weights-container');
+      const typeCounts = {};
+      const activeTypes = [];
+
+      // Keep configured types even if Nb=0 so user never loses access to re-add them
+      Object.keys(trim.evalWeights || {}).forEach(k => {
+        if (k && !isBonusType(k) && !isMalusType(k)) {
+          typeCounts[k] = 0;
+          activeTypes.push(k);
+        }
+      });
+
+      trim.columns.forEach(col => {
+        if (!isBonusType(col.type) && !isMalusType(col.type)) {
+          const eff = getEffectiveColumnType(col);
+          typeCounts[eff] = (typeCounts[eff] || 0) + 1;
+          if (!activeTypes.includes(eff)) {
+            activeTypes.push(eff);
+            if (trim.evalWeights[eff] === undefined) {
+              trim.evalWeights[eff] = appState.activeMemory.evalWeights?.[eff] ?? wb.defaultWeight ?? 1;
+            }
+          }
+        }
+      });
+
+      if (activeTypes.length === 0) {
+        container.innerHTML = '<span style="font-size:12px;color:#94a3b8;font-style:italic;">Aucune évaluation standard</span>';
+        return;
+      }
+
+      container.innerHTML = activeTypes.map(type => {
+        const val = trim.evalWeights[type] ?? wb.defaultWeight ?? 1;
+        const count = typeCounts[type] || 0;
+        return `
+          <div class="eval-pill">
+            <span class="eval-pill-name">${escapeHtml(type)}</span>
+            <label class="eval-mini-box val" title="Coefficient / Valeur de ce type d'évaluation">
+              <span>Val:</span>
+              <input type="number" step="0.25" min="0.1" value="${val}" data-eval-weight="${escapeHtml(type)}" />
+            </label>
+            <label class="eval-mini-box nb" title="Nombre de colonnes dans ce trimestre">
+              <span>Nb:</span>
+              <input type="number" step="1" min="0" max="25" value="${count}" data-eval-count="${escapeHtml(type)}" />
+            </label>
+            <button type="button" class="eval-quick-plus" data-eval-plus="${escapeHtml(type)}" title="Ajouter +1 colonne ${escapeHtml(type)}">+</button>
+          </div>`;
+      }).join('');
+    }
+
+    function updateEvalTypeWeight(trimKey, evalType, newVal) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim || !isSafeKey(evalType)) return;
+      const num = parseFloat(newVal);
+      if (!Number.isFinite(num) || num <= 0 || num > 100) {
+        renderTopRightSubSettings(wb, trimKey);
+        return;
+      }
+      trim.evalWeights[evalType] = num;
+      appState.activeMemory.evalWeights[evalType] = num;
+      saveState();
+      renderTrimesterGrid(wb, trimKey);
+    }
+
+    function setEvaluationTypeColumnCount(trimKey, evalType, targetCountRaw) {
+      const targetCount = parseInt(targetCountRaw, 10);
+      if (isNaN(targetCount) || targetCount < 0 || targetCount > 25) return;
+
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim) return;
+      const matchingIndices = [];
+      trim.columns.forEach((col, idx) => {
+        if (!isBonusType(col.type) && !isMalusType(col.type) && getEffectiveColumnType(col) === evalType) {
+          matchingIndices.push(idx);
+        }
+      });
+
+      const currentCount = matchingIndices.length;
+      if (targetCount === currentCount) return;
+
+      if (targetCount > currentCount) {
+        const toAdd = targetCount - currentCount;
+        if (trim.columns.length + toAdd > 50) {
+          showToast('Maximum 50 colonnes par trimestre.', 'error');
+          renderTopRightSubSettings(wb, trimKey);
+          return;
+        }
+        const isDropdownOpt = getAllDropdownOptions().includes(evalType);
+        const newCols = [];
+        for (let i = 0; i < toAdd; i++) {
+          newCols.push({
+            id: makeUniqueId('col'),
+            type: isDropdownOpt ? evalType : 'Autre...',
+            customLabel: isDropdownOpt ? '' : evalType
+          });
+        }
+        const insertPos = matchingIndices.length > 0 ? matchingIndices[matchingIndices.length - 1] + 1 : trim.columns.length;
+        trim.columns.splice(insertPos, 0, ...newCols);
+        showToast(`${toAdd} colonne(s) "${evalType}" ajoutée(s).`, 'success');
+      } else {
+        const toRemoveCount = currentCount - targetCount;
+        if (trim.columns.length - toRemoveCount < 1) {
+          showToast('Il doit rester au moins une colonne dans la feuille.', 'error');
+          renderTopRightSubSettings(wb, trimKey);
+          return;
+        }
+        const indicesToRemove = matchingIndices.slice(-toRemoveCount);
+        const removedIds = indicesToRemove.map(i => trim.columns[i].id);
+        const hasGrades = Object.values(trim.grades || {}).some(gMap => removedIds.some(cid => gMap && gMap[cid] !== undefined && gMap[cid] !== ''));
+        if (hasGrades && !confirm(`Supprimer ${toRemoveCount} colonne(s) "${evalType}" contenant déjà des notes ?`)) {
+          renderTopRightSubSettings(wb, trimKey);
+          return;
+        }
+        trim.columns = trim.columns.filter((_, idx) => !indicesToRemove.includes(idx));
+        Object.keys(trim.grades).forEach(sId => {
+          removedIds.forEach(cId => { if (trim.grades[sId]) delete trim.grades[sId][cId]; });
+        });
+        showToast(`${toRemoveCount} colonne(s) "${evalType}" retirée(s).`, 'info');
+      }
+
+      saveState();
+      renderAll();
+    }
+
+    // ==================== EXCEL GRID RENDERING ====================
+    function getAllDropdownOptions() {
+      const custom = appState.activeMemory.customEvalTypes || [];
+      const combined = [...DEFAULT_EVAL_TYPES];
+      custom.forEach(c => {
+        if (!combined.includes(c) && c !== 'Bonus (+)' && c !== 'Malus (-)' && c !== 'Autre...') combined.push(c);
+      });
+      return [...combined, 'Bonus (+)', 'Malus (-)', 'Autre...'];
+    }
+
+    function renderTrimesterGrid(wb, trimKey) {
+      populateMemoryDatalists();
+      const trim = wb.trimesters[trimKey];
+      const thead = document.getElementById('grid-head');
+      const tbody = document.getElementById('grid-body');
+      const allOptions = getAllDropdownOptions();
+      const runningTypeCounter = {};
+
+      let headHtml = `<tr>
+        <th class="sticky-col-1" style="padding:10px 4px;font-size:12px;">N°</th>
+        <th class="sticky-col-2" style="padding:10px 12px;text-align:left;font-size:12px;">Nom &amp; Prénoms</th>
+        <th class="sticky-col-3" style="padding:10px 2px;font-size:11.5px;">Sexe</th>`;
+
+      trim.columns.forEach((col) => {
+        const isBonus = isBonusType(col.type);
+        const isMalus = isMalusType(col.type);
+        const isOther = col.type === 'Autre...';
+        const effType = getEffectiveColumnType(col);
+        runningTypeCounter[effType] = (runningTypeCounter[effType] || 0) + 1;
+        const typeNum = runningTypeCounter[effType];
+
+        const cls = isBonus ? 'is-bonus' : isMalus ? 'is-malus' : '';
+
+        headHtml += `
+          <th class="col-header-cell ${cls}">
+            <div class="col-header-top">
+              ${(isBonus || isMalus)
+                ? `<span class="col-badge ${isBonus ? 'bonus' : 'malus'}" title="${escapeHtml(effType)} #${typeNum}">${isBonus ? '+ Bonus' : '− Malus'} #${typeNum}</span>`
+                : `<span class="col-type-label" title="${escapeHtml(effType)} #${typeNum}">${escapeHtml(effType)} #${typeNum}</span>
+                   <span class="col-badge coeff">×${trim.evalWeights[effType] ?? wb.defaultWeight}</span>`}
+              <button type="button" data-del-col="${escapeHtml(col.id)}" title="Supprimer cette colonne" class="col-del-btn">&times;</button>
+            </div>
+            <select data-col-type-select="${escapeHtml(col.id)}" class="col-select">
+              ${allOptions.map(opt => `<option value="${escapeHtml(opt)}" ${col.type === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
+            </select>
+            ${isOther ? `
+              <input type="text" list="memory-evals" value="${escapeHtml(col.customLabel || '')}"
+                placeholder="Préciser le type..."
+                data-col-custom-label="${escapeHtml(col.id)}"
+                class="col-custom-input" />
+            ` : ''}
+          </th>`;
+      });
+
+      headHtml += `
+        <th style="min-width:136px;padding:8px;text-align:center;background:#e2e8f0;border-left:2px solid #94a3b8;">
+          <div style="font-size:12px;font-weight:700;">Moy. Trim. ${escapeHtml(trimKey)}</div>
+          <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;color:#64748b;">/ 20 • <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg> Édit.</div>
+        </th>`;
+
+      if (appState.showCrossPreview) {
+        for (let t = 1; t <= wb.trimesterCount; t++) {
+          const tStr = String(t);
+          if (tStr === trimKey) continue;
+          headHtml += `
+            <th style="min-width:82px;padding:8px;text-align:center;background:#eef2ff;color:#312e81;">
+              <div style="font-size:11px;font-weight:700;">Moy. T${t}</div>
+              <div style="font-size:9.5px;color:#6366f1;">Aperçu</div>
+            </th>`;
+        }
+        headHtml += `
+          <th style="min-width:92px;padding:8px;text-align:center;background:#ecfdf5;color:#064e3b;">
+            <div style="font-size:11px;font-weight:700;">Moy. Gén.</div>
+            <div style="font-size:9.5px;color:#059669;">Annuelle</div>
+          </th>`;
+      }
+
+      headHtml += `<th style="width:40px;padding:6px;text-align:center;font-size:11px;color:#64748b;">Act.</th></tr>`;
+      thead.innerHTML = headHtml;
+
+      if (wb.students.length === 0) {
+        const colSpan = 5 + trim.columns.length + (appState.showCrossPreview ? wb.trimesterCount : 0);
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" style="padding:38px;text-align:center;color:#94a3b8;">Aucun élève dans cette classe. Cliquez sur <strong>+ Ajouter Élève</strong> ou <strong>Importer Liste</strong>.</td></tr>`;
+        document.getElementById('live-sheet-avg').textContent = '-- / 20';
+        return;
+      }
+
+      let bodyHtml = '';
+      wb.students.forEach((student, idx) => {
+        const sGrades = trim.grades[student.id] || {};
+        const override = trim.manualOverrides?.[student.id] || { enabled: false, value: null };
+        const finalAvg = getFinalTrimesterAverage(wb, trimKey, student.id);
+        const isEdit = !!appState.bulkEditStudents;
+
+        bodyHtml += `<tr data-student-id="${escapeHtml(student.id)}">
+          <td class="sticky-col-1 mono" style="font-size:12px;color:#64748b;font-weight:600;">${idx + 1}</td>
+          <td class="sticky-col-2 ${isEdit ? 'td-editing' : ''}">
+            ${isEdit
+              ? `<input type="text" value="${escapeHtml(student.name)}" data-student-name="${escapeHtml(student.id)}" placeholder="Nom et Prénoms" class="cell-input" style="font-weight:600;color:#451a03;" />`
+              : `<div class="student-name-display" title="${escapeHtml(student.name)}">${escapeHtml(student.name)}</div>`}
+          </td>
+          <td class="sticky-col-3 ${isEdit ? 'td-editing' : ''}" style="padding:0 3px;">
+            ${isEdit
+              ? `<select data-student-gender="${escapeHtml(student.id)}" style="width:40px;height:26px;padding:0 1px;font-weight:700;font-size:11.5px;border:1px solid #f59e0b;border-radius:5px;background:#fff;text-align:center;color:${student.gender === 'F' ? '#be185d' : '#1d4ed8'};">
+                  <option value="F" ${student.gender === 'F' ? 'selected' : ''}>F</option>
+                  <option value="G" ${student.gender === 'G' ? 'selected' : ''}>G</option>
+                 </select>`
+              : `<span class="gender-badge-cell ${student.gender === 'F' ? 'gender-F' : 'gender-G'}">${student.gender}</span>`}
+          </td>`;
+
+        trim.columns.forEach((col, cIdx) => {
+          const val = sGrades[col.id] ?? '';
+          const isBonus = isBonusType(col.type);
+          const isMalus = isMalusType(col.type);
+          const tdCls = isBonus ? 'td-bonus' : isMalus ? 'td-malus' : '';
+
+          bodyHtml += `
+            <td class="${tdCls}">
+              <input type="number" step="0.25" min="0" max="40"
+                data-row="${idx}" data-col="${cIdx}"
+                data-grade-student="${escapeHtml(student.id)}"
+                data-grade-col="${escapeHtml(col.id)}"
+                value="${val}"
+                placeholder="${isBonus ? '+0' : isMalus ? '-0' : '-'}"
+                class="cell-input cell-grade" />
+            </td>`;
+        });
+
+        const avgDisplay = finalAvg !== null ? finalAvg.toFixed(2) : '';
+
+        bodyHtml += `
+          <td id="avg-cell-${escapeHtml(student.id)}" class="td-avg ${override.enabled ? 'manual' : ''}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+              ${override.enabled
+                ? `<input type="number" step="0.01" min="0" max="20" value="${override.value ?? (finalAvg ?? '')}" data-manual-avg-input="${escapeHtml(student.id)}" class="manual-avg-input" />`
+                : `<span id="avg-val-${escapeHtml(student.id)}" class="mono ${avgColorClass(finalAvg)}" style="font-weight:700;font-size:13.5px;flex:1;text-align:center;">${avgDisplay || '--'}</span>`}
+              <input type="checkbox" ${override.enabled ? 'checked' : ''} data-manual-avg-toggle="${escapeHtml(student.id)}" title="Activer l'édition manuelle de la moyenne" style="width:14px;height:14px;accent-color:#d97706;cursor:pointer;" />
+            </div>
+          </td>`;
+
+        if (appState.showCrossPreview) {
+          for (let t = 1; t <= wb.trimesterCount; t++) {
+            const tStr = String(t);
+            if (tStr === trimKey) continue;
+            const otherAvg = getFinalTrimesterAverage(wb, tStr, student.id);
+            bodyHtml += `<td class="td-cross mono" style="font-size:12px;font-weight:600;color:#334155;">${otherAvg !== null ? otherAvg.toFixed(2) : '--'}</td>`;
+          }
+          const annAvg = calculateAnnualAverage(wb, student.id);
+          bodyHtml += `<td id="cross-ann-${escapeHtml(student.id)}" class="td-cross-ann mono ${avgColorClass(annAvg)}" style="font-size:12.5px;font-weight:700;">${annAvg !== null ? annAvg.toFixed(2) : '--'}</td>`;
+        }
+
+        bodyHtml += `
+          <td style="text-align:center;">
+            <button type="button" data-del-student="${escapeHtml(student.id)}" title="Supprimer cet élève" class="col-del-btn" style="padding:4px 8px;">
+              <svg class="svg-ico sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </td>
+        </tr>`;
+      });
+
+      tbody.innerHTML = bodyHtml;
+      updateLiveSheetClassAverage(wb, trimKey);
+    }
+
+    function toggleBulkStudentEdit(enabled) {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      appState.bulkEditStudents = !!enabled;
+      saveState();
+      if (appState.activeTab !== 'annual') renderTrimesterGrid(wb, appState.activeTab);
+    }
+
+    function handleGradeInput(trimKey, studentId, colId, rawValue) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim || !isSafeKey(studentId) || !isSafeKey(colId)) return;
+      if (!trim.grades[studentId]) trim.grades[studentId] = {};
+      if (rawValue === '' || rawValue === null) {
+        delete trim.grades[studentId][colId];
+      } else {
+        const num = parseFloat(rawValue);
+        if (!Number.isFinite(num)) {
+          delete trim.grades[studentId][colId];
+        } else {
+          trim.grades[studentId][colId] = Math.min(40, Math.max(0, num));
+        }
+      }
+      saveState();
+      recalculateSingleRowDOM(wb, trimKey, studentId);
+      updateLiveSheetClassAverage(wb, trimKey);
+    }
+
+    function recalculateSingleRowDOM(wb, trimKey, studentId) {
+      const finalAvg = getFinalTrimesterAverage(wb, trimKey, studentId);
+      const valSpan = document.getElementById(`avg-val-${studentId}`);
+      if (valSpan) {
+        valSpan.textContent = finalAvg !== null ? finalAvg.toFixed(2) : '--';
+        valSpan.className = `mono ${avgColorClass(finalAvg)}`;
+      }
+      if (appState.showCrossPreview) {
+        const crossAnn = document.getElementById(`cross-ann-${studentId}`);
+        if (crossAnn) {
+          const annAvg = calculateAnnualAverage(wb, studentId);
+          crossAnn.textContent = annAvg !== null ? annAvg.toFixed(2) : '--';
+          crossAnn.className = `td-cross-ann mono ${avgColorClass(annAvg)}`;
+        }
+      }
+    }
+
+    function updateLiveSheetClassAverage(wb, trimKey) {
+      let sum = 0, count = 0;
+      (wb?.students || []).forEach(s => {
+        const avg = getFinalTrimesterAverage(wb, trimKey, s.id);
+        if (avg !== null && Number.isFinite(avg)) { sum += avg; count++; }
+      });
+      document.getElementById('live-sheet-avg').textContent = count > 0 ? `${(sum / count).toFixed(2)} / 20` : '-- / 20';
+    }
+
+    function handleGridKeydown(e, rowIdx, colIdx) {
+      if (e.key === 'Enter' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = document.querySelector(`input[data-row="${rowIdx + 1}"][data-col="${colIdx}"]`);
+        if (next) { next.focus(); next.select(); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = document.querySelector(`input[data-row="${rowIdx - 1}"][data-col="${colIdx}"]`);
+        if (prev) { prev.focus(); prev.select(); }
+      }
+    }
+
+    // ==================== COLUMN & ROW CRUD ====================
+    function addEvaluationColumn() {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[appState.activeTab];
+      if (!trim) return;
+      if (trim.columns.length >= 50) {
+        showToast('Maximum 50 colonnes par trimestre.', 'error');
+        return;
+      }
+      trim.columns.push({ id: makeUniqueId('col'), type: 'Test', customLabel: '' });
+      ensureEvalWeight(wb, trim, 'Test');
+      saveState();
+      renderAll();
+    }
+
+    function removeEvaluationColumn(trimKey, colId) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim) return;
+      if (trim.columns.length <= 1) {
+        showToast("Il faut garder au moins une colonne d'évaluation.", 'error');
+        return;
+      }
+      const hasGrades = Object.values(trim.grades || {}).some(g => g && g[colId] !== undefined && g[colId] !== '');
+      if (hasGrades && !confirm('Cette colonne contient des notes. Confirmer la suppression ?')) return;
+      trim.columns = trim.columns.filter(c => c.id !== colId);
+      Object.keys(trim.grades).forEach(sId => { if (trim.grades[sId]) delete trim.grades[sId][colId]; });
+      saveState();
+      renderAll();
+    }
+
+    function changeColumnType(trimKey, colId, newType) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim) return;
+      const col = trim.columns.find(c => c.id === colId);
+      if (!col) return;
+      col.type = newType;
+      ensureEvalWeight(wb, trim, newType);
+      saveState();
+      renderAll();
+    }
+
+    function updateCustomColumnLabel(trimKey, colId, label) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim) return;
+      const col = trim.columns.find(c => c.id === colId);
+      if (!col) return;
+      const clean = String(label || '').trim().slice(0, 80);
+      col.customLabel = clean;
+      if (pushUniqueMemory('customEvalTypes', clean)) {
+        showToast(`Type "${clean}" ajouté à la mémoire active !`, 'success');
+      }
+      if (clean) ensureEvalWeight(wb, trim, clean);
+      saveState();
+      renderAll();
+    }
+
+    function addStudentRow() {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      if (wb.students.length >= 500) {
+        showToast('Maximum 500 élèves par classe.', 'error');
+        return;
+      }
+      wb.students.push({
+        id: makeUniqueId('st'),
+        name: `ÉLÈVE ${wb.students.length + 1}`,
+        gender: 'F'
+      });
+      appState.bulkEditStudents = true;
+      const chk = document.getElementById('toggle-bulk-student-edit');
+      if (chk) chk.checked = true;
+      saveState();
+      renderAll();
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('#grid-body tr:last-child input[data-student-name]');
+        if (inputs.length) { inputs[0].focus(); inputs[0].select(); }
+      }, 40);
+    }
+
+    function removeStudentRow(studentId) {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      wb.students = wb.students.filter(s => s.id !== studentId);
+      Object.values(wb.trimesters).forEach(trim => {
+        delete trim.grades[studentId];
+        if (trim.manualOverrides) delete trim.manualOverrides[studentId];
+      });
+      saveState();
+      renderAll();
+    }
+
+    function updateStudentField(studentId, field, value) {
+      const wb = getActiveWorkbook();
+      if (!wb || (field !== 'name' && field !== 'gender')) return;
+      const student = wb.students.find(s => s.id === studentId);
+      if (!student) return;
+      student[field] = field === 'gender'
+        ? (value === 'F' ? 'F' : 'G')
+        : (String(value || '').trim().slice(0, 160) || student.name);
+      saveState();
+      if (field === 'gender') {
+        renderHeaderBar(wb);
+        if (appState.activeTab !== 'annual') renderTrimesterGrid(wb, appState.activeTab);
+      }
+    }
+
+    function toggleManualAverage(trimKey, studentId, enabled) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim || !isSafeKey(studentId)) return;
+      if (!trim.manualOverrides) trim.manualOverrides = {};
+      const currentCalc = calculateFormulaTrimesterAverage(wb, trimKey, studentId);
+      trim.manualOverrides[studentId] = {
+        enabled: !!enabled,
+        value: enabled ? (trim.manualOverrides[studentId]?.value ?? currentCalc ?? 10) : null
+      };
+      saveState();
+      renderTrimesterGrid(wb, trimKey);
+    }
+
+    function updateManualAverageValue(trimKey, studentId, rawVal) {
+      const wb = getActiveWorkbook();
+      const trim = wb?.trimesters?.[trimKey];
+      if (!trim || !isSafeKey(studentId)) return;
+      if (!trim.manualOverrides) trim.manualOverrides = {};
+      if (!trim.manualOverrides[studentId]) trim.manualOverrides[studentId] = { enabled: true, value: null };
+      if (rawVal === '' || rawVal === null) {
+        trim.manualOverrides[studentId].value = null;
+      } else {
+        const num = parseFloat(rawVal);
+        const maxVal = wb.capAt20 !== false ? 20 : 40;
+        trim.manualOverrides[studentId].value = Number.isFinite(num) ? Math.min(maxVal, Math.max(0, num)) : null;
+      }
+      saveState();
+      updateLiveSheetClassAverage(wb, trimKey);
+      if (appState.showCrossPreview) recalculateSingleRowDOM(wb, trimKey, studentId);
+    }
+
+    function toggleCrossPreview(checked) {
+      const wb = getActiveWorkbook();
+      appState.showCrossPreview = !!checked;
+      saveState();
+      if (wb && appState.activeTab !== 'annual') renderTrimesterGrid(wb, appState.activeTab);
+    }
+
+    // ==================== LOGIC 3 & 4: ANNUAL VIEW & CHART.JS ====================
+    function renderAnnualView() {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      const weightsContainer = document.getElementById('trimester-weights-inputs');
+      let wHtml = '', formulaParts = [], denomSum = 0;
+
+      for (let t = 1; t <= wb.trimesterCount; t++) {
+        const tKey = String(t);
+        const w = wb.trimesterWeights[tKey] ?? (t === 1 ? 1 : 2);
+        wb.trimesterWeights[tKey] = w;
+        formulaParts.push(`(T${t}×${w})`);
+        denomSum += Number(w);
+        wHtml += `
+          <div style="display:inline-flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:4px 10px;">
+            <span style="font-size:12px;font-weight:600;color:#334155;">Trim ${t} : ×</span>
+            <input type="number" step="0.5" min="0.5" value="${w}" onchange="updateTrimesterWeight('${tKey}', this.value)"
+              style="width:46px;text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--primary);border:1px solid #cbd5e1;border-radius:4px;background:#fff;padding:2px;" />
+          </div>`;
+      }
+      weightsContainer.innerHTML = wHtml;
+      document.getElementById('annual-formula-preview').textContent = `(${formulaParts.join('+')}) / ${denomSum}`;
+
+      const annualMap = buildAnnualMap(wb);
+      const ranks = computeRanks(annualMap);
+      const validAnnuals = Object.values(annualMap).filter(v => v !== null && !isNaN(v));
+
+      if (validAnnuals.length > 0) {
+        const classAvg = validAnnuals.reduce((a, b) => a + b, 0) / validAnnuals.length;
+        const passCount = validAnnuals.filter(v => v >= 10).length;
+        document.getElementById('kpi-annual-avg').textContent = `${classAvg.toFixed(2)} / 20`;
+        document.getElementById('kpi-pass-rate').textContent = `${Math.round((passCount / validAnnuals.length) * 100)} %`;
+        document.getElementById('kpi-max-avg').textContent = `${Math.max(...validAnnuals).toFixed(2)} / 20`;
+        document.getElementById('kpi-min-avg').textContent = `${Math.min(...validAnnuals).toFixed(2)} / 20`;
+      } else {
+        document.getElementById('kpi-annual-avg').textContent = '-- / 20';
+        document.getElementById('kpi-pass-rate').textContent = '-- %';
+        document.getElementById('kpi-max-avg').textContent = '-- / 20';
+        document.getElementById('kpi-min-avg').textContent = '-- / 20';
+      }
+
+      const thead = document.getElementById('annual-head');
+      const tbody = document.getElementById('annual-body');
+      let hHtml = `<tr>
+        <th style="text-align:center;width:44px;font-size:12px;">N°</th>
+        <th style="text-align:left;min-width:200px;font-size:12px;">Nom &amp; Prénoms</th>
+        <th style="text-align:center;width:64px;font-size:12px;">Sexe</th>`;
+      for (let t = 1; t <= wb.trimesterCount; t++) {
+        hHtml += `<th style="text-align:center;font-size:12px;">Moy. Trim ${t} <span style="font-size:10px;color:#64748b;">(×${wb.trimesterWeights[t]})</span></th>`;
+      }
+      hHtml += `
+        <th style="text-align:center;font-size:12px;background:#eff6ff;color:#1e3a8a;font-weight:700;">Moyenne Annuelle</th>
+        <th style="text-align:center;font-size:12px;">Rang</th>
+        <th style="text-align:center;font-size:12px;">Appréciation</th>
+      </tr>`;
+      thead.innerHTML = hHtml;
+
+      tbody.innerHTML = wb.students.map((s, idx) => {
+        const ann = annualMap[s.id];
+        let colsHtml = '';
+        for (let t = 1; t <= wb.trimesterCount; t++) {
+          const tAvg = getFinalTrimesterAverage(wb, String(t), s.id);
+          const tColor = tAvg !== null && tAvg < 10 ? 'color-text-bad' : tAvg === null ? 'color-text-muted' : '';
+          colsHtml += `<td class="mono ${tColor}" style="text-align:center;font-weight:600;">${tAvg !== null ? tAvg.toFixed(2) : '--'}</td>`;
+        }
+        return `<tr>
+          <td class="mono" style="text-align:center;color:#64748b;">${idx + 1}</td>
+          <td style="font-weight:600;">${escapeHtml(s.name)}</td>
+          <td style="text-align:center;font-weight:700;color:${s.gender === 'F' ? '#be185d' : '#1d4ed8'};">${s.gender}</td>
+          ${colsHtml}
+          <td class="mono ${avgColorClass(ann)}" style="text-align:center;font-weight:800;background:#eff6ff;">${ann !== null ? ann.toFixed(2) : '--'}</td>
+          <td class="mono" style="text-align:center;font-weight:700;">${ranks[s.id] || '--'}</td>
+          <td style="text-align:center;font-size:12px;color:#475569;">${getAppreciation(ann)}</td>
+        </tr>`;
+      }).join('');
+
+      renderAnalyticsCharts(wb, annualMap);
+    }
+
+    function updateTrimesterWeight(trimKey, val) {
+      const wb = getActiveWorkbook();
+      if (!wb || !isSafeKey(trimKey)) return;
+      const num = parseFloat(val);
+      if (!Number.isFinite(num) || num <= 0 || num > 20) {
+        renderAnnualView();
+        return;
+      }
+      wb.trimesterWeights[trimKey] = num;
+      saveState();
+      renderAnnualView();
+    }
+
+    function getAppreciation(avg) {
+      if (avg === null || isNaN(avg)) return '--';
+      if (avg >= 16) return 'Très Bien';
+      if (avg >= 14) return 'Bien';
+      if (avg >= 12) return 'Assez Bien';
+      if (avg >= 10) return 'Passable';
+      if (avg >= 8) return 'Insuffisant';
+      return 'Faible';
+    }
+
+    function buildChartConfigs(wb, annualMap, disableAnimations) {
+      const labels = [], allAvgs = [], girlsAvgs = [], boysAvgs = [];
+      const calcMean = arr => arr.length ? +(arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : 0;
+      const pushBucket = (label, getVal) => {
+        labels.push(label);
+        const all = [], girls = [], boys = [];
+        wb.students.forEach(s => {
+          const v = getVal(s);
+          if (v !== null && !isNaN(v)) {
+            all.push(v);
+            (s.gender === 'F' ? girls : boys).push(v);
+          }
+        });
+        allAvgs.push(calcMean(all));
+        girlsAvgs.push(calcMean(girls));
+        boysAvgs.push(calcMean(boys));
+        return all;
+      };
+
+      for (let t = 1; t <= wb.trimesterCount; t++) {
+        const tKey = String(t);
+        pushBucket(`Trimestre ${t}`, s => getFinalTrimesterAverage(wb, tKey, s.id));
+      }
+      const annAll = pushBucket('Bilan Annuel', s => annualMap[s.id]);
+
+      const brackets = [0, 0, 0, 0, 0];
+      annAll.forEach(v => {
+        if (v < 8) brackets[0]++;
+        else if (v < 10) brackets[1]++;
+        else if (v < 12) brackets[2]++;
+        else if (v < 14) brackets[3]++;
+        else brackets[4]++;
+      });
+
+      const anim = disableAnimations ? false : undefined;
+      return {
+        compConfig: {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Moyenne Classe', data: allAvgs, backgroundColor: sanitizeHexColor(wb.themeColor), borderRadius: 6 },
+              { label: 'Filles (F)', data: girlsAvgs, backgroundColor: '#ec4899', borderRadius: 6 },
+              { label: 'Garçons (G)', data: boysAvgs, backgroundColor: '#0ea5e9', borderRadius: 6 }
+            ]
+          },
+          options: {
+            animation: anim,
+            responsive: !disableAnimations,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 20 } },
+            plugins: { legend: { position: 'bottom' } }
+          }
+        },
+        distConfig: {
+          type: 'bar',
+          data: {
+            labels: ['< 8 (Faible)', '8–9.99 (Insuff.)', '10–11.99 (Pass.)', '12–13.99 (A. Bien)', '≥ 14 (Bien+)'],
+            datasets: [{
+              label: "Nombre d'élèves",
+              data: brackets,
+              backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            animation: anim,
+            responsive: !disableAnimations,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } }
+          }
+        }
+      };
+    }
+
+    function renderAnalyticsCharts(wb, annualMap) {
+      if (!window.Chart) return;
+      if (chartInstances.comparison) chartInstances.comparison.destroy();
+      if (chartInstances.distribution) chartInstances.distribution.destroy();
+      const { compConfig, distConfig } = buildChartConfigs(wb, annualMap, false);
+      chartInstances.comparison = new Chart(document.getElementById('trimesterComparisonChart').getContext('2d'), compConfig);
+      chartInstances.distribution = new Chart(document.getElementById('gradeDistributionChart').getContext('2d'), distConfig);
+    }
+
+    function renderPrintChartSnapshots(wb, annualMap) {
+      if (!window.Chart) return { img1: null, img2: null };
+      const { compConfig, distConfig } = buildChartConfigs(wb, annualMap, true);
+      const c1 = document.getElementById('printChartCompCanvas');
+      const c2 = document.getElementById('printChartDistCanvas');
+      if (!c1 || !c2) return { img1: null, img2: null };
+      let inst1 = null, inst2 = null;
+      try {
+        if (typeof Chart.getChart === 'function') {
+          Chart.getChart(c1)?.destroy();
+          Chart.getChart(c2)?.destroy();
+        }
+        inst1 = new Chart(c1.getContext('2d'), compConfig);
+        inst2 = new Chart(c2.getContext('2d'), distConfig);
+        return { img1: c1.toDataURL('image/png'), img2: c2.toDataURL('image/png') };
+      } catch (err) {
+        console.error('Erreur capture graphiques impression:', err);
+        return { img1: null, img2: null };
+      } finally {
+        if (inst1) inst1.destroy();
+        if (inst2) inst2.destroy();
+      }
+    }
+
+    // ==================== LOGIC 1: SETUP WIZARD & ACTIVE MEMORY ====================
+    function populateMemoryDatalists() {
+      document.getElementById('memory-schools').innerHTML = (appState.activeMemory.schools || [])
+        .map(s => `<option value="${escapeHtml(s)}">`).join('');
+      document.getElementById('memory-classes').innerHTML = (appState.activeMemory.classes || [])
+        .map(c => `<option value="${escapeHtml(c)}">`).join('');
+      document.getElementById('memory-evals').innerHTML = (appState.activeMemory.customEvalTypes || [])
+        .map(e => `<option value="${escapeHtml(e)}">`).join('');
+      document.getElementById('memory-subtitles').innerHTML = (appState.activeMemory.subtitles || [])
+        .map(s => `<option value="${escapeHtml(s)}">`).join('');
+    }
+
+    function stepSetupCount(inputId, delta) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      const cur = parseInt(el.value, 10) || 0;
+      el.value = Math.min(20, Math.max(0, cur + delta));
+      updateSetupColTotal();
+    }
+
+    function updateSetupColTotal() {
+      const q = parseInt(document.getElementById('init-quiz-count')?.value, 10) || 0;
+      const t = parseInt(document.getElementById('init-test-count')?.value, 10) || 0;
+      const d = parseInt(document.getElementById('init-devoir-count')?.value, 10) || 0;
+      const o = parseInt(document.getElementById('init-oral-count')?.value, 10) || 0;
+      const custRaw = document.getElementById('setup-custom-evals')?.value || '';
+      const custCount = custRaw.split(',').map(s => s.trim()).filter(Boolean).length;
+      const total = q + t + d + o + custCount;
+      const badge = document.getElementById('setup-total-cols-preview');
+      if (badge) badge.textContent = `${total} colonne${total > 1 ? 's' : ''} / trim.`;
+    }
+
+    function openSetupModalForSchool(schoolName) {
+      openSetupModal(false);
+      document.getElementById('setup-school').value = schoolName;
+      document.getElementById('setup-class').focus();
+    }
+
+    function openSetupModal(isEdit) {
+      populateMemoryDatalists();
+      document.getElementById('setup-is-edit').value = isEdit ? 'true' : 'false';
+      const wb = getActiveWorkbook();
+
+      if (isEdit && wb) {
+        document.getElementById('setup-modal-title').textContent = `Paramètres : ${wb.className}`;
+        document.getElementById('setup-school').value = wb.school;
+        document.getElementById('setup-class').value = wb.className;
+        document.getElementById('setup-trimesters').value = String(wb.trimesterCount);
+        document.getElementById('setup-default-weight').value = wb.defaultWeight ?? 1;
+        document.getElementById('setup-color').value = wb.themeColor || '#1e40af';
+        document.getElementById('setup-subtitle').value = wb.reportSubtitle || '';
+        document.getElementById('setup-custom-evals').value = '';
+        document.getElementById('setup-cap-20').checked = wb.capAt20 !== false;
+        document.getElementById('setup-initial-columns-box').classList.add('hidden');
+      } else {
+        document.getElementById('setup-modal-title').textContent = 'Créer une Nouvelle Classe';
+        document.getElementById('setup-school').value = wb ? wb.school : '';
+        document.getElementById('setup-class').value = '';
+        document.getElementById('setup-trimesters').value = '3';
+        document.getElementById('setup-default-weight').value = '1';
+        document.getElementById('setup-color').value = '#1e40af';
+        document.getElementById('setup-subtitle').value = appState.activeMemory.subtitles?.[0] || 'Année Scolaire 2026-2027';
+        document.getElementById('setup-custom-evals').value = '';
+        document.getElementById('setup-cap-20').checked = true;
+        document.getElementById('init-quiz-count').value = '2';
+        document.getElementById('init-test-count').value = '2';
+        document.getElementById('init-devoir-count').value = '0';
+        document.getElementById('init-oral-count').value = '1';
+        document.getElementById('setup-initial-columns-box').classList.remove('hidden');
+        updateSetupColTotal();
+      }
+      document.getElementById('setup-modal').classList.remove('hidden');
+    }
+
+    function saveWorkbookSetup(e) {
+      e.preventDefault();
+      const isEdit = document.getElementById('setup-is-edit').value === 'true';
+      const school = document.getElementById('setup-school').value.trim().slice(0, 140);
+      const className = document.getElementById('setup-class').value.trim().slice(0, 80);
+      if (!school || !className) {
+        showToast("Veuillez renseigner le nom de l'établissement et de la classe.", 'error');
+        return;
+      }
+      const trimesterCount = Math.round(sanitizeNumber(document.getElementById('setup-trimesters').value, 1, 6, 3));
+      const defaultWeight = sanitizeNumber(document.getElementById('setup-default-weight').value, 0.1, 20, 1);
+      const themeColor = sanitizeHexColor(document.getElementById('setup-color').value);
+      const reportSubtitle = document.getElementById('setup-subtitle').value.trim().slice(0, 160);
+      const capAt20 = document.getElementById('setup-cap-20').checked;
+      const customEvalsRaw = document.getElementById('setup-custom-evals').value;
+
+      pushUniqueMemory('schools', school);
+      pushUniqueMemory('classes', className);
+      pushUniqueMemory('subtitles', reportSubtitle);
+
+      const parsedCustomEvals = customEvalsRaw.split(',').map(s => s.trim().slice(0, 80)).filter(Boolean);
+      parsedCustomEvals.forEach(ev => pushUniqueMemory('customEvalTypes', ev));
+
+      if (isEdit) {
+        const wb = getActiveWorkbook();
+        if (!wb) {
+          closeModal('setup-modal');
+          return;
+        }
+        wb.school = school;
+        wb.className = className;
+        wb.trimesterCount = trimesterCount;
+        wb.defaultWeight = defaultWeight;
+        wb.themeColor = themeColor;
+        wb.reportSubtitle = reportSubtitle;
+        wb.capAt20 = capAt20;
+        for (let t = 1; t <= trimesterCount; t++) {
+          const tKey = String(t);
+          if (!wb.trimesters[tKey]) {
+            wb.trimesters[tKey] = {
+              evalWeights: { 'Test': defaultWeight },
+              columns: [{ id: makeUniqueId(`c${t}`), type: 'Test', customLabel: '' }],
+              grades: {},
+              manualOverrides: {}
+            };
+          }
+          if (!wb.trimesterWeights[tKey]) wb.trimesterWeights[tKey] = t === 1 ? 1 : 2;
+        }
+        const activeTrim = wb.trimesters[appState.activeTab === 'annual' ? '1' : appState.activeTab];
+        if (activeTrim) parsedCustomEvals.forEach(ev => ensureEvalWeight(wb, activeTrim, ev));
+        showToast('Paramètres de la classe mis à jour !', 'success');
+      } else {
+        const quizCount = Math.round(sanitizeNumber(document.getElementById('init-quiz-count').value, 0, 20, 0));
+        const quizVal = sanitizeNumber(document.getElementById('init-quiz-val').value, 0.1, 20, 0.5);
+        const testCount = Math.round(sanitizeNumber(document.getElementById('init-test-count').value, 0, 20, 0));
+        const testVal = sanitizeNumber(document.getElementById('init-test-val').value, 0.1, 20, 1);
+        const devoirCount = Math.round(sanitizeNumber(document.getElementById('init-devoir-count').value, 0, 20, 0));
+        const devoirVal = sanitizeNumber(document.getElementById('init-devoir-val').value, 0.1, 20, 2);
+        const oralCount = Math.round(sanitizeNumber(document.getElementById('init-oral-count').value, 0, 20, 0));
+        const oralVal = sanitizeNumber(document.getElementById('init-oral-val').value, 0.1, 20, 1);
+
+        const newId = makeUniqueId('wb');
+        const trimesters = {};
+        const trimesterWeights = {};
+
+        for (let t = 1; t <= trimesterCount; t++) {
+          const tKey = String(t);
+          const cols = [];
+          const weights = {};
+          const addBatch = (type, count, val) => {
+            if (count > 0) {
+              weights[type] = val;
+              appState.activeMemory.evalWeights[type] = val;
+              for (let i = 0; i < count && cols.length < 50; i++) {
+                cols.push({ id: makeUniqueId(`c${t}`), type, customLabel: '' });
+              }
+            }
+          };
+          addBatch('Interro / Quiz', quizCount, quizVal);
+          addBatch('Test', testCount, testVal);
+          addBatch('Devoir', devoirCount, devoirVal);
+          addBatch('Oral', oralCount, oralVal);
+
+          parsedCustomEvals.forEach((ev) => {
+            if (cols.length >= 50) return;
+            const w = appState.activeMemory.evalWeights?.[ev] ?? defaultWeight;
+            weights[ev] = w;
+            cols.push({ id: makeUniqueId(`c${t}_cust`), type: ev, customLabel: '' });
+          });
+
+          if (cols.length === 0) {
+            weights['Test'] = defaultWeight;
+            cols.push({ id: makeUniqueId(`c${t}_def`), type: 'Test', customLabel: '' });
+          }
+
+          trimesters[tKey] = { evalWeights: weights, columns: cols, grades: {}, manualOverrides: {} };
+          trimesterWeights[tKey] = t === 1 ? 1 : 2;
+        }
+
+        appState.workbooks[newId] = {
+          id: newId,
+          school,
+          className,
+          reportSubtitle,
+          themeColor,
+          trimesterCount,
+          defaultWeight,
+          capAt20,
+          trimesterWeights,
+          students: [{ id: makeUniqueId('st'), name: 'ÉLÈVE 1', gender: 'F' }],
+          trimesters
+        };
+        appState.activeWorkbookId = newId;
+        appState.currentView = 'workbook';
+        appState.activeTab = '1';
+        showToast(`Classe "${className}" créée et ajoutée à l'accueil !`, 'success');
+      }
+
+      saveState();
+      closeModal('setup-modal');
+      renderAll();
+    }
+
+    // ==================== LOGIC 4: WORD / PDF / OCR ROSTER IMPORTER ====================
+    function openImportRosterModal() {
+      parsedImportBuffer = [];
+      document.getElementById('roster-file-input').value = '';
+      document.getElementById('roster-paste-area').value = '';
+      setImportOcrStatus('');
+      renderImportPreview();
+      document.getElementById('import-roster-modal').classList.remove('hidden');
+    }
+
+    function setImportOcrStatus(msg) {
+      const box = document.getElementById('import-ocr-status');
+      if (!box) return;
+      if (!msg) {
+        box.classList.add('hidden');
+        box.textContent = '';
+      } else {
+        box.textContent = msg;
+        box.classList.remove('hidden');
+      }
+    }
+
+    function extractLinesFromDocxHtml(htmlStr) {
+      const doc = new DOMParser().parseFromString(htmlStr || '', 'text/html');
+      const lines = [];
+      const tables = doc.querySelectorAll('table');
+      if (tables.length > 0) {
+        tables.forEach(tbl => {
+          tbl.querySelectorAll('tr').forEach(tr => {
+            const cells = Array.from(tr.querySelectorAll('td, th')).map(td => td.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            if (cells.length) lines.push(cells.join('\t'));
+          });
+        });
+      }
+      if (lines.length >= 2) return lines.join('\n');
+      return Array.from(doc.querySelectorAll('p, li')).map(el => el.textContent.trim()).filter(Boolean).join('\n');
+    }
+
+    async function runOcrOnImageSource(imgSource) {
+      if (!window.PortfolioOCR) {
+        throw new Error('Module OCR local indisponible.');
+      }
+      const res = await window.PortfolioOCR.recognizeCanvas(imgSource, {
+        lang: 'fra',
+        onProgress: (pct) => setImportOcrStatus(`Analyse OCR locale en cours... ${pct}%`)
+      });
+      return res.text || '';
+    }
+
+    async function handleRosterFileUpload(event) {
+      const inputEl = event.target;
+      const file = inputEl?.files?.[0];
+      if (!file) return;
+      if (file.size > MAX_ROSTER_BYTES) {
+        showToast('Fichier trop volumineux (max 25 Mo).', 'error');
+        inputEl.value = '';
+        return;
+      }
+      const ext = file.name.split('.').pop().toLowerCase();
+      setImportOcrStatus('');
+
+      try {
+        showToast(`Analyse du fichier ${file.name}...`, 'info');
+        if (ext === 'docx') {
+          if (!window.mammoth) throw new Error('Mammoth.js local indisponible.');
+          const arrayBuffer = await file.arrayBuffer();
+          const htmlRes = await mammoth.convertToHtml({ arrayBuffer });
+          let structured = extractLinesFromDocxHtml(htmlRes.value);
+          if (!structured || structured.trim().length < 5) {
+            const rawRes = await mammoth.extractRawText({ arrayBuffer });
+            structured = rawRes.value;
+          }
+          parseRawRosterText(structured);
+        } else if (ext === 'pdf') {
+          if (!window.pdfjsLib) throw new Error('PDF.js local indisponible.');
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          let fullText = '';
+          const maxPages = Math.min(pdf.numPages || 0, 20);
+          for (let p = 1; p <= maxPages; p++) {
+            const page = await pdf.getPage(p);
+            const content = await page.getTextContent();
+            const linesMap = {};
+            content.items.forEach(item => {
+              const y = Math.round(item.transform[5] / 5) * 5;
+              if (!linesMap[y]) linesMap[y] = [];
+              linesMap[y].push({ x: item.transform[4], str: item.str });
+            });
+            Object.keys(linesMap).sort((a, b) => Number(b) - Number(a)).forEach(y => {
+              const rowItems = linesMap[y].sort((a, b) => a.x - b.x).map(it => it.str.trim()).filter(Boolean);
+              if (rowItems.length) fullText += rowItems.join('\t') + '\n';
+            });
+          }
+
+          // Fallback to offline Tesseract OCR if PDF is scanned (empty text layer)
+          if (fullText.replace(/\s+/g, '').length < 10) {
+            if (!window.PortfolioOCR) {
+              throw new Error('PDF scanné sans texte sélectionnable et OCR local indisponible.');
+            }
+            setImportOcrStatus('PDF scanné détecté : lancement de la reconnaissance OCR locale...');
+            let ocrText = '';
+            const maxOcrPages = Math.min(pdf.numPages || 0, 6);
+            for (let p = 1; p <= maxOcrPages; p++) {
+              setImportOcrStatus(`OCR page ${p}/${maxOcrPages}...`);
+              const page = await pdf.getPage(p);
+              const vp = page.getViewport({ scale: 2.0 });
+              const canvas = document.createElement('canvas');
+              canvas.width = vp.width;
+              canvas.height = vp.height;
+              await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+              ocrText += '\n' + await runOcrOnImageSource(canvas);
+              canvas.width = 0;
+              canvas.height = 0;
+            }
+            setImportOcrStatus('OCR terminé. Vérifiez et corrigez les noms/sexes si besoin ci-dessous.');
+            parseRawRosterText(ocrText);
+          } else {
+            parseRawRosterText(fullText);
+          }
+        } else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+          setImportOcrStatus("Analyse OCR de l'image en cours...");
+          const bitmap = await createImageBitmap(file);
+          try {
+            const scale = Math.min(1, MAX_OCR_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height, 1));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+            canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            const ocrText = await runOcrOnImageSource(canvas);
+            canvas.width = 0;
+            canvas.height = 0;
+            setImportOcrStatus('OCR terminé. Vérifiez les noms/sexes ci-dessous.');
+            parseRawRosterText(ocrText);
+          } finally {
+            if (typeof bitmap.close === 'function') bitmap.close();
+          }
+        } else {
+          const text = await file.text();
+          parseRawRosterText(text);
+        }
+      } catch (err) {
+        console.error(err);
+        setImportOcrStatus('');
+        showToast(`Erreur lecture fichier : ${err.message}`, 'error');
+      } finally {
+        inputEl.value = '';
+      }
+    }
+
+    function parseRawRosterText(rawText) {
+      const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const extracted = [];
+      const ignoreRegex = /^(n°|no|num|matricule|nom\s*&?\s*pr[ée]noms?|sexe|genre|classe|lyc[ée]e|coll[èe]ge|liste|effectif|total|ann[ée]e|trimestre|minist[èe]re|r[ée]publique|date\s*de\s*naiss)/i;
+      const genderTokenRx = /^(F|FÉMININ|FEMININ|FILLE|M|G|MASCULIN|GARÇON|GARCON|H|HOMME)$/i;
+
+      lines.forEach(line => {
+        if (ignoreRegex.test(line) || line.length < 3) return;
+
+        let gender = 'G';
+        let hasExplicitGender = false;
+        let nameCandidate = '';
+
+        // Structured columns (tabs / semicolons / pipes / multiple spaces)
+        const cols = line.split(/\t|[;|]+|\s{2,}/).map(c => c.trim()).filter(Boolean);
+        if (cols.length >= 2) {
+          const cleanedCols = [];
+          cols.forEach(col => {
+            const bare = col.replace(/^[(\[]|[)\]]$/g, '').trim();
+            if (!hasExplicitGender && genderTokenRx.test(bare)) {
+              gender = bare.toUpperCase().startsWith('F') ? 'F' : 'G';
+              hasExplicitGender = true;
+              return;
+            }
+            if (/^\d{1,3}[.)\-]?$/.test(col)) return; // Row index
+            if (/^\d{6,10}[A-Z]?$/i.test(col)) return; // Matricule
+            if (/^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}$/.test(col)) return; // Birthdate
+            if (/^(?:[1-6]e\d?|tle\s*[a-z\d]*|1[èe]re\s*[a-z\d]*|2nde\s*[a-z\d]*)$/i.test(col)) return; // Class label
+            cleanedCols.push(col);
+          });
+          nameCandidate = cleanedCols.join(' ').trim();
+        }
+
+        if (!nameCandidate) {
+          let work = line;
+          work = work.replace(/^\d+[\s.)\-–:]+/, '').trim();
+          work = work.replace(/^\d{6,10}[A-Z]?\s+/i, '').trim();
+          nameCandidate = work;
+        }
+
+        if (!hasExplicitGender && nameCandidate) {
+          const endMatch = nameCandidate.match(/(?:[\s,;|(\[-]+)(F|FÉMININ|FEMININ|FILLE|M|G|MASCULIN|GARÇON|GARCON|H|HOMME)(?:[\s)\]-]*)(?:\s+(?:\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}|[1-6]e\d?.*))?$/i);
+          if (endMatch) {
+            gender = endMatch[1].toUpperCase().startsWith('F') ? 'F' : 'G';
+            hasExplicitGender = true;
+            nameCandidate = nameCandidate.slice(0, endMatch.index).trim();
+          }
+        }
+
+        if (nameCandidate.replace(/[^a-zA-ZÀ-ÿ]/g, '').length >= 2) {
+          extracted.push({ name: nameCandidate, gender });
+        }
+      });
+
+      parsedImportBuffer = extracted;
+      renderImportPreview();
+    }
+
+    function renderImportPreview() {
+      const tbody = document.getElementById('import-preview-tbody');
+      const stats = document.getElementById('import-preview-stats');
+      const { fCount, gCount, total } = getGenderCounts(parsedImportBuffer);
+      stats.textContent = `${fCount} F, ${gCount} G | T : ${total}`;
+
+      if (total === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding:24px;text-align:center;color:#94a3b8;">Aucun élève détecté pour le moment.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = parsedImportBuffer.map((item, idx) => `
+        <tr>
+          <td class="mono" style="color:#64748b;">${idx + 1}</td>
+          <td>
+            <input type="text" value="${escapeHtml(item.name)}" data-import-name="${idx}"
+              style="width:100%;border:1px solid transparent;border-bottom-color:#e2e8f0;background:transparent;padding:2px 4px;font-weight:600;outline:none;" />
+          </td>
+          <td style="text-align:center;">
+            <select data-import-gender="${idx}"
+              style="border:1px solid #cbd5e1;border-radius:5px;padding:2px 6px;font-weight:700;color:${item.gender === 'F' ? '#be185d' : '#1d4ed8'};">
+              <option value="F" ${item.gender === 'F' ? 'selected' : ''}>F</option>
+              <option value="G" ${item.gender === 'G' ? 'selected' : ''}>G</option>
+            </select>
+          </td>
+          <td style="text-align:center;">
+            <button type="button" data-import-remove="${idx}" style="background:none;border:none;color:#e11d48;font-weight:700;font-size:15px;">&times;</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function confirmImportRoster() {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      if (parsedImportBuffer.length === 0) {
+        showToast('Aucun élève à importer.', 'error');
+        return;
+      }
+      const replace = document.getElementById('import-replace-existing').checked;
+      const newStudents = parsedImportBuffer
+        .slice(0, 500)
+        .map((item) => ({
+          id: makeUniqueId('st'),
+          name: String(item.name || '').trim().slice(0, 160),
+          gender: item.gender === 'F' ? 'F' : 'G'
+        }))
+        .filter(s => s.name.length > 0);
+
+      if (newStudents.length === 0) {
+        showToast('Aucun élève valide à importer.', 'error');
+        return;
+      }
+
+      if (replace) {
+        wb.students = newStudents;
+        Object.values(wb.trimesters).forEach(trim => {
+          trim.grades = {};
+          trim.manualOverrides = {};
+        });
+      } else {
+        wb.students = [...wb.students, ...newStudents].slice(0, 500);
+      }
+
+      saveState();
+      closeModal('import-roster-modal');
+      renderAll();
+      showToast(`${newStudents.length} élèves importés ! Activez "Éditer Noms/Genres" pour ajuster un nom ou un genre.`, 'success');
+    }
+
+    // ==================== PRINTABLE / EXPORTABLE REPORTS ====================
+    function openPrintModal() {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      const container = document.getElementById('print-trimester-checkboxes');
+      let html = '';
+      for (let t = 1; t <= wb.trimesterCount; t++) {
+        html += `
+          <label class="checkdot-item">
+            <input type="checkbox" name="print-trim" value="${t}" checked />
+            <span>Inclure Trimestre ${t} (Coeff. ×${wb.trimesterWeights[t] ?? 1})</span>
+          </label>`;
+      }
+      container.innerHTML = html;
+      document.getElementById('print-modal').classList.remove('hidden');
+    }
+
+    function executePrintReport() {
+      const wb = getActiveWorkbook();
+      if (!wb) return;
+      const selectedTrims = Array.from(document.querySelectorAll('input[name="print-trim"]:checked')).map(cb => cb.value);
+      const includeDetails = document.getElementById('print-opt-details').checked;
+      const includeAnnual = document.getElementById('print-opt-annual').checked;
+      const includeCharts = document.getElementById('print-opt-charts').checked;
+
+      if (selectedTrims.length === 0 && !includeAnnual && !includeDetails) {
+        showToast('Veuillez cocher au moins un élément à imprimer.', 'error');
+        return;
+      }
+
+      const { fCount, gCount, total } = getGenderCounts(wb);
+      const annualMap = buildAnnualMap(wb);
+      const ranks = computeRanks(annualMap);
+      const activeTrimKey = appState.activeTab === 'annual' ? '1' : appState.activeTab;
+      const activeTrim = wb.trimesters[activeTrimKey];
+
+      let chartsHtml = '';
+      if (includeCharts) {
+        const { img1, img2 } = renderPrintChartSnapshots(wb, annualMap);
+        const safePng = (u) => typeof u === 'string' && u.startsWith('data:image/png;base64,');
+        if (safePng(img1) && safePng(img2)) {
+          chartsHtml = `
+            <div class="print-charts-grid">
+              <div>
+                <div style="font-size:11px;font-weight:700;text-align:center;margin-bottom:4px;">Comparaison Trimestrielle &amp; Genre</div>
+                <img src="${img1}" alt="Comparaison Trimestrielle" />
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;text-align:center;margin-bottom:4px;">Répartition des Moyennes Annuelles</div>
+                <img src="${img2}" alt="Distribution des Moyennes" />
+              </div>
+            </div>`;
+        }
+      }
+
+      const subtitle = wb.reportSubtitle ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:2px;">${escapeHtml(wb.reportSubtitle)}</div>` : '';
+
+      const html = `
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f172a;padding-bottom:10px;margin-bottom:14px;">
+            <div>
+              ${subtitle}
+              <h1 style="margin:0;font-size:18px;font-weight:800;text-transform:uppercase;">${escapeHtml(wb.school)}</h1>
+              <div style="font-size:13px;font-weight:600;margin-top:4px;">Relevé de Notes &amp; Bilan Pédagogique — Classe : <u>${escapeHtml(wb.className)}</u></div>
+            </div>
+            <div style="text-align:right;font-size:11.5px;">
+              <div class="mono" style="font-weight:700;background:#f1f5f9;border:1px solid #cbd5e1;padding:4px 8px;border-radius:4px;">
+                Effectif : ${fCount} F | ${gCount} G | Total : ${total}
+              </div>
+              <div style="color:#64748b;margin-top:4px;">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+            </div>
+          </div>
+
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th style="width:28px;text-align:center;">N°</th>
+                <th style="text-align:left;">Nom &amp; Prénoms</th>
+                <th style="width:36px;text-align:center;">Sexe</th>
+                ${includeDetails && activeTrim ? activeTrim.columns.map(c => `<th style="text-align:center;">${escapeHtml(getEffectiveColumnType(c))}</th>`).join('') : ''}
+                ${selectedTrims.map(t => `<th style="text-align:center;">Moy. Trim ${t}</th>`).join('')}
+                ${includeAnnual ? `<th style="text-align:center;">Moy. Annuelle</th><th style="text-align:center;">Rang</th><th style="text-align:center;">Appréciation</th>` : ''}
+              </tr>
+            </thead>
+            <tbody>
+              ${wb.students.map((s, idx) => {
+                const ann = annualMap[s.id];
+                const sGrades = activeTrim?.grades[s.id] || {};
+                return `
+                  <tr>
+                    <td style="text-align:center;" class="mono">${idx + 1}</td>
+                    <td style="font-weight:600;">${escapeHtml(s.name)}</td>
+                    <td style="text-align:center;font-weight:700;">${s.gender}</td>
+                    ${includeDetails && activeTrim ? activeTrim.columns.map(c => `<td style="text-align:center;" class="mono">${sGrades[c.id] ?? '-'}</td>`).join('') : ''}
+                    ${selectedTrims.map(t => {
+                      const val = getFinalTrimesterAverage(wb, t, s.id);
+                      return `<td style="text-align:center;font-weight:600;" class="mono">${val !== null ? val.toFixed(2) : '--'}</td>`;
+                    }).join('')}
+                    ${includeAnnual ? `
+                      <td style="text-align:center;font-weight:700;" class="mono">${ann !== null ? ann.toFixed(2) : '--'}</td>
+                      <td style="text-align:center;font-weight:700;" class="mono">${ranks[s.id] || '--'}</td>
+                      <td style="text-align:center;">${getAppreciation(ann)}</td>
+                    ` : ''}
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+
+          ${chartsHtml}
+
+          <div class="print-signatures">
+            <div><div style="font-weight:700;">Visa du Professeur :</div><div style="height:48px;"></div></div>
+            <div style="text-align:right;"><div style="font-weight:700;">Visa de l'Administration / Direction :</div><div style="height:48px;"></div></div>
+          </div>
+        </div>`;
+
+      document.getElementById('print-area').innerHTML = html;
+      closeModal('print-modal');
+      setTimeout(() => window.print(), 180);
+    }
+
+    // ==================== DATABASE & ACTIVE MEMORY MANAGEMENT ====================
+    function toggleDbMenu() {
+      document.getElementById('db-menu').classList.toggle('hidden');
+    }
+
+    function getSchoolInitials(schoolName) {
+      const stopWords = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'l', 'd', 'au', 'aux', 'et', 'en']);
+      const rawWords = String(schoolName || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .split(/[\s'\u2019\-_/.]+/)
+        .map(w => w.replace(/[^a-zA-Z0-9]/g, ''))
+        .filter(Boolean);
+      if (!rawWords.length) return 'ETAB';
+      const filtered = rawWords.filter(w => !stopWords.has(w.toLowerCase()));
+      return (filtered.length ? filtered : rawWords).map(w => w[0].toUpperCase()).join('');
+    }
+
+    function buildExportInfo(wb, now = new Date()) {
+      const pad2 = n => String(n).padStart(2, '0');
+      const dateStr = `${pad2(now.getDate())}_${pad2(now.getMonth() + 1)}_${String(now.getFullYear()).slice(-2)}`;
+      const hh = pad2(now.getHours());
+      const mm = pad2(now.getMinutes());
+      const classSlug = String(wb?.className || 'Cahier')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || 'Cahier';
+      const trimTag = !wb ? 'ALL' : appState.activeTab === 'annual' ? 'ANN' : `TR${appState.activeTab}`;
+      const schoolInitials = wb ? getSchoolInitials(wb.school) : 'ALL';
+      const filename = `${classSlug}_${trimTag}_${schoolInitials}_${dateStr}_${hh}-${mm}.json`;
+      return {
+        filename,
+        exportMeta: {
+          filename,
+          date: dateStr,
+          time: `${hh}:${mm}`,
+          className: wb?.className || '',
+          trimester: trimTag,
+          school: wb?.school || '',
+          schoolInitials,
+          exportedAt: now.toISOString()
+        }
+      };
+    }
+
+    function exportDatabase() {
+      const info = buildExportInfo(getActiveWorkbook());
+      const payload = Object.assign({ exportMeta: info.exportMeta }, appState);
+      const dataStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = info.filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast(`Base exportée : ${info.filename}`, 'success');
+    }
+
+    function importDatabase(event) {
+      const inputEl = event.target;
+      const file = inputEl?.files?.[0];
+      if (!file) return;
+      if (file.size > MAX_JSON_BYTES) {
+        showToast('Fichier JSON trop volumineux (max 10 Mo).', 'error');
+        inputEl.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          const { exportMeta, ...rawImported } = (imported && typeof imported === 'object') ? imported : {};
+          const clean = sanitizeAppState(rawImported);
+          if (!clean) throw new Error('Format de sauvegarde invalide.');
+          appState = clean;
+          normalizeActiveWorkbook();
+          saveState();
+          renderAll();
+          showToast('Base de données restaurée avec succès !', 'success');
+        } catch (err) {
+          showToast("Erreur d'importation : " + err.message, 'error');
+        } finally {
+          inputEl.value = '';
+        }
+      };
+      reader.onerror = () => {
+        inputEl.value = '';
+        showToast('Impossible de lire le fichier JSON.', 'error');
+      };
+      reader.readAsText(file);
+    }
+
+    function deleteWorkbookById(wbId) {
+      const target = appState.workbooks[wbId];
+      if (!target) return;
+      if (!confirm(`Supprimer définitivement la classe "${target.className}" (${target.school}) ?`)) return;
+      delete appState.workbooks[wbId];
+      if (appState.activeWorkbookId === wbId) appState.activeWorkbookId = null;
+      normalizeActiveWorkbook();
+      saveState();
+      renderAll();
+      showToast(`Classe "${target.className}" supprimée.`, 'info');
+    }
+
+    function loadDemoData() {
+      if (!confirm('Charger les classes de démonstration (conserve ou remplace selon le cas) ?')) return;
+      seedDefaultWorkbooks();
+      renderAll();
+      showToast('Exemple de démonstration chargé.', 'info');
+    }
+
+    function deleteAllDatabase() {
+      if (!confirm('Voulez-vous vraiment SUPPRIMER toutes les classes et notes enregistrées ? Cette action est irréversible.')) return;
+      appState.workbooks = {};
+      normalizeActiveWorkbook();
+      saveState();
+      renderAll();
+      showToast('Base de données entièrement vidée.', 'info');
+    }
+
+    function openMemoryModal() {
+      renderMemoryModalChips();
+      document.getElementById('memory-modal').classList.remove('hidden');
+    }
+
+    function renderMemoryModalChips() {
+      const renderChips = (arr, category) => (arr && arr.length)
+        ? arr.map((item, idx) => `
+          <span class="mem-chip">
+            ${escapeHtml(item)}
+            <button type="button" onclick="removeMemoryItem('${category}', ${idx})" title="Retirer">&times;</button>
+          </span>`).join('')
+        : '<span style="color:#94a3b8;font-style:italic;">Vide</span>';
+
+      document.getElementById('mem-list-schools').innerHTML = renderChips(appState.activeMemory.schools, 'schools');
+      document.getElementById('mem-list-classes').innerHTML = renderChips(appState.activeMemory.classes, 'classes');
+      document.getElementById('mem-list-evals').innerHTML = renderChips(appState.activeMemory.customEvalTypes, 'customEvalTypes');
+    }
+
+    function removeMemoryItem(category, idx) {
+      if (!isSafeKey(category) || !Array.isArray(appState.activeMemory[category])) return;
+      if (!Number.isInteger(idx) || idx < 0 || idx >= appState.activeMemory[category].length) return;
+      appState.activeMemory[category].splice(idx, 1);
+      saveState();
+      renderMemoryModalChips();
+    }
+
+    // ==================== HELPERS ====================
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const cls = type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : 'toast-info';
+      toast.className = `toast-msg ${cls}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
