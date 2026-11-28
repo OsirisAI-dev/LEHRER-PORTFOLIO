@@ -18,7 +18,7 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v39';
+const CACHE_VERSION = 'v41';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
@@ -78,6 +78,7 @@ const PRECACHE_URLS = [
   './js/smart_tutor.js',
   './js/core/deutschthek-sync.js',
   './js/core/portfolio-ocr.js',
+  './js/core/cahier-sync.js',
   './js/core/osiris-core.js',
   './js/core/osiris-educore.js',
   './js/core/class-roster.js',
@@ -87,6 +88,8 @@ const PRECACHE_URLS = [
   './js/apps/dashboard-pointeur.js',
 
   './lib/chart/v4.5.1/chart.umd.min.js',
+  './lib/qrcode/qrcode.min.js',
+  './lib/qrcode/jsQR.min.js',
   './lib/sqljs/v1.10.3/sql-wasm.js',
   './lib/sqljs/v1.10.3/sql-wasm.wasm',
   './lib/htmldocx/v1/html-docx.js',

@@ -9,12 +9,15 @@
   <link rel="icon" type="image/png" href="../icons/cahier-notes.png" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png" />
   <link rel="stylesheet" href="../fonts/fonts.css" />
-  <script>if (window.self !== window.top) document.documentElement.classList.add('in-portfolio-iframe');</script>
+  <script>if (window.self !== window.top || window.AndroidBridge || location.search.includes('standalone=1')) document.documentElement.classList.add('in-portfolio-iframe');</script>
   <!-- Offline Local Vendor Libraries (0 CDN dependency) -->
   <script src="../lib/chart/v4.5.1/chart.umd.min.js"></script>
   <script src="../lib/mammoth/v1/mammoth.browser.js"></script>
   <script src="../lib/pdf/v1/pdf.min.js"></script>
+  <script src="../lib/qrcode/qrcode.min.js"></script>
+  <script src="../lib/qrcode/jsQR.min.js"></script>
   <script src="../js/core/portfolio-ocr.js"></script>
+  <script src="../js/core/cahier-sync.js"></script>
 
   <style>
     :root {
@@ -147,6 +150,12 @@
       color: #ffffff;
     }
     .btn-ribbon-emerald:hover { background: #059669; }
+    .btn-ribbon-sync {
+      background: #0891b2;
+      border-color: #06b6d4;
+      color: #ffffff;
+    }
+    .btn-ribbon-sync:hover { background: #0e7490; }
     .btn-ribbon-dark {
       background: rgba(0, 0, 0, 0.24);
       border-color: rgba(255, 255, 255, 0.18);
@@ -1410,6 +1419,14 @@
         </button>
       </div>
 
+      <!-- Hybrid Sync Button -->
+      <button type="button" id="btn-sync-open" onclick="openSyncModal()" class="btn-ribbon btn-ribbon-sync" title="Synchroniser APK & Desktop par QR Code ou fichier">
+        <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 00-9-9 9.75 9.75 0 00-6.74 2.74L3 8M3 3v5h5M3 12a9 9 0 009 9 9.75 9.75 0 006.74-2.74L21 16M16 16h5v5"/>
+        </svg>
+        <span>Synchro</span>
+      </button>
+
       <!-- Database & Memory Menu -->
       <div class="dropdown-wrap">
         <button type="button" id="btn-db-toggle" onclick="toggleDbMenu()" class="btn-ribbon btn-ribbon-dark">
@@ -1419,6 +1436,11 @@
           <span>Base &amp; Mémoire</span>
         </button>
         <div id="db-menu" class="dropdown-menu hidden">
+          <button type="button" onclick="openSyncModal(); toggleDbMenu()" class="dropdown-item">
+            <svg class="svg-ico" style="color:#0891b2;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 00-9-9 9.75 9.75 0 00-6.74 2.74L3 8M3 3v5h5M3 12a9 9 0 009 9 9.75 9.75 0 006.74-2.74L21 16M16 16h5v5"/></svg>
+            Synchroniser (QR &amp; Transfert APK/PC)
+          </button>
+          <div class="dropdown-sep"></div>
           <button type="button" onclick="exportDatabase(); toggleDbMenu()" class="dropdown-item">
             <svg class="svg-ico" style="color:#2563eb;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Exporter la base (.JSON)
@@ -2065,7 +2087,8 @@
         capAt20,
         trimesterWeights,
         students,
-        trimesters
+        trimesters,
+        updatedAt: Number.isFinite(Number(rawWb.updatedAt)) ? Number(rawWb.updatedAt) : Date.now()
       };
     }
 
@@ -2231,6 +2254,8 @@
 
     function saveState() {
       try {
+        const activeWb = getActiveWorkbook();
+        if (activeWb) activeWb.updatedAt = Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
         const status = document.getElementById('autosave-status');
         if (status) status.innerHTML = '<span class="dot-emerald"></span> Enregistré';
@@ -4069,7 +4094,13 @@
 
       document.getElementById('print-area').innerHTML = html;
       closeModal('print-modal');
-      setTimeout(() => window.print(), 180);
+      setTimeout(() => {
+        if (window.AndroidBridge && typeof window.AndroidBridge.printPage === 'function') {
+          window.AndroidBridge.printPage(`Cahier_Notes_${wb.className || 'Rapport'}`);
+        } else {
+          window.print();
+        }
+      }, 180);
     }
 
     // ==================== DATABASE & ACTIVE MEMORY MANAGEMENT ====================
@@ -4119,6 +4150,11 @@
       const info = buildExportInfo(getActiveWorkbook());
       const payload = Object.assign({ exportMeta: info.exportMeta }, appState);
       const dataStr = JSON.stringify(payload, null, 2);
+      if (window.CahierSync && typeof window.CahierSync.deliverTextFile === 'function') {
+        window.CahierSync.deliverTextFile(dataStr, info.filename, 'application/json', false);
+        showToast(`Base exportée : ${info.filename}`, 'success');
+        return;
+      }
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -4236,7 +4272,57 @@
         .replace(/'/g, '&#39;');
     }
 
-    document.addEventListener('DOMContentLoaded', initApp);
+    function openSyncModal(defaultTab) {
+      if (!window.CahierSync) {
+        showToast('Module de synchronisation indisponible.', 'error');
+        return;
+      }
+      window.CahierSync.open(defaultTab);
+    }
+
+    window.__handleAndroidBack = function () {
+      if (window.CahierSync && window.CahierSync.isOpen()) {
+        window.CahierSync.close();
+        return true;
+      }
+      const modalIds = ['print-modal', 'import-modal', 'setup-modal', 'memory-modal'];
+      for (const id of modalIds) {
+        const el = document.getElementById(id);
+        if (el && !el.classList.contains('hidden')) {
+          closeModal(id);
+          return true;
+        }
+      }
+      const dbMenu = document.getElementById('db-menu');
+      if (dbMenu && !dbMenu.classList.contains('hidden')) {
+        dbMenu.classList.add('hidden');
+        return true;
+      }
+      if (appState.currentView === 'workbook') {
+        goToHome();
+        return true;
+      }
+      return false;
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp();
+      if (window.CahierSync && typeof window.CahierSync.init === 'function') {
+        window.CahierSync.init({
+          getState: () => appState,
+          setState: (next) => {
+            appState = next;
+            normalizeActiveWorkbook();
+            saveState();
+          },
+          sanitizeState: sanitizeAppState,
+          getActiveWorkbook,
+          buildExportInfo,
+          showToast,
+          onAfterApply: () => { renderAll(); }
+        });
+      }
+    });
   </script>
 </body>
 </html>
