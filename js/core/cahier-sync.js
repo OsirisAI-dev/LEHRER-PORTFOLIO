@@ -599,7 +599,7 @@
     const controlsEl = document.getElementById('csync-anim-controls');
     if (controlsEl) controlsEl.classList.add('hidden');
     if (!envInfo.lanAvailable) {
-      if (statusEl) statusEl.innerHTML = '<span class="csync-badge warn">Serveur LAN non actif</span> Lancez via <b>Lancer_Cahier_de_Notes.bat</b> pour le Wi-Fi local instantané.';
+      if (statusEl) statusEl.innerHTML = '<span class="csync-badge warn">Serveur LAN non actif</span> Lancez via <b>Cahier_de_Notes_Pro.exe</b> pour le Wi-Fi local instantané.';
       return;
     }
     try {
@@ -632,7 +632,7 @@
     const controlsEl = document.getElementById('csync-anim-controls');
     if (controlsEl) controlsEl.classList.add('hidden');
     if (!envInfo.lanAvailable) {
-      if (statusEl) statusEl.innerHTML = '<span class="csync-badge warn">Serveur LAN non actif</span> Lancez via <b>Lancer_Cahier_de_Notes.bat</b>.';
+      if (statusEl) statusEl.innerHTML = '<span class="csync-badge warn">Serveur LAN non actif</span> Lancez via <b>Cahier_de_Notes_Pro.exe</b>.';
       return;
     }
     try {
