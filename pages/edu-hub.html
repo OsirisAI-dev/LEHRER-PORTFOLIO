@@ -5,6 +5,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edu Hub</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 
 <script src="../js/core/deutschthek-sync.js"></script>
 <script>
@@ -392,16 +393,11 @@
   if (!TOOLS[appState.tool]) appState.tool = 'bank';
 
   // Shared postMessage helper to the currently-embedded tool's iframe —
-  // setActiveModelId() below already did this inline for SET_MODEL;
-  // toggleLang()/randomFont() need the same thing for SET_LANG/SET_FONT,
-  // which they never actually sent before (only the pre-paint
-  // osiris_hub_prefs read on the iframe's *next* full reload picked
-  // these up — toggling lang/font while a tool was already open silently
-  // did nothing until you switched away and back).
   function pushToFrame(type, payload) {
     var frame = document.getElementById('tool-frame');
     if (frame && frame.contentWindow) {
-      frame.contentWindow.postMessage({ type: type, payload: payload }, '*');
+      var targetOrig = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+      frame.contentWindow.postMessage({ type: type, payload: payload }, targetOrig);
     }
   }
 

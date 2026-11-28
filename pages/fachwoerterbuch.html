@@ -52,9 +52,6 @@ body.font-mono h1, body.font-mono h2, body.font-mono h3{font-family:'Courier New
 }
 
 
-
-
-
 .logo h1 { margin: 0; font-size: clamp(1rem, 4.5vw, 1.25rem); font-family: var(--font-hand); font-weight: 700; color: var(--text-light); white-space: nowrap; }
 .logo p { margin: 4px 0 0; font-size: clamp(0.55rem, 2.5vw, 0.7rem); color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-hand); white-space: nowrap; }
 
@@ -574,7 +571,7 @@ main{padding-bottom:132px;}
         <option value="child">Kind</option>
         <option value="senior">Senior (ältere Stimme)</option>
       </select>
-      <div class="api-hint">Wirkt sich auf die deutsche Stimme und (per Tonhöhe/Tempo) auf alle Vorlesefunktionen aus.</div>
+      <div class="api-hint" id="germanVoiceHint">Wirkt sich auf die deutsche Stimme und (per Tonhöhe/Tempo) auf alle Vorlesefunktionen aus.</div>
     </div>
     <div class="settings-section">
       <label>Lokale Wortliste</label>
@@ -1332,6 +1329,7 @@ const settingsHeader = document.getElementById('settingsHeader');
 document.getElementById('btnSettings').onclick = ()=>{
   document.getElementById('voiceProfileSelect').value = menuState.voiceProfile;
   document.getElementById('localDbIoMsg').style.display = 'none';
+  if (typeof updateGermanVoiceHintUI === 'function') updateGermanVoiceHintUI();
   settingsModal.classList.add('show');
 };
 
@@ -2532,8 +2530,8 @@ async function translateText(text, targetLang){
 let ttsActiveButton = null, ttsPaused = false, ttsSession = 0, ttsPendingCount = 0;
 
 const GERMAN_VOICE_HINTS = {
-  female: ['katja','amala','hedda','anna','petra','marlene','vicki','helena','ingrid','martha','gisela','louisa','seraphina','de-de-x-nfh','de-de-x-dea','de-de-x-dec','female'],
-  male: ['conrad','florian','killian','stefan','markus','martin','yannick','hans','klaus','daniel','de-de-x-deg','de-de-x-deb','male'],
+  female: ['katja','amala','hedda','anna','petra','marlene','vicki','helena','ingrid','martha','gisela','louisa','de-de-x-nfh','de-de-x-dea','de-de-x-dec','female'],
+  male: ['conrad','killian','stefan','markus','martin','yannick','hans','klaus','daniel','de-de-x-deg','de-de-x-deb','male'],
   child: ['kind','child','junior','kids','gisela'],
   senior: ['senior','opa','oma','greta','gustav','old','conrad','stefan']
 };
@@ -2544,10 +2542,65 @@ const PROFILE_TUNING = {
   senior: { pitch:0.70, rate:0.82 }
 };
 let _cachedGermanVoices = [];
+let _germanVoiceWarningShown = false;
+function normalizeVoiceLang(v){ return String((v && v.lang) || '').replace(/_/g, '-').toLowerCase(); }
+function isGermanVoice(v){ const l = normalizeVoiceLang(v); return l === 'de' || l.startsWith('de-'); }
+function scoreGermanVoice(v, profile){
+  const name = String((v && v.name) || '').toLowerCase();
+  const lang = normalizeVoiceLang(v);
+  let score = /multilingual/i.test(name) ? -30 : 50;
+  const hints = GERMAN_VOICE_HINTS[profile] || [];
+  if (hints.some(h => name.includes(h))) score += 30;
+  if (lang === 'de-de') score += 20;
+  else if (lang === 'de') score += 10;
+  const online = (typeof navigator === 'undefined') ? true : navigator.onLine !== false;
+  if (!online) score += v.localService ? 25 : -45;
+  else {
+    if (/natural|online|google deutsch|neural/i.test(name)) score += 12;
+    if (v.localService) score += 4;
+  }
+  return score;
+}
+function updateGermanVoiceHintUI(){
+  const hintEl = document.getElementById('germanVoiceHint');
+  if (!hintEl || window.AndroidTTS || !('speechSynthesis' in window)) return;
+  const all = window.speechSynthesis.getVoices() || [];
+  const profile = (typeof menuState !== 'undefined' && menuState.voiceProfile) || 'female';
+  const best = pickGermanVoice(profile);
+  if (best){
+    hintEl.style.color = '';
+    hintEl.textContent = `Aktive deutsche Stimme: ${best.name} (${best.lang}).`;
+  } else if (all.length > 0){
+    hintEl.style.color = 'var(--accent-gold, #d97706)';
+    hintEl.textContent = '⚠ Keine deutsche Stimme auf diesem Gerät installiert — System-Standardstimme liest evtl. mit fremdem Akzent. Bitte «Deutsch (Deutschland)» in den Systemeinstellungen hinzufügen oder Microsoft Edge (Online-Stimmen) verwenden.';
+  }
+}
 function refreshGermanVoices(){
   if (!('speechSynthesis' in window)) return [];
-  _cachedGermanVoices = window.speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith('de'));
+  _cachedGermanVoices = (window.speechSynthesis.getVoices() || []).filter(isGermanVoice);
+  updateGermanVoiceHintUI();
   return _cachedGermanVoices;
+}
+function ensureGermanVoicesLoaded(timeoutMs = 450){
+  if (!('speechSynthesis' in window)) return Promise.resolve([]);
+  const immediate = refreshGermanVoices();
+  if (immediate.length > 0) return Promise.resolve(immediate);
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (typeof window.speechSynthesis.removeEventListener === 'function') {
+        window.speechSynthesis.removeEventListener('voiceschanged', onChanged);
+      }
+      resolve(refreshGermanVoices());
+    };
+    const onChanged = () => { if (refreshGermanVoices().length > 0) finish(); };
+    if (typeof window.speechSynthesis.addEventListener === 'function') {
+      window.speechSynthesis.addEventListener('voiceschanged', onChanged);
+    }
+    setTimeout(finish, timeoutMs);
+  });
 }
 if ('speechSynthesis' in window) {
   refreshGermanVoices();
@@ -2559,11 +2612,24 @@ if ('speechSynthesis' in window) {
 }
 function pickGermanVoice(profile){
   if (!('speechSynthesis' in window)) return null;
-  const voices = _cachedGermanVoices.length ? _cachedGermanVoices : refreshGermanVoices();
+  const voices = _cachedGermanVoices.length ? _cachedGermanVoices : (window.speechSynthesis.getVoices() || []).filter(isGermanVoice);
   if (!voices.length) return null;
-  const hints = GERMAN_VOICE_HINTS[profile] || [];
-  const match = voices.find(v=>hints.some(h=>v.name.toLowerCase().includes(h)));
-  return match || voices.find(v=>v.lang.toLowerCase()==='de-de') || voices[0];
+  let best = voices[0], bestScore = scoreGermanVoice(best, profile);
+  for (let i = 1; i < voices.length; i++){
+    const s = scoreGermanVoice(voices[i], profile);
+    if (s > bestScore){ best = voices[i]; bestScore = s; }
+  }
+  return best;
+}
+function showMissingGermanVoiceNoticeOnce(){
+  if (_germanVoiceWarningShown || window.AndroidTTS || !('speechSynthesis' in window)) return;
+  const all = window.speechSynthesis.getVoices() || [];
+  if (all.length === 0 || all.some(isGermanVoice)) return;
+  _germanVoiceWarningShown = true;
+  updateGermanVoiceHintUI();
+  if (typeof showToast === 'function') {
+    showToast('⚠ Keine deutsche Stimme installiert — System-Standardstimme aktiv.');
+  }
 }
 
 function speak(text, lang, flush = true){
@@ -2582,18 +2648,29 @@ function speak(text, lang, flush = true){
     return;
   }
   if (!('speechSynthesis' in window)) { alert('Sprachausgabe wird in diesem Browser nicht unterstützt.'); return; }
+  if (flush) { window.speechSynthesis.cancel(); ttsPendingCount = 0; }
   const session = ttsSession; ttsPendingCount++;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'de-DE';
-  const voice = pickGermanVoice(profile);
-  if (voice) u.voice = voice;
-  u.pitch = tuning.pitch; u.rate = tuning.rate;
-  u.onend = u.onerror = ()=>{
+  const enqueue = () => {
     if (session !== ttsSession) return;
-    ttsPendingCount = Math.max(0, ttsPendingCount-1);
-    if (ttsPendingCount===0) resetActiveReadButton();
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = pickGermanVoice(profile);
+    if (voice) {
+      u.voice = voice;
+      u.lang = (voice.lang || 'de-DE').replace(/_/g, '-');
+    } else {
+      u.lang = 'de-DE';
+      showMissingGermanVoiceNoticeOnce();
+    }
+    u.pitch = tuning.pitch; u.rate = tuning.rate;
+    u.onend = u.onerror = ()=>{
+      if (session !== ttsSession) return;
+      ttsPendingCount = Math.max(0, ttsPendingCount-1);
+      if (ttsPendingCount===0) resetActiveReadButton();
+    };
+    window.speechSynthesis.speak(u);
   };
-  window.speechSynthesis.speak(u);
+  if (_cachedGermanVoices.length > 0) enqueue();
+  else ensureGermanVoicesLoaded(450).then(enqueue);
 }
 function stopSpeech(){
   if (window.AndroidTTS && typeof window.AndroidTTS.stop === 'function') { window.AndroidTTS.stop(); }
@@ -2709,19 +2786,26 @@ document.getElementById('btnReadAll').onclick = async ()=>{
          window.AndroidTTS.speak(fullText.join('. '), 'de-DE');
        }
     } else {
+       await ensureGermanVoicesLoaded(450);
        await new Promise(res=>{
          const session = ttsSession;
+         if (ttsActiveButton !== btn) { res(); return; }
          const u = new SpeechSynthesisUtterance(fullText.join('. '));
-         u.lang = 'de-DE';
          const profile = menuState.voiceProfile || 'female';
          const voice = pickGermanVoice(profile);
-         if (voice) u.voice = voice;
+         if (voice) {
+           u.voice = voice;
+           u.lang = (voice.lang || 'de-DE').replace(/_/g, '-');
+         } else {
+           u.lang = 'de-DE';
+           showMissingGermanVoiceNoticeOnce();
+         }
          const tuning = PROFILE_TUNING[profile] || PROFILE_TUNING.female;
          u.pitch = tuning.pitch; u.rate = tuning.rate;
          u.onend = u.onerror = ()=> res();
          window.speechSynthesis.speak(u);
        });
-       resetReadAllButton();
+       if (ttsActiveButton === btn) resetReadAllButton();
     }
   } else {
     resetReadAllButton();

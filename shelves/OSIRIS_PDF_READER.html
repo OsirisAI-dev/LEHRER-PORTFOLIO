@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Osiris PDF Reader</title>
-<link rel="stylesheet" href="/fonts/fonts.css" onerror="this.remove()">
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css" onerror="this.remove()">
 <style>
 /* ── Theme tokens ────────────────────────────────────────────────── */
 :root {
@@ -222,6 +223,11 @@ body {
 
   <button class="tb-btn" id="ttsBtn" disabled><span id="lblTtsPlay">🔊 Écouter</span></button>
   <button class="tb-btn" id="ttsStopBtn" disabled style="display:none;">⏹</button>
+  <select class="tb-meta" id="ttsLang" disabled title="Langue de lecture">
+    <option value="auto" selected>Auto</option>
+    <option value="de">DE</option>
+    <option value="fr">FR</option>
+  </select>
   <select class="tb-meta" id="ttsRate" disabled title="Vitesse de lecture">
     <option value="0.75">0.75×</option>
     <option value="1" selected>1×</option>
@@ -283,8 +289,11 @@ const TR = {
     errLoad:'Impossible de charger ce PDF.',
     ttsPlay:'Écouter', ttsPause:'Pause', ttsResume:'Reprendre', ttsStop:'Arrêter',
     ttsRateTitle:'Vitesse de lecture',
+    ttsLangTitle:'Langue de lecture vocale (Auto / DE / FR)',
     ttsUnavailable:'Lecture vocale non disponible sur cet appareil.',
     ttsNoVoice:'Aucune voix disponible pour lire ce document.',
+    ttsNoDeVoice:'⚠ Aucune voix allemande installée sur cet appareil — installez « Allemand (Allemagne) » dans Windows/Système ou utilisez Edge.',
+    ttsNoFrVoice:'⚠ Aucune voix française installée sur cet appareil — la voix par défaut du système est utilisée.',
     ocrBtn:'Reconnaître le texte de cette page',
     ocrRunning:(pct)=>`Reconnaissance en cours… ${pct}%`,
     ocrDone:(chars)=>`✓ Texte reconnu (${chars} caractères).`,
@@ -307,13 +316,16 @@ const TR = {
     errLoad:'Diese PDF-Datei kann nicht geladen werden.',
     ttsPlay:'Vorlesen', ttsPause:'Pause', ttsResume:'Fortsetzen', ttsStop:'Stopp',
     ttsRateTitle:'Lesegeschwindigkeit',
+    ttsLangTitle:'Vorlesesprache (Auto / DE / FR)',
     ttsUnavailable:'Sprachausgabe auf diesem Gerät nicht verfügbar.',
     ttsNoVoice:'Keine Stimme zum Vorlesen dieses Dokuments verfügbar.',
+    ttsNoDeVoice:'⚠ Keine deutsche Stimme auf diesem Gerät installiert — bitte «Deutsch (Deutschland)» im System hinzufügen oder Edge nutzen.',
+    ttsNoFrVoice:'⚠ Keine französische Stimme auf diesem Gerät installiert — System-Standardstimme aktiv.',
     ocrBtn:'Text dieser Seite erkennen',
     ocrRunning:(pct)=>`Erkennung läuft… ${pct}%`,
     ocrDone:(chars)=>`✓ Text erkannt (${chars} Zeichen).`,
     ocrFailed:'❌ Erkennung fehlgeschlagen — erneut versuchen oder die Sprache wechseln, falls das Ergebnis schlecht ist.',
-    ocrMissingLang:'❌ Sprachdatei fehlt in libs/tesseract-lang/ — bitte fra.traineddata.gz und/oder deu.traineddata.gz dort ablegen (siehe OCR_WORKPLAN.md).',
+    ocrMissingLang:'❌ Sprachdatei fehlt in libs/tesseract-lang/ — bitte fra.traineddata.gz und/oder deu.traineddata.gz dort ablegen.',
     close:'Bibliothek',
     themeTitle:'Lesethema',
     pageOf:(n,t)=>`/ ${t}`,
@@ -340,8 +352,10 @@ const ttsSupported = 'speechSynthesis' in window;
 let ttsState      = 'idle';   // 'idle' | 'playing' | 'paused'
 let ttsPage       = 0;
 let ttsRate       = 1;
+let ttsLangMode   = 'auto';   // 'auto' | 'de' | 'fr'
 let ttsVoices     = [];
 let ttsUtterance  = null;
+let ttsWarnedLang = new Set();
 
 /* ── OCR state ───────────────────────────────────────────────────── */
 
@@ -378,6 +392,7 @@ const fitWBtn   = $('fitWBtn');
 const fitPBtn   = $('fitPBtn');
 const ttsBtn    = $('ttsBtn');
 const ttsStopBtn= $('ttsStopBtn');
+const ttsLangEl = $('ttsLang');
 const ttsRateEl = $('ttsRate');
 const ocrBtn    = $('ocrBtn');
 const ocrLangSel= $('ocrLangSel');
@@ -656,28 +671,31 @@ function goTo(n) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ════════════════ TEXT-TO-SPEECH ═══════════════════════════════════
-   Reads page by page, scroll-synced via goTo(), auto-advancing on
-   utterance end. Text comes straight from pdf.js's getTextContent() —
-   independent of the render/clear virtualization above, so a page
-   doesn't need to be currently rendered just to be read. Word-level
-   highlighting (best-effort, via onboundary/charIndex) DOES need the
-   page's real text-layer spans, so waitForRender() gives the proximity
-   observer a moment to render it after goTo() scrolls it into view
-   before the highlight mapping is built; reading itself never blocks
-   on this — if rendering doesn't finish in time, the page is still
-   read aloud, just without highlighting for that page.
-   Known limitation, confirmed rather than assumed: this was built and
-   verified structurally, but no TTS voices were available in the
-   sandbox this was written in to test actual speech/highlight timing
-   end-to-end. ttsSupported + the voice-availability check below mean
-   the controls simply stay disabled with an explanatory tooltip on
-   any device that truly has none — but real timing behavior on a
-   device that does have voices installed hasn't been observed. */
 
 function loadTtsVoices() {
-  ttsVoices = ttsSupported ? window.speechSynthesis.getVoices() : [];
+  ttsVoices = ttsSupported ? (window.speechSynthesis.getVoices() || []) : [];
   updateTtsAvailability();
+  return ttsVoices;
+}
+function ensureTtsVoices(forLang, timeoutMs = 450) {
+  if (!ttsSupported) return Promise.resolve([]);
+  loadTtsVoices();
+  if (pickTtsVoice(forLang)) return Promise.resolve(ttsVoices);
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      window.speechSynthesis.removeEventListener('voiceschanged', onChanged);
+      resolve(loadTtsVoices());
+    };
+    const onChanged = () => {
+      loadTtsVoices();
+      if (pickTtsVoice(forLang)) finish();
+    };
+    window.speechSynthesis.addEventListener('voiceschanged', onChanged);
+    setTimeout(finish, timeoutMs);
+  });
 }
 if (ttsSupported) {
   loadTtsVoices();
@@ -687,31 +705,59 @@ if (ttsSupported) {
 function updateTtsAvailability() {
   const available = ttsSupported && !!pdfDoc && ttsVoices.length > 0;
   ttsBtn.disabled = !available;
+  ttsLangEl.disabled = !available;
   ttsRateEl.disabled = !available;
   if (!ttsSupported)         ttsBtn.title = t('ttsUnavailable');
   else if (pdfDoc && !ttsVoices.length) ttsBtn.title = t('ttsNoVoice');
   else                        ttsBtn.title = '';
 }
 
+const PDF_VOICE_HINTS = {
+  de: ['katja', 'conrad', 'amala', 'killian', 'hedda', 'stefan', 'google deutsch', 'anna', 'petra', 'markus', 'yannick', 'marlene', 'vicki', 'helena', 'de-de-x-nfh', 'de-de-x-deg'],
+  fr: ['denise', 'henri', 'hortense', 'julie', 'paul', 'google français', 'thomas', 'amelie', 'amélie', 'celine', 'céline', 'audrey']
+};
+function normalizePdfVoiceLang(v) {
+  return String((v && v.lang) || '').replace(/_/g, '-').toLowerCase();
+}
+function scorePdfVoice(v, want) {
+  const name = String((v && v.name) || '').toLowerCase();
+  const l = normalizePdfVoiceLang(v);
+  let score = /multilingual/i.test(name) ? -30 : 50;
+  if ((PDF_VOICE_HINTS[want] || []).some(h => name.includes(h))) score += 25;
+  if (l === want + '-' + want) score += 20;
+  else if (l === want) score += 10;
+  const online = (typeof navigator === 'undefined') ? true : navigator.onLine !== false;
+  if (!online) score += v.localService ? 25 : -45;
+  else {
+    if (/natural|online|google|neural/i.test(name)) score += 12;
+    if (v.localService) score += 4;
+  }
+  return score;
+}
 function pickTtsVoice(forLang) {
   const want = (forLang || lang) === 'de' ? 'de' : 'fr';
-  return ttsVoices.find(v => v.lang && v.lang.toLowerCase() === want + '-' + want)
-      || ttsVoices.find(v => v.lang && v.lang.toLowerCase().startsWith(want))
-      || ttsVoices[0] || null;
+  const candidates = ttsVoices.filter(v => {
+    const l = normalizePdfVoiceLang(v);
+    return l === want || l.startsWith(want + '-');
+  });
+  if (!candidates.length) return null; // NEVER fall back to an English/wrong-language ttsVoices[0]!
+  let best = candidates[0], bestScore = scorePdfVoice(best, want);
+  for (let i = 1; i < candidates.length; i++) {
+    const s = scorePdfVoice(candidates[i], want);
+    if (s > bestScore) { best = candidates[i]; bestScore = s; }
+  }
+  return best;
 }
 
-
-const DE_MARKERS = /\b(der|die|das|und|ist|nicht|mit|für|auch|eine|einen|einer|sich|auf|von|zu|im|dem|den|wir|sie|ich|haben|sind|oder|aber|wenn|wie)\b/gi;
-const FR_MARKERS = /\b(le|la|les|des|est|dans|pour|avec|une|un|nous|vous|ils|elles|je|qui|que|pas|sont|être|avoir|mais|comme|plus|tout)\b/gi;
+const DE_MARKERS = /(?:^|[^\p{L}])(der|die|das|den|dem|des|ein|eine|einen|einem|einer|und|oder|aber|ist|sind|war|waren|nicht|kein|keine|mit|für|über|auf|aus|bei|nach|von|zu|zum|zur|im|am|sich|auch|noch|schon|wir|sie|ich|du|ihr|haben|hat|werden|wird|kann|wenn|wie|was|wer|als|dass|sehr|mehr|immer|heute|hier)(?=$|[^\p{L}])/giu;
+const FR_MARKERS = /(?:^|[^\p{L}])(le|la|les|des|du|au|aux|est|sont|dans|pour|avec|une|un|nous|vous|ils|elles|je|tu|qui|que|pas|ne|être|avoir|mais|comme|plus|tout|cette|ces|sur|par|entre|sans|sous)(?=$|[^\p{L}])/giu;
 function detectPageLang(text) {
   const deWords = (text.match(DE_MARKERS) || []).length;
   const frWords = (text.match(FR_MARKERS) || []).length;
-
-
   const deChars = (text.match(/[ßäöüÄÖÜ]/g) || []).length;
-  const frChars = (text.match(/[éèêàçîôû]/gi) || []).length;
-  const deScore = deWords * 3 + deChars;
-  const frScore = frWords * 3 + frChars;
+  const frChars = (text.match(/[éèêëàâçîïôûùœæ]/gi) || []).length;
+  const deScore = deWords * 3 + deChars * 2;
+  const frScore = frWords * 3 + frChars * 2;
   if (deScore === 0 && frScore === 0) return null; // no real signal — caller falls back to the UI language
   return deScore >= frScore ? 'de' : 'fr';
 }
@@ -793,14 +839,23 @@ async function readPage(n) {
   if (!cleanText) { ttsPage = n; readPage(n + 1); return; } // scanned/blank page — skip
 
   const offsets = buildOffsetMap(items);
+  const detectedLang = ttsLangMode === 'auto' ? (detectPageLang(cleanText) || lang) : ttsLangMode;
+  await ensureTtsVoices(detectedLang, 450);
+  if (ttsState !== 'playing') return;
+
   const utter = new SpeechSynthesisUtterance(cleanText);
-
-
-  const detectedLang = detectPageLang(cleanText) || lang;
-  utter.lang = detectedLang === 'de' ? 'de-DE' : 'fr-FR';
   utter.rate = ttsRate;
   const voice = pickTtsVoice(detectedLang);
-  if (voice) utter.voice = voice;
+  if (voice) {
+    utter.voice = voice;
+    utter.lang = (voice.lang || (detectedLang === 'de' ? 'de-DE' : 'fr-FR')).replace(/_/g, '-');
+  } else {
+    utter.lang = detectedLang === 'de' ? 'de-DE' : 'fr-FR';
+    if (!ttsWarnedLang.has(detectedLang) && ttsVoices.length > 0) {
+      ttsWarnedLang.add(detectedLang);
+      showToast(t(detectedLang === 'de' ? 'ttsNoDeVoice' : 'ttsNoFrVoice'), 5000);
+    }
+  }
 
   utter.onboundary = ev => {
     if (ev.name && ev.name !== 'word') return;
@@ -949,6 +1004,7 @@ function applyI18n() {
   prevBtn.title = t('prev'); nextBtn.title = t('next');
   zInBtn.title  = t('zIn');  zOutBtn.title = t('zOut');
   fitWBtn.title = t('fitW'); fitPBtn.title = t('fitP');
+  ttsLangEl.title = t('ttsLangTitle');
   ttsRateEl.title = t('ttsRateTitle');
   updateTtsAvailability();
   updateTtsUI();
@@ -959,7 +1015,12 @@ function applyI18n() {
 }
 
 /* ════════════════ HUB postMessage ════════════════════════════════════ */
-window.addEventListener('message', ({ data }) => {
+function _sameOriginTarget() {
+  return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+}
+window.addEventListener('message', (e) => {
+  if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
+  const data = e.data;
   if (!data) return;
   if (data.type === 'SET_LANG') {
     lang = (data.payload?.lang || 'FR').toLowerCase();
@@ -970,18 +1031,19 @@ window.addEventListener('message', ({ data }) => {
     if (p.title)  metaTitle.value  = p.title;
     if (p.author) metaAuthor.value = p.author;
     if (p.buffer) openPdf(p.buffer);
-    else if (p.blobUrl) fetch(p.blobUrl).then(r => r.arrayBuffer()).then(openPdf);
+    else if (typeof p.blobUrl === 'string' && p.blobUrl.startsWith('blob:')) fetch(p.blobUrl).then(r => r.arrayBuffer()).then(openPdf);
   }
   if (data.type === 'SET_THEME') {
-    const theme = data.payload?.theme || 'dark';
+    const allowedThemes = ['light', 'dark', 'osiris', 'snow'];
+    const theme = allowedThemes.includes(data.payload?.theme) ? data.payload.theme : 'dark';
     document.documentElement.setAttribute('data-theme', theme);
-    themeSel.value = theme; // reflect the Hub's pushed default; the person can still override from here
+    themeSel.value = theme;
   }
 });
 
 /* ════════════════ EVENT WIRING ══════════════════════════════════════ */
 closeBtn.addEventListener('click', () => {
-  if (window.parent !== window) window.parent.postMessage({ type: 'osirisReaderClose' }, '*');
+  if (window.parent !== window) window.parent.postMessage({ type: 'osirisReaderClose' }, _sameOriginTarget());
 });
 themeSel.addEventListener('change', () => {
   document.documentElement.setAttribute('data-theme', themeSel.value);
@@ -1001,9 +1063,17 @@ ttsBtn.addEventListener('click', () => {
   else ttsPauseResume();
 });
 ttsStopBtn.addEventListener('click', ttsStop);
+ttsLangEl.addEventListener('change', e => {
+  ttsLangMode = e.target.value || 'auto';
+  if (ttsState === 'playing') {
+    const cur = ttsPage || +pageNum.value || 1;
+    window.speechSynthesis.cancel();
+    readPage(cur);
+  }
+});
 ttsRateEl.addEventListener('change', e => {
   ttsRate = parseFloat(e.target.value) || 1;
-  if (ttsUtterance) ttsUtterance.rate = ttsRate; // takes effect from the next page on — most engines don't re-rate a playing utterance
+  if (ttsUtterance) ttsUtterance.rate = ttsRate;
 });
 
 
@@ -1054,7 +1124,7 @@ ocrBtn.addEventListener('click', async () => {
   if (ocrBtn.disabled || ocrRunning) return;
   const pageNum = selPage || 1;
   const canvas = document.querySelector(`.pw[data-n="${pageNum}"] canvas`);
-  if (!canvas) return; // page not currently rendered — nothing to recognize yet
+  if (!canvas) return;
 
   ocrRunning = true;
   ocrBtn.disabled = true;
@@ -1080,7 +1150,7 @@ ocrBtn.addEventListener('click', async () => {
     const text  = (result?.data?.text   || '').trim();
     const words =  result?.data?.words  || [];
     ocrResults.set(pageNum, { text, words });
-    replaceTextLayer(pageNum, words);          // Step 4 — swap textLayer
+    replaceTextLayer(pageNum, words);
     showToast(t('ocrDone', text.length), 3200);
   } catch (err) {
     console.warn('OCR error:', err);
@@ -1126,7 +1196,7 @@ document.addEventListener('keydown', e => {
 
 
   if (window.parent !== window) {
-    window.parent.postMessage({ type: 'osirisReaderReady' }, '*');
+    window.parent.postMessage({ type: 'osirisReaderReady' }, _sameOriginTarget());
   }
 })();
 </script>

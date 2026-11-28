@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bibliothèque — Démo Osiris</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 <style>
 /* ======================================================================
    OSIRIS LIBRARY — namespaced under .osiris-library so this block can sit
@@ -36,12 +37,7 @@
   border-radius: 8px;
   box-sizing: border-box;
   position: relative;
-  /* Widened from 980px so Gallery's 8-across tier (see .ol-gal-grid) has
-     genuine room to fire with full-size 140px covers on a wide screen,
-     instead of being structurally capped at 5. Shelf and List views
-     share this same root, but neither has a fixed-width layout that
-     depends on staying narrow — Shelf's flex row and List's rows both
-     just get more breathing room. */
+
   max-width: 1400px;
   margin: 0 auto;
   transition: background 0.3s ease, color 0.3s ease;
@@ -237,18 +233,11 @@
    VIEW 2 — GALLERY (hover-tilt effect). Independent block, prefix: ol-gal-
    Cover tilts open on hover, page-edge strip widens, highlight sweeps in.
    ====================================================================== */
-/* Shelf backdrop for Gallery mode (item 5) — same cuboid-case family as
-   the Shelf view's .ol-shelf-wrap/.ol-shelf-unit, just sized for the
-   wider 140px covers instead of the Shelf view's 26px spines, and fluid-
-   width (100%) instead of content-sized, since it has to hold a full
-   grid rather than a single flex row. */
+
 .ol-gal-wrap {
   perspective: 900px;
   padding: 10px 0 30px;
-  /* Turns this wrap into a query container so .ol-gal-grid below can pick
-     its column count from the shelf's own real rendered width, not the
-     browser viewport — correct even when the shelf is embedded somewhere
-     narrower than the window. */
+
   container-type: inline-size;
   container-name: ol-gal;
 }
@@ -264,10 +253,7 @@
   box-shadow:
     0 18px 30px -14px rgba(0,0,0,0.6),
     inset 0 0 0 1px rgba(194,160,78,0.25);
-  /* No overflow-x here anymore — the grid below always resolves to
-     exactly this box's width (fr-based columns, no fixed floor), so the
-     leather case is guaranteed to stay fully visible with nothing
-     cropped or scrolling, at any size. */
+
 }
 .ol-gal-grid {
   display: grid;
@@ -281,19 +267,11 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 34px 26px;
   padding: 10px 6px 20px;
-  /* Shelf ledge (item 5), same treatment as .ol-shelf-row below. */
+
   border-bottom: 10px solid var(--ol-leather-light);
   box-shadow: inset 0 8px 14px -6px rgba(0,0,0,0.55);
 }
-/* 5-across once the case is wide enough to hold 5 full-size (140px)
-   covers comfortably; 8-across once it's wide enough for 8 — reachable
-   now that .osiris-library's max-width (see top of file) gives this
-   room to grow into on a wide screen. If this component ever ends up
-   embedded somewhere narrower (a tighter host container, a small
-   window), the query simply never crosses the 950px threshold and the
-   grid quietly stays at 5 — the "keep 5 max when 8 isn't possible"
-   fallback, handled automatically here rather than needing a scrollbar
-   or extra logic. */
+
 @container ol-gal (min-width: 660px) {
   .ol-gal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
@@ -302,10 +280,7 @@
   .ol-gal-cover { padding: 8px; }
   .ol-gal-cover .ol-gal-title { font-size: 0.68rem; }
 }
-/* Fallback for browsers without container-query support (pre-2023
-   Firefox/Safari): same tiers, keyed off viewport width instead of the
-   shelf's own box. Less precise for narrow embeds, but still can't
-   overflow since columns stay fr-based here too. */
+
 @supports not (container-type: inline-size) {
   @media (min-width: 660px) {
     .ol-gal-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -315,10 +290,7 @@
   }
 }
 .ol-gal-book {
-  /* Fluid instead of a fixed 140x200: caps at a book's natural size on
-     any column roomy enough for it, and only ever scales down (keeping
-     proportions via aspect-ratio) on a case narrower than that — the
-     fallback that replaces the old horizontal-scroll safety net. */
+
   width: 100%;
   max-width: 140px;
   aspect-ratio: 7 / 10;
@@ -326,13 +298,7 @@
   margin: 0 auto;
 }
 .ol-gal-cover {
-  /* Not a click target itself (nothing happens if you click it), and
-     its hover rotateY(...) is a genuine 3D transform — Chromium hit-
-     tests that trapezoidal shape over the flat .ol-gal-open pill even
-     though the pill has a higher z-index, so only the sliver of the
-     pill outside the cover's transformed footprint was clickable.
-     Removing the cover from hit-testing lets clicks fall straight
-     through to the pill everywhere inside it. */
+
   pointer-events: none;
   position: absolute;
   inset: 0;
@@ -381,11 +347,7 @@
 }
 .ol-gal-book:hover .ol-gal-edge { width: 28px; }
 
-/* "Click to open" pill, centered on the cover — ported from Codex's
-   .vol-open. Sits as a sibling of .ol-gal-cover (not nested inside it)
-   so it stays flat and centered instead of inheriting the cover's
-   hover rotateY tilt. Only rendered when there's actually a file
-   handle or link to open (see canOpenFile() in the render function). */
+
 .ol-gal-open {
   position: absolute; top: 50%; left: 50%; z-index: 3;
   transform: translate(-50%, -50%);
@@ -398,10 +360,7 @@
   opacity: 0; transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
 }
-/* Icon/label were eating the click before it reached the button (only
-   the bare edge of the pill — outside their boxes — was registering),
-   so make them purely decorative and let every click inside the pill
-   resolve to the button itself. */
+
 .ol-gal-open svg,
 .ol-gal-open span { pointer-events: none; }
 .ol-gal-open svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; flex-shrink: 0; }
@@ -453,11 +412,7 @@
 }
 .ol-list-row.ol-open .ol-list-swatch { transform: rotateY(35deg); }
 
-/* Cover thumbnail + always-reachable "click to open" overlay — ported
-   from Lit Circle's .row-thumb-wrap/.thumb-open. Sits directly on the
-   collapsed row (not gated behind expanding it first), hover-revealed
-   on pointer devices and left faintly visible under (hover: none) so
-   touch users aren't stuck guessing. */
+
 .ol-list-thumb-wrap {
   position: relative;
   flex-shrink: 0;
@@ -762,10 +717,7 @@
   margin-left: 6px;
   vertical-align: middle;
 }
-/* Step 9: a text-based tag had a real excerpt behind it at classify
-   time, not just title/author/category/comment — solid border (vs. the
-   dashed default above) to read as a step more grounded, without
-   overclaiming certainty the badge's title text still hedges. */
+
 .ol-ai-tag-text {
   border-style: solid;
   border-color: var(--ol-brass);
@@ -1031,7 +983,7 @@
       untitled: "Sans titre"
     },
     DE: {
-      pageTitle: "Bibliothek — Osiris Demo",
+      pageTitle: "Bibliothek — Osiris",
       headerTitle: "Meine Bücher",
       count: function (n) { return n + " Werk(e)"; },
       bgUploadTitle: "Hintergrundbild wählen",
@@ -1239,13 +1191,7 @@
     } catch(e) {}
   }
 
-  /* ---------------- Cross-theme sort row (Hub SET_SORT) ----------------
-     Step 5 of the workplan: the Hub's sort row computes one shared order
-     across the whole library (core.sortBooks) and pushes it down to
-     whichever shelf is currently mounted via postMessage. This shelf
-     just needs to remember the last order it was given and apply it at
-     render time — no sorting logic lives here, that's all in
-     osiris-core.js's sortBooks(), same helper the Hub itself calls. */
+
   var sortOrder = null; // array of book ids in display order, or null = no sort applied yet
   function applySortOrder(list) {
     if (!sortOrder || !sortOrder.length) return list;
@@ -1540,10 +1486,7 @@
     openFileBookBusy(openBtn.getAttribute("data-id"), openBtn);
   });
 
-  /* ---------------- Shelf-view click-to-open (invisible affordance) ----------------
-     No icon/label is ever rendered on the spine (see renderShelf) — the
-     whole spine is the click target, silently, only when there's
-     actually something to open (canOpenFile()). */
+
   document.getElementById("olShelfRow").addEventListener("click", function(e){
     var spine = e.target.closest(".ol-shelf-book");
     if (!spine) return;
@@ -1609,8 +1552,8 @@
       btn.textContent = originalLabel;
       btn.disabled = false;
       if (status === "opened") return;
-      if (book.link) {
-        window.open(book.link, "_blank", "noopener,noreferrer");
+      if (book.link && /^https?:\/\//i.test(book.link.trim())) {
+        window.open(book.link.trim(), "_blank", "noopener,noreferrer");
       } else {
         alert(t.fileNotFound);
       }
@@ -1636,8 +1579,8 @@
     resolveAndOpenFile(id).then(function (status) {
       el.classList.remove("ol-open-busy");
       if (status === "opened") return;
-      if (book.link) {
-        window.open(book.link, "_blank", "noopener,noreferrer");
+      if (book.link && /^https?:\/\//i.test(book.link.trim())) {
+        window.open(book.link.trim(), "_blank", "noopener,noreferrer");
       } else {
         alert(t.fileNotFound);
       }
@@ -1652,7 +1595,7 @@
   var pendingFileHandle = null; // FileSystemFileHandle chosen this session, not yet saved to IndexedDB (Chromium only)
   var pendingFile = null;       // actual File, used for cover/metadata extraction on any browser
   var pendingCoverDataUrl = null;
-  var pendingTextExcerpt = null; // step 9: plain-text sample for aiClassifyBatch, see extractPdfCover/extractEpubCover
+  var pendingTextExcerpt = null;
 
   var titleInput = document.getElementById("olTitle");
   var authorInput = document.getElementById("olAuthor");

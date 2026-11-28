@@ -5,6 +5,7 @@
 <link rel="manifest" href="../manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Tableau de Bord Scolaire</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
     <style>
         :root {
             --primary-blue: #1a1a1a;
@@ -770,14 +771,57 @@
             margin-bottom: 25px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.06);
             border: 1px solid var(--border-grey);
-            overflow-x: auto;
             width: 100%;
+        }
+
+        .evaluations-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 14px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
         }
 
         .evaluations-title {
             font-size: 1.1rem;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 0;
+        }
+
+        .eval-cahier-link {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            white-space: nowrap;
+            padding: 2px 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .eval-cahier-link:hover {
+            opacity: 0.78;
+        }
+
+        .eval-cahier-link .eval-link-arrow {
+            display: inline-block;
+            transition: transform 0.15s ease;
+        }
+
+        .eval-cahier-link:hover .eval-link-arrow {
+            transform: translateX(2px);
+        }
+
+        .evaluations-section.section-locked .eval-cahier-link {
+            pointer-events: auto;
+        }
+
+        .eval-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .eval-table {
@@ -1020,7 +1064,7 @@
             .navbar, .school-bar, .sub-navbar, .navbar-controls, .add-btn-circle, 
             .add-book-row-btn, .add-subject-btn, .action-buttons-row, 
             .reset-btn-container, .modal-overlay, .delete-btn, .num-input-ctrl,
-            .ctrl-btn {
+            .ctrl-btn, .eval-cahier-link {
                 display: none !important;
             }
 
@@ -1243,6 +1287,10 @@
             .list-card { min-width: 0; }
             .modal-content { padding: 16px; width: 94%; }
             .add-subject-btn { width: 100%; }
+            .evaluations-section { padding: 14px; }
+            .evaluations-header-row { gap: 6px 10px; margin-bottom: 12px; }
+            .evaluations-title { font-size: 1rem; }
+            .eval-cahier-link { font-size: 0.82rem; padding: 4px 0 2px; }
         }
 
         /* --- Pointeur module styling --- */
@@ -1892,20 +1940,27 @@
 
         <!-- Evaluations Section -->
         <div class="evaluations-section" id="evaluationsSection">
-            <div class="evaluations-title" id="evaluationsTitle">Évaluations:</div>
-            <table class="eval-table">
-                <thead>
-                    <tr>
-                        <th id="thType">Types</th>
-                        <th id="thDates">Dates</th>
-                        <th id="thStats">Statistiques</th>
-                        <th id="thChartType">Graphique</th>
-                        <th id="thDetails">Détails</th>
-                        <th style="width: 40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="evalTbody"></tbody>
-            </table>
+            <div class="evaluations-header-row">
+                <div class="evaluations-title" id="evaluationsTitle">Évaluations:</div>
+                <a href="cahier-notes.html" id="evalCahierNotesLink" target="_blank" rel="noopener noreferrer" class="action-link eval-cahier-link" title="Ouvrir Cahier de Notes" onclick="handleCahierNotesLinkClick(event, 'cahier-notes.html')">
+                    <span id="evalCahierNotesLinkText">Cahier de Notes</span><span class="eval-link-arrow" aria-hidden="true">→</span>
+                </a>
+            </div>
+            <div class="eval-table-wrap">
+                <table class="eval-table">
+                    <thead>
+                        <tr>
+                            <th id="thType">Types</th>
+                            <th id="thDates">Dates</th>
+                            <th id="thStats">Statistiques</th>
+                            <th id="thChartType">Graphique</th>
+                            <th id="thDetails">Détails</th>
+                            <th style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="evalTbody"></tbody>
+                </table>
+            </div>
             <button class="add-book-row-btn" onclick="addEvalRow()">+</button>
         </div>
 
@@ -2186,15 +2241,7 @@
         </div>
     </div>
 
-<!-- Chart.js loading (local file with fallback to CDN) -->
 <script src="../lib/chart/v4.5.1/chart.umd.min.js"></script>
-<script>if(typeof Chart==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"><\/script>');}</script>
-<!-- Shared Osiris library storage + PDF/EPUB extraction, same files the
-     shelves already load — this assumes DASHBOARD.html sits in the same
-     root folder as library.html/osiris-core.js (matching the
-     existing "Ma bibliothèque" link above, which uses a plain relative
-     path with no folder prefix). Adjust the two "shelves/libs/..." paths
-     below if your actual folder layout differs. -->
 <script src="../lib/jszip/v1/jszip.min.js"></script>
 <script src="../lib/pdf/v1/pdf.min.js"></script>
 <script src="../lib/qrcode/qrcode.min.js"></script>
@@ -2208,16 +2255,31 @@
 <script>
     console.assert(typeof Chart === 'function', 'Chart.js n\'est pas disponible.');
 
-    // ============================================================
-    // Book file -> cover/title/author/excerpt extraction, feeding the
-    // shared Osiris library (osiris_library_books_v2 via osiris-core.js)
-    // so a book picked here actually appears on the shelves, not just as
-    // a local decorative thumbnail. Ported from the_codex_collection.html
-    // (that shelf's own reference implementation) — same constants, same
-    // page-1/page-2 and spine-entry fallback logic, so an excerpt
-    // extracted here is exactly as AI-Sorting-ready as one extracted from
-    // within a shelf itself.
-    // ============================================================
+    function escDashHtml(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+    function safeDashHref(raw) {
+        const s = String(raw || '').trim();
+        if (!s || s === '#') return '#';
+        if (/^https?:\/\//i.test(s) || /^(\.\.?\/)?[a-zA-Z0-9_.\-\/]+\.html(\?[^\s"'<>]*)?(#[^\s"'<>]*)?$/i.test(s)) return s;
+        return '#';
+    }
+    function safeCoverSrc(raw) {
+        const s = String(raw || '').trim();
+        if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[a-zA-Z0-9+/=]+$/i.test(s)) return s;
+        if (/^https?:\/\//i.test(s) || /^\.\.?\//.test(s)) return s;
+        return '';
+    }
+    function _sameOriginTarget() {
+        return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+    }
+    function _isTrustedOrigin(origin) {
+        if (!window.location.origin || window.location.origin === 'null') return true;
+        return origin === window.location.origin;
+    }
+
     if (window.pdfjsLib) {
         try {
             pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('../lib/pdf/v1/pdf.worker.min.js', window.location.href).href;
@@ -2226,17 +2288,6 @@
         }
     }
 
-    // One-time repair for books extracted here before this shelf's own
-    // canOpenFile() flag requirement was understood: the file itself was
-    // always genuinely saved to the shared blob store, but the library
-    // entry never got its `fileBlob: true` flag set — and every shelf's
-    // "Open" affordance checks that flag synchronously, not the actual
-    // IndexedDB contents, so those books rendered with no way to open
-    // them despite the file being right there. This scans the shared
-    // library once for entries with no fileBlob/fileHandle/link at all
-    // (i.e. nothing a shelf would currently offer to open), checks
-    // whether a blob genuinely exists for each, and sets the flag where
-    // it does. Guarded so it only ever runs once.
     const REPAIR_FLAG = 'osiris_dashboard_fileblob_repair_done';
     function repairMissingFileBlobFlagsIfNeeded() {
         if (!window.OsirisCore || localStorage.getItem(REPAIR_FLAG)) return;
@@ -2258,58 +2309,49 @@
         });
     }
 
-    // "Ouvrir la bibliothèque" row link: when this dashboard is itself
-    // embedded in Portfolio (window.parent !== window), stay inside the
-    // shell instead of breaking out to a new tab — ask Portfolio to
-    // switch to the Hub's own registered tab, passing along which
-    // specific book to open once it's mounted there. When opened
-    // standalone (not embedded), preventDefault() never runs and the
-    // normal target="_blank" link behavior happens exactly as before —
-    // no regression for that case.
-    //
-    // Waits for Portfolio's own osirisNavigateToAppResult before deciding
-    // anything further, with a timeout as a safety net — Portfolio might
-    // not find a matching registered link (wrong/renamed filename), might
-    // be at its open-tab limit, or this page might end up embedded in
-    // something that isn't Portfolio at all. In every one of those cases
-    // this falls back to a plain new tab instead of silently doing
-    // nothing, which is what a bare preventDefault() with no confirmation
-    // would otherwise risk.
-    function handleLibraryLinkClick(e, libraryLink) {
+    function navigatePortfolioApp(e, targetUrl, pageFileName, bookId) {
+        const safeUrl = safeDashHref(targetUrl);
+        if (safeUrl === '#') { e.preventDefault(); return; }
         if (window.parent === window) return;
         e.preventDefault();
-        let bookId = null;
-        try {
-            bookId = new URL(libraryLink, location.href).searchParams.get('book');
-        } catch (err) { /* malformed/empty link - navigate to the Hub in general, no specific book */ }
 
         let settled = false;
         let fallbackTimer = setTimeout(function () {
             if (settled) return;
-            console.warn('[osiris-nav] Dashboard timed out waiting for shell (2500ms) - opening fallback window');
             window.removeEventListener('message', onResult);
-            window.open(libraryLink, '_blank');
+            window.open(safeUrl, '_blank', 'noopener,noreferrer');
         }, 2500);
 
         function onResult(ev) {
+            if (!_isTrustedOrigin(ev.origin)) return;
             if (!ev.data || ev.data.type !== 'osirisNavigateToAppResult') return;
-            console.debug('[osiris-nav] Dashboard received result:', ev.data.success);
             window.removeEventListener('message', onResult);
             clearTimeout(fallbackTimer);
             settled = true;
             if (!ev.data.success) {
-                console.warn('[osiris-nav] Shell refused navigation (success: false) - opening fallback window');
-                window.open(libraryLink, '_blank');
+                window.open(safeUrl, '_blank', 'noopener,noreferrer');
             }
         }
         window.addEventListener('message', onResult);
 
-        console.debug('[osiris-nav] Dashboard sending osirisNavigateToApp, bookId=', bookId);
         window.parent.postMessage({
             type: 'osirisNavigateToApp',
-            pageFileName: 'library.html',
-            bookId: bookId
-        }, '*');
+            pageFileName: pageFileName,
+            bookId: bookId || null
+        }, _sameOriginTarget());
+    }
+
+    function handleLibraryLinkClick(e, libraryLink) {
+        const safeUrl = safeDashHref(libraryLink);
+        let bookId = null;
+        try {
+            bookId = new URL(safeUrl, location.href).searchParams.get('book');
+        } catch (err) {}
+        navigatePortfolioApp(e, safeUrl, 'library.html', bookId);
+    }
+
+    function handleCahierNotesLinkClick(e, targetUrl) {
+        navigatePortfolioApp(e, targetUrl || 'cahier-notes.html', 'cahier-notes.html', null);
     }
 
     // [Document & Book Cover Extraction moved to ../js/core/epub-pdf-extractor.js]
@@ -2382,6 +2424,8 @@
             colActions: 'Documentation',
             viewLib: 'Voir Bibliothèque',
             evalTitle: 'Évaluations:',
+            evalCahierLink: 'Cahier de Notes',
+            evalCahierLinkTitle: 'Ouvrir Cahier de Notes',
             colType: 'Types',
             colDates: 'Dates',
             colStats: 'Statistiques',
@@ -2541,6 +2585,8 @@
             colActions: 'Dokumentation',
             viewLib: 'Bibliothek ansehen',
             evalTitle: 'Bewertungen:',
+            evalCahierLink: 'Cahier de Notes',
+            evalCahierLinkTitle: 'Cahier de Notes öffnen',
             colType: 'Typen',
             colDates: 'Daten',
             colStats: 'Statistiken',
@@ -2879,6 +2925,10 @@
         document.getElementById('classesLabel').textContent = lang.classes;
         document.getElementById('addSubjectBtn').textContent = lang.addSubject;
         document.getElementById('evaluationsTitle').textContent = lang.evalTitle;
+        const evalCahierLinkEl = document.getElementById('evalCahierNotesLink');
+        const evalCahierLinkTextEl = document.getElementById('evalCahierNotesLinkText');
+        if (evalCahierLinkTextEl) evalCahierLinkTextEl.textContent = lang.evalCahierLink;
+        if (evalCahierLinkEl) evalCahierLinkEl.title = lang.evalCahierLinkTitle;
         document.getElementById('thType').textContent = lang.colType;
         document.getElementById('thDates').textContent = lang.colDates;
         document.getElementById('thStats').textContent = lang.colStats;
@@ -3562,20 +3612,26 @@
 
                 // 1. Book Title
                 const tdTitle = document.createElement('td');
-                tdTitle.innerHTML = `<input type="text" class="book-title-input" value="${book.title}" oninput="getActiveClass().subjects[${sIdx}].books[${bIdx}].title=this.value">`;
+                const titleInp = document.createElement('input');
+                titleInp.type = 'text';
+                titleInp.className = 'book-title-input';
+                titleInp.value = String(book.title || '');
+                titleInp.addEventListener('input', () => { getActiveClass().subjects[sIdx].books[bIdx].title = titleInp.value; });
+                tdTitle.appendChild(titleInp);
                 tr.appendChild(tdTitle);
 
                 // 2. Cover Preview / Upload
                 const tdCover = document.createElement('td');
                 const coverId = `cover_input_${sIdx}_${bIdx}`;
                 const coverImgId = `${coverId}_img`;
+                const safeCover = safeCoverSrc(book.coverImg);
                 tdCover.innerHTML = `
                     <input type="file" id="${coverId}" accept="application/pdf,.epub,application/epub+zip" style="display:none;" onchange="handleBookFileExtract(event, ${sIdx}, ${bIdx})">
                     <input type="file" id="${coverImgId}" accept="image/*" style="display:none;" onchange="handleCoverUpload(event, ${sIdx}, ${bIdx})">
-                    <div class="cover-upload-box" onclick="document.getElementById('${coverId}').click()" title="${lang.extractCoverTitle}">
-                        ${book.coverImg ? `<img src="${book.coverImg}">` : `<span>${lang.extractCoverHint}</span>`}
-                        ${book.extractBusy ? `<div class="cover-busy-overlay">${lang.extracting}</div>` : ''}
-                        <button type="button" class="cover-manual-btn" title="${lang.manualImageTitle}" onclick="event.stopPropagation(); document.getElementById('${coverImgId}').click();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>
+                    <div class="cover-upload-box" onclick="document.getElementById('${coverId}').click()" title="${escDashHtml(lang.extractCoverTitle)}">
+                        ${safeCover ? `<img src="${escDashHtml(safeCover)}">` : `<span>${escDashHtml(lang.extractCoverHint)}</span>`}
+                        ${book.extractBusy ? `<div class="cover-busy-overlay">${escDashHtml(lang.extracting)}</div>` : ''}
+                        <button type="button" class="cover-manual-btn" title="${escDashHtml(lang.manualImageTitle)}" onclick="event.stopPropagation(); document.getElementById('${coverImgId}').click();"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>
                     </div>
                 `;
                 tr.appendChild(tdCover);
@@ -3603,7 +3659,15 @@
 
                 // 6. Action Link
                 const tdAction = document.createElement('td');
-                tdAction.innerHTML = `<a href="${book.libraryLink || '#'}" target="_blank" class="action-link" onclick="handleLibraryLinkClick(event, '${book.libraryLink || ''}')">${lang.viewLib}</a>`;
+                const safeLibUrl = safeDashHref(book.libraryLink);
+                const actionA = document.createElement('a');
+                actionA.href = safeLibUrl;
+                actionA.target = '_blank';
+                actionA.rel = 'noopener noreferrer';
+                actionA.className = 'action-link';
+                actionA.textContent = lang.viewLib;
+                actionA.addEventListener('click', (e) => handleLibraryLinkClick(e, safeLibUrl));
+                tdAction.appendChild(actionA);
                 tr.appendChild(tdAction);
 
                 // 7. Remove Book Row (X)
@@ -3792,20 +3856,25 @@
                         <option value="IE" ${ev.type === 'IE' ? 'selected' : ''}>${lang.evalTypeIE}</option>
                         <option value="DS" ${ev.type === 'DS' ? 'selected' : ''}>${lang.evalTypeDS}</option>
                         <option value="IO" ${ev.type === 'IO' ? 'selected' : ''}>${lang.evalTypeIO}</option>
-                        <option value="Autres" ${ev.type === 'Autres' ? 'selected' : ''}>${lang.evalTypeAutres}</option>
+                        <option value="Autres" ${ev.type === 'Autres' ? 'selected' : ''}>${escDashHtml(lang.evalTypeAutres)}</option>
                     </select>
-                    ${isAutres ? `<input type="text" class="book-title-input" style="width:100px;" placeholder="${lang.evalCustomPlaceholder}" value="${ev.customType || ''}" oninput="getActiveClass().evaluations[${idx}].customType=this.value">` : ''}
+                    ${isAutres ? `<input type="text" class="book-title-input" style="width:100px;" placeholder="${escDashHtml(lang.evalCustomPlaceholder)}" value="${escDashHtml(ev.customType || '')}" oninput="getActiveClass().evaluations[${idx}].customType=this.value">` : ''}
                 </div>
             `;
             tr.appendChild(tdType);
 
             const tdDate = document.createElement('td');
-            tdDate.innerHTML = `<input type="date" class="eval-date" value="${ev.date}" onchange="getActiveClass().evaluations[${idx}].date=this.value">`;
+            const dateInp = document.createElement('input');
+            dateInp.type = 'date';
+            dateInp.className = 'eval-date';
+            dateInp.value = String(ev.date || '');
+            dateInp.addEventListener('change', () => { getActiveClass().evaluations[idx].date = dateInp.value; });
+            tdDate.appendChild(dateInp);
             tr.appendChild(tdDate);
 
             const tdStat = document.createElement('td');
             tdStat.innerHTML = `
-                <div class="stat-preview-box" onclick="openChartModal(${idx})" title="${lang.statCalcTitle}">
+                <div class="stat-preview-box" onclick="openChartModal(${idx})" title="${escDashHtml(lang.statCalcTitle)}">
                     ${getMiniChartSVG(ev.stat, ev.pointeurData)}
                 </div>
             `;
@@ -3814,22 +3883,29 @@
             const tdChartType = document.createElement('td');
             tdChartType.innerHTML = `
                 <select class="eval-select" style="font-size:0.8rem; padding:3px 6px;" onchange="getActiveClass().evaluations[${idx}].stat=this.value; renderEvaluations();">
-                    <option value="donut" ${ev.stat === 'donut' ? 'selected' : ''}>${lang.statDonut}</option>
-                    <option value="bar" ${ev.stat === 'bar' ? 'selected' : ''}>${lang.statBar}</option>
-                    <option value="pie" ${ev.stat === 'pie' ? 'selected' : ''}>${lang.statPie}</option>
-                    <option value="line" ${ev.stat === 'line' ? 'selected' : ''}>${lang.statLine}</option>
+                    <option value="donut" ${ev.stat === 'donut' ? 'selected' : ''}>${escDashHtml(lang.statDonut)}</option>
+                    <option value="bar" ${ev.stat === 'bar' ? 'selected' : ''}>${escDashHtml(lang.statBar)}</option>
+                    <option value="pie" ${ev.stat === 'pie' ? 'selected' : ''}>${escDashHtml(lang.statPie)}</option>
+                    <option value="line" ${ev.stat === 'line' ? 'selected' : ''}>${escDashHtml(lang.statLine)}</option>
                 </select>
             `;
             tr.appendChild(tdChartType);
 
             const tdDetails = document.createElement('td');
-            tdDetails.innerHTML = `<button class="ctrl-btn" style="color:var(--accent); border-color:var(--accent);" onclick="openPointeurModal('${ev.id}')" title="${lang.statCalcTitle}"><svg width="20px" height="20px" viewBox="0 0 48 48" fill="none">
+            const detBtn = document.createElement('button');
+            detBtn.className = 'ctrl-btn';
+            detBtn.style.color = 'var(--accent)';
+            detBtn.style.borderColor = 'var(--accent)';
+            detBtn.title = lang.statCalcTitle || '';
+            detBtn.innerHTML = `<svg width="20px" height="20px" viewBox="0 0 48 48" fill="none">
         <rect width="48" height="48" fill="white" fill-opacity="0.01"/>
         <path d="M39 4H11C9.89543 4 9 4.89543 9 6V42C9 43.1046 9.89543 44 11 44H39C40.1046 44 41 43.1046 41 42V6C41 4.89543 40.1046 4 39 4Z" fill="#2F88FF" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M17 30L31 30" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M17 36H24" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         <rect x="17" y="12" width="14" height="10" fill="#2F88FF" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg></button>`;
+        </svg>`;
+            detBtn.addEventListener('click', () => openPointeurModal(ev.id));
+            tdDetails.appendChild(detBtn);
             tr.appendChild(tdDetails);
 
             const tdRemove = document.createElement('td');

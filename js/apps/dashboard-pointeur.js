@@ -1030,7 +1030,6 @@
     }
 
 
-
     // Expose all functions to global scope for inline HTML onclick/onchange attributes
     global.openPointeurModal = openPointeurModal;
     global.closePointeurModal = closePointeurModal;

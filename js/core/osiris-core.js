@@ -1,18 +1,5 @@
-/* ============================================================
-   osiris-core.js
-   Shared library core for the Osiris multi-theme bookshelf.
 
-   Step 3 of the workplan ("Shared schema + storage key"): one
-   storage key, one array of book records, read/written by every
-   shelf (CLASSIQUE, Codex Collection, Lit Circle). Dark Shelf is
-   intentionally NOT migrated yet â€” see workplan Â§2/Â§9 step 4.
 
-   Each shelf already contains its own one-time migration logic
-   (MIGRATION_FLAG + legacy key fold-in) that calls into the
-   loadLibrary/saveLibrary/makeBookId functions below â€” this file
-   only needs to provide the shared storage primitives, it does not
-   need to know about any shelf's legacy key format.
-   ============================================================ */
 (function (global) {
   "use strict";
 
@@ -144,12 +131,23 @@
 
   function _debugOn() {
     try { return global.localStorage && global.localStorage.getItem("osirisDebug") === "1"; }
-    catch (e) { return false; } // localStorage can throw in some sandboxed/private-mode contexts
+    catch (e) { return false; }
   }
   function _debugLog() {
     if (!_debugOn()) return;
     var args = ["[osiris-core]"].concat(Array.prototype.slice.call(arguments));
     (global.console && global.console.log || function () {}).apply(global.console, args);
+  }
+
+  function _sameOriginTarget() {
+    var orig = global.location && global.location.origin;
+    return (orig && orig !== "null") ? orig : "*";
+  }
+
+  function _isTrustedOrigin(origin) {
+    var selfOrig = global.location && global.location.origin;
+    if (!selfOrig || selfOrig === "null") return true;
+    return origin === selfOrig;
   }
 
   function send(targetWindow, type, payload) {
@@ -158,7 +156,7 @@
         var label = targetWindow === global.parent ? "parent" : (targetWindow === global ? "self" : "iframe");
         _debugLog("SEND ->", label, type, payload);
       }
-      targetWindow.postMessage({ type: type, payload: payload }, "*");
+      targetWindow.postMessage({ type: type, payload: payload }, _sameOriginTarget());
     }
   }
 
@@ -170,43 +168,23 @@
     _listeners.push(listenerObj);
     if (_listeners.length === 1) {
       global.addEventListener("message", function (e) {
+        if (!_isTrustedOrigin(e.origin)) return;
         for (var i = 0; i < _listeners.length; i++) {
           var lstn = _listeners[i];
           if (lstn.target && e.source === lstn.target) {
             if (e.data && e.data.type && lstn.handlers && lstn.handlers[e.data.type]) {
               _debugLog("RECV <-", e.data.type, e.data.payload, "(handled)");
               lstn.handlers[e.data.type](e.data.payload);
-              return; // handled by one
+              return;
             }
           }
         }
         if (e.data && e.data.type && _debugOn()) {
-          _debugLog("RECV <-", e.data.type, e.data.payload, "(NO HANDLER REGISTERED â€” contract mismatch?)");
+          _debugLog("RECV <-", e.data.type, e.data.payload, "(unhandled)");
         }
       });
     }
   }
-
-  /* ---------------- Vault Bridge (real Portfolio contract) ----------------
-     Ported from the actual PORTFOLIO_SEITE.html message contract. The vault
-     itself (PBKDF2 -> AES-GCM, 4-digit passphrase, ki_safe_vault_store) lives
-     entirely inside Portfolio â€” it is never present in this file or the Hub.
-     Portfolio does NOT broadcast a vault "state" and does NOT answer a
-     "request state" query; the previous OSIRIS_VAULT_STATE / OSIRIS_REQUEST_
-     VAULT message types here were speculative and matched nothing Portfolio
-     actually sends, which is why the Hub's vault status always fell back to
-     "locked/unavailable" even against a genuinely unlocked vault.
-
-     What Portfolio really does: when the user clicks "Apply Keys" on its
-     side, it posts already-decrypted keys, unprompted, straight to the
-     current .page-frame's contentWindow:
-       { type: 'osirisVaultKeys', keys: [{ provider, key, email }] }
-     â€” provider is a free-text display name (e.g. "Google Gemini", "GitHub
-     Models"), not one of this file's provider ids â€” and expects an ack
-     back so it can update its own status line:
-       { type: 'osirisVaultKeysApplied', count }
-     There is no "locked vs unlocked" signal available to the embedded page
-     at all; the only observable event is "keys arrived" or "they didn't". */
 
 
   function matchProviderId(displayName) {
@@ -381,13 +359,7 @@
     global.localStorage.setItem("osiris_manual_models", JSON.stringify(models));
   }
 
-  /* ---------------- File handle store (Â§5 / Â§9.6) ----------------
-     IndexedDB store for FileSystemFileHandle objects, keyed by book id.
-     Handles are opaque objects that can't be JSON.stringify'd into
-     localStorage (that's why the schema's book.fileHandle field is just
-     a boolean flag, not the handle itself â€” the real handle lives here).
-     Chromium only: callers must feature-detect `showOpenFilePicker`
-     before offering this path and fall back to book.link otherwise. */
+
   var FH_DB_NAME = "osiris_file_handles_db";
   var FH_STORE = "handles";
 
@@ -544,18 +516,6 @@
     });
   }
 
-  /* ---------------- AI Classifier (Â§7 AI Sorting) ----------------
-     Batch classification of books into {theme, cecr} using whatever
-     provider(s) have a key present, in FREE_MODELS declaration order,
-     with automatic failover to the next provider on any error.
-
-     Uses a real text excerpt when the caller's entry has one (workplan
-     Â§9's text extractor â€” shipped in all 4 shelves as of this pass,
-     `book.excerpt`, capped ~700 chars, PDF/EPUB) and falls back to
-     metadata-only (title/author/category/comment) otherwise, e.g. a
-     link-only entry with no locally readable file. confidence is
-     "excerpt" for the former, "estimated" for the latter, per entry â€”
-     a single batch can be a mix of both. */
 
   var CHAT_ENDPOINTS = {
     cerebras: "https://api.cerebras.ai/v1/chat/completions",

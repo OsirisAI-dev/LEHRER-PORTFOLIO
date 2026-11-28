@@ -4,8 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Lit Circle — Book Club</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 <meta name="description" content="Discover and join active book club reading sessions. Add your own books with real cover art pulled from images, PDFs, or EPUBs." />
-<link rel="stylesheet" href="/fonts/fonts.css" />
+<link rel="stylesheet" href="../fonts/fonts.css" />
 <style>
 /* ==========================================================================
    Lit Circle — original implementation. The row/accordion/roster concept
@@ -206,10 +207,7 @@ body {
 }
 .row-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* Always-reachable "click to open" affordance directly on the cover —
-   hover-reveal on pointer devices, always-on under (hover: none) so it's
-   not hidden from touch. Sits on top of the cover, not gated behind the
-   row's expanded state. */
+
 .thumb-open {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -858,7 +856,7 @@ body {
             custom: true,
             badge: b.badge || { text: t("justAdded"), color: b.accent || "#2dd4bf" },
             accent: b.accent || "#2dd4bf",
-            note: b.excerpt || "", // legacy field was called "excerpt"; renamed to "note" to free that name up for step 9's real text-extraction excerpt
+            note: b.excerpt || "",
             coverKind: b.coverKind || "color",
             coverSrc: b.coverSrc || null,
             link: b.link || null,
@@ -1178,8 +1176,8 @@ body {
       btn.textContent = originalLabel;
       btn.disabled = false;
       if (status === "opened") return;
-      if (book.link) {
-        window.open(book.link, "_blank", "noopener,noreferrer");
+      if (book.link && /^https?:\/\//i.test(book.link.trim())) {
+        window.open(book.link.trim(), "_blank", "noopener,noreferrer");
       }
     });
   }
@@ -1192,7 +1190,7 @@ body {
   var pendingFile = null;
   var pendingFileHandle = null; // FileSystemFileHandle chosen this modal session, not yet saved to IndexedDB
   var pendingCoverDataUrl = null; // set once extraction resolves
-  var pendingTextExcerpt = null; // step 9: plain-text sample for aiClassifyBatch, see extractPdfData/extractEpubData
+  var pendingTextExcerpt = null;
   var extractionPromise = null; // non-null while a chosen file is still being read
   var titleAutofilled = false; // true when the current fTitle value came from us, not typing
   var authorAutofilled = false;
@@ -1510,10 +1508,7 @@ body {
     }).catch(function () { return null; });
   }
 
-  /* -- Chosen-file pipeline: cover + metadata, run as soon as a file is
-     picked (click, drag-drop, or handle-picker) rather than waiting for
-     submit — that's what lets title/author get filled in while the
-     person is still looking at the form. ------------------------------- */
+
   function deriveNameFallback(filename) {
     return (filename || "").replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ").trim();
   }
@@ -1548,7 +1543,7 @@ body {
     extractionPromise = extractionFor(file, kind).then(function (result) {
       setAutoTitle(result.title);
       setAutoAuthor(result.author);
-      pendingTextExcerpt = result.excerpt || null; // step 9 — independent of whether a cover was found
+      pendingTextExcerpt = result.excerpt || null;
       if (!result.cover) {
         dzStatusEl.textContent = (kind === "pdf" || kind === "epub") ? t("dzNoCover") : "";
         return;
@@ -1581,7 +1576,7 @@ body {
       badge: { text: t("justAdded"), color: selectedColor },
       accent: selectedColor,
       note: note, coverKind: "color", coverSrc: null, link: link || null,
-      excerpt: pendingTextExcerpt || null, // step 9 — feeds OsirisCore.aiClassifyBatch() via the Hub
+      excerpt: pendingTextExcerpt || null,
       aiExcluded: excludeAi,
       fileHandle: !!pendingFileHandle,
       fileBlob: !!(pendingFile && !pendingFileHandle),

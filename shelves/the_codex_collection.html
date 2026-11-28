@@ -4,8 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Codex — Bibliothèque</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 <meta name="description" content="Bibliothèque personnelle avec animation de livres en CSS, extraction de couverture réelle (PDF/EPUB) et thème clair/sombre." />
-<link rel="stylesheet" href="/fonts/fonts.css" />
+<link rel="stylesheet" href="../fonts/fonts.css" />
 <style>
   /* -- Reset -------------------------------------------------------- */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -367,11 +368,7 @@
   .vol-shell:hover .vol-remove { opacity: 1; }
   .vol-remove:hover { background: var(--danger); }
 
-  /* -- "Click to open" affordance, centered on the cover (only rendered
-     when the book has an uploaded file handle or a fallback link — see
-     bookCard()). Revealed on hover/focus like the rest of the jacket's
-     hover state, as a labeled pill rather than a corner-icon-only button
-     so it reads clearly instead of needing to be guessed at. ---------- */
+
   .vol-open {
     position: absolute; top: 50%; left: 50%; z-index: 6;
     transform: translate(-50%, -50%);
@@ -1590,7 +1587,7 @@
       readFileAsArrayBuffer(file).then(function (buf) {
         return extractPdfCover(buf);
       }).then(function (res) {
-        pendingExtractedExcerpt = res.excerpt || null; // step 9 — independent of whether a cover was found
+        pendingExtractedExcerpt = res.excerpt || null;
         if (!res.cover) {
           setExtractStatus(t().extractNoCoverFound, 'warn');
           applyExtractedMeta(res.meta);
@@ -1611,7 +1608,7 @@
       readFileAsArrayBuffer(file).then(function (buf) {
         return extractEpubCover(buf);
       }).then(function (res) {
-        pendingExtractedExcerpt = res.excerpt || null; // step 9 — independent of whether a cover was found
+        pendingExtractedExcerpt = res.excerpt || null;
         if (!res.cover) {
           setExtractStatus(t().extractNoCoverEpub, 'warn');
           applyExtractedMeta(res.meta);
@@ -1786,7 +1783,7 @@
         book.spine = selectedSwatch;
         if (pendingExtractedCover) { book.cover = pendingExtractedCover; book.coverIsReal = true; }
         if (pendingFileMeta) { book.fileMeta = { name: pendingFileMeta.name }; }
-        if (pendingExtractedExcerpt) { book.excerpt = pendingExtractedExcerpt; } // step 9 — feeds aiClassifyBatch
+        if (pendingExtractedExcerpt) { book.excerpt = pendingExtractedExcerpt; }
         if (pendingFileHandle) { book.fileHandle = true; }
         else if (pendingFile) {
 
@@ -1816,7 +1813,7 @@
         spine: selectedSwatch,
         cover: pendingExtractedCover || null,
         coverIsReal: !!pendingExtractedCover,
-        excerpt: pendingExtractedExcerpt || null, // step 9 — feeds OsirisCore.aiClassifyBatch() via the Hub
+        excerpt: pendingExtractedExcerpt || null,
         art: ART_PATTERNS[hashStr(title) % ART_PATTERNS.length],
         texture: PAGE_TEXTURES[hashStr(title + (fAuthor.value || '')) % PAGE_TEXTURES.length],
         fileMeta: pendingFileMeta ? { name: pendingFileMeta.name } : null,
@@ -1948,8 +1945,8 @@
       btn.textContent = originalLabel;
       btn.disabled = false;
       if (status === 'opened') return;
-      if (book.link) {
-        window.open(book.link, '_blank', 'noopener,noreferrer');
+      if (book.link && /^https?:\/\//i.test(book.link.trim())) {
+        window.open(book.link.trim(), '_blank', 'noopener,noreferrer');
       } else {
         showToast(t().toastFileNotFound);
       }
@@ -1964,8 +1961,8 @@
     resolveAndOpenFile(id).then(function (status) {
       btn.classList.remove('busy');
       if (status === 'opened') return;
-      if (book.link) {
-        window.open(book.link, '_blank', 'noopener,noreferrer');
+      if (book.link && /^https?:\/\//i.test(book.link.trim())) {
+        window.open(book.link.trim(), '_blank', 'noopener,noreferrer');
       } else {
         showToast(t().toastFileNotFound);
       }

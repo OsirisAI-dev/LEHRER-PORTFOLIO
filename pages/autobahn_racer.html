@@ -2814,7 +2814,6 @@
     } else {
       morphCands.push(`die ${noun}ung`, `das ${noun}nis`, `die ${noun}heit`);
     }
-    // Filter out any candidate whose noun part already exists as a real German noun in DB!
     const validMorph = morphCands.filter(c => {
       const bare = c.split(' ').slice(1).join(' ').toLowerCase();
       return bare && bare !== noun.toLowerCase() && !wordPool.nounSet.has(bare);
@@ -4248,24 +4247,110 @@
     return firstUnlocked;
   }
 
+  const AUTOBAHN_DE_VOICE_HINTS = ['katja', 'amala', 'hedda', 'conrad', 'killian', 'stefan', 'google deutsch', 'anna', 'petra', 'markus', 'yannick', 'marlene', 'vicki', 'helena', 'de-de-x-nfh', 'de-de-x-deg', 'de-de-x-dea'];
+  let _cachedDeVoices = [];
+  let _ttsRequestSeq = 0;
+  let _missingDeVoiceWarned = false;
+
+  function normalizeVoiceLang(v) {
+    return String((v && v.lang) || '').replace(/_/g, '-').toLowerCase();
+  }
+  function isGermanVoice(v) {
+    const l = normalizeVoiceLang(v);
+    return l === 'de' || l.startsWith('de-');
+  }
+  function scoreGermanVoice(v) {
+    const name = String((v && v.name) || '').toLowerCase();
+    const lang = normalizeVoiceLang(v);
+    let score = /multilingual/i.test(name) ? -30 : 50;
+    if (AUTOBAHN_DE_VOICE_HINTS.some(h => name.includes(h))) score += 25;
+    if (lang === 'de-de') score += 20;
+    else if (lang === 'de') score += 10;
+    const online = (typeof navigator === 'undefined') ? true : navigator.onLine !== false;
+    if (!online) score += v.localService ? 25 : -45;
+    else {
+      if (/natural|online|google deutsch|neural/i.test(name)) score += 12;
+      if (v.localService) score += 4;
+    }
+    return score;
+  }
+  function refreshAutobahnGermanVoices() {
+    if (!('speechSynthesis' in window) || !window.speechSynthesis.getVoices) return [];
+    _cachedDeVoices = (window.speechSynthesis.getVoices() || []).filter(isGermanVoice);
+    return _cachedDeVoices;
+  }
+  function ensureAutobahnGermanVoices(timeoutMs = 400) {
+    if (!('speechSynthesis' in window)) return Promise.resolve([]);
+    const immediate = refreshAutobahnGermanVoices();
+    if (immediate.length > 0) return Promise.resolve(immediate);
+    return new Promise(resolve => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (typeof window.speechSynthesis.removeEventListener === 'function') {
+          window.speechSynthesis.removeEventListener('voiceschanged', onChanged);
+        }
+        resolve(refreshAutobahnGermanVoices());
+      };
+      const onChanged = () => { if (refreshAutobahnGermanVoices().length > 0) finish(); };
+      if (typeof window.speechSynthesis.addEventListener === 'function') {
+        window.speechSynthesis.addEventListener('voiceschanged', onChanged);
+      }
+      setTimeout(finish, timeoutMs);
+    });
+  }
+  function pickAutobahnGermanVoice() {
+    const voices = refreshAutobahnGermanVoices();
+    if (!voices.length) return null;
+    let best = voices[0], bestScore = scoreGermanVoice(best);
+    for (let i = 1; i < voices.length; i++) {
+      const s = scoreGermanVoice(voices[i]);
+      if (s > bestScore) { best = voices[i]; bestScore = s; }
+    }
+    return best;
+  }
+  if ('speechSynthesis' in window) {
+    refreshAutobahnGermanVoices();
+    if (typeof window.speechSynthesis.addEventListener === 'function') {
+      window.speechSynthesis.addEventListener('voiceschanged', refreshAutobahnGermanVoices);
+    } else {
+      window.speechSynthesis.onvoiceschanged = refreshAutobahnGermanVoices;
+    }
+  }
+
   function speakGratulation(text) {
     if (!settings.readAloud || sfx.muted) return;
     const clean = String(text || '').replace(/[^\p{L}\p{N}\s!\-.,?]/gu, '').trim();
     if (!clean) return;
     lastSpokenGratulation = clean;
     if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(clean);
-      u.lang = 'de-DE';
-      u.rate = 1.06;
-      u.pitch = 1.04;
-      u.volume = 0.95;
-      const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-      const deVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('de'));
-      if (deVoice) u.voice = deVoice;
-      window.speechSynthesis.speak(u);
-    } catch (e) {}
+    const seq = ++_ttsRequestSeq;
+    const doSpeak = () => {
+      if (seq !== _ttsRequestSeq || !settings.readAloud || sfx.muted) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(clean);
+        u.rate = 1.04;
+        u.pitch = 1.04;
+        u.volume = 0.95;
+        const deVoice = pickAutobahnGermanVoice();
+        if (deVoice) {
+          u.voice = deVoice;
+          u.lang = (deVoice.lang || 'de-DE').replace(/_/g, '-');
+        } else {
+          u.lang = 'de-DE';
+          const all = window.speechSynthesis.getVoices ? (window.speechSynthesis.getVoices() || []) : [];
+          if (!_missingDeVoiceWarned && all.length > 0) {
+            _missingDeVoiceWarned = true;
+            console.warn('[Autobahn TTS] Keine deutsche Stimme auf diesem Gerät installiert — System-Standardstimme aktiv.');
+          }
+        }
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    };
+    if (_cachedDeVoices.length > 0) doSpeak();
+    else ensureAutobahnGermanVoices(400).then(doSpeak);
   }
 
   function recordCorrectWordForCefr(wordCefr, qMode, aux) {

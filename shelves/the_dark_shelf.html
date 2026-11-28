@@ -4,8 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Dark Shelf — Curated Reads</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 <meta name="description" content="An interactive 3D book shelf with hover reveal animations, generated covers, and real cover import from your own files." />
-<link rel="stylesheet" href="/fonts/fonts.css" />
+<link rel="stylesheet" href="../fonts/fonts.css" />
 <style>
   /* --- Reset & Base ----------------------------------------------- */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -156,7 +157,7 @@
   }
   .osiris-open-highlight { animation: osirisOpenPulse 2.2s ease; }
 
-  /* soft grounding glow — replaces the old full-width shelf bar */
+
   .volume::before {
     content: '';
     position: absolute;
@@ -248,10 +249,7 @@
   .del-btn:hover { background: #ff4d4d; border-color: #ff4d4d; }
   .volume:hover .del-btn { opacity: 1; transform: translateY(0); }
 
-  /* "get to the file" affordance — centered over the jacket so it reads
-     clearly as an action rather than being guessed at from an icon
-     tucked in a corner. Shown only when the book has a fileHandle or a
-     manual link (§5, §9.6). */
+
   .open-link {
     position: absolute; top: 50%; left: 50%; z-index: 3;
     transform: translate(-50%, -50%);
@@ -814,11 +812,7 @@
     }
   }
 
-  /* -- Storage: shared library (Step 4 — Dark Shelf parity) --------
-     Dark Shelf never persisted before, so there's no legacy key to
-     migrate — it adopts osiris_library_books_v2 directly via
-     osiris-core.js. Falls back to a local-only key if osiris-core.js
-     failed to load, same defensive pattern as the other 3 shelves. */
+
   var FALLBACK_KEY = 'osiris_darkshelf_fallback_v1';
   var DECOY_CLEANUP_FLAG = 'osiris_darkshelf_decoys_removed';
   function loadBooks() {
@@ -870,9 +864,7 @@
 
   function uid() { return 'b' + Math.random().toString(36).slice(2, 9); }
 
-  /* -- Compress a data URL before it ever lands in the shared library —
-     same discipline as the §3 Codex fix, applied here from the start
-     instead of retrofitted after a storage-full bug. ---------------- */
+
   function compressDataUrl(dataUrl, maxWidth, quality) {
     return new Promise(function (resolve) {
       var img = new Image();
@@ -1160,12 +1152,7 @@
     return acc ? cleanExcerptText(acc).slice(0, MAX_EXCERPT_CHARS) : null;
   }
 
-  /* Real first-page render for PDFs — Step 4 replaces the old "keep the
-     live File and <embed> it" approach: a live blob can't be persisted
-     (localStorage can't hold a File, and the bytes would blow quota the
-     same way the §3 Codex bug did). Codex/Lit Circle's proven pattern —
-     render page 1 to canvas, extract a static compressed cover, discard
-     the file — is what Dark Shelf adopts here too. */
+
   function extractPdfCoverDataUrl(file) {
     return file.arrayBuffer().then(function (buf) {
       return pdfjsLib.getDocument({ data: buf }).promise;
@@ -1216,10 +1203,7 @@
     return { name: file.name, size: file.size, type: file.type || '' };
   }
 
-  /* Resolve any supported uploaded file into a cover the shelf can show.
-     Every path now returns a static, pre-compressed cover + fileMeta —
-     the file itself is discarded, never stored (§2's "don't store the
-     real file" pattern, applied to the cover thumbnail too per §3). */
+
   async function resolveCoverFromFile(file) {
     const kind = detectCoverKind(file);
     if (kind === 'image') {
@@ -1309,15 +1293,7 @@
   const shelfEl = document.getElementById('shelf');
   const shelfEmptyEl = document.getElementById('shelfEmpty');
 
-  /* -- Cross-shelf field normalization ------------------------------
-     The shared library (osiris_library_books_v2) holds books added
-     from ALL 4 themes in one array, unfiltered — that's the point of
-     §2's shared schema. But each shelf still writes its own internal
-     field names for color/cover (Classique: color, Codex: spine+cover,
-     Lit Circle: accent+coverSrc, Dark Shelf: hex+cover) — full
-     cross-shelf field-name unification wasn't in scope for this pass
-     (see workplan note under §2), so Dark Shelf resolves whichever
-     field a given book actually has instead of assuming its own names. */
+
   function resolveAccent(book) {
     if (book.hex || book.color || book.spine || book.accent) {
       return book.hex || book.color || book.spine || book.accent;
@@ -1402,16 +1378,7 @@
     renderShelf();
   }
 
-  /* -- One-time cleanup: earlier versions of this shelf auto-seeded three
-     generated demo books directly into the shared library on first run.
-     That seeding is gone now (removed, not fixed forward — it served no
-     purpose beyond a first-run demo) — but anyone who already opened this
-     shelf before this change still has those 3 decoys sitting in their
-     real shared library data, visible on every shelf, not just this one.
-     Sweeps them out by exact (title, author) match against the known
-     decoy pairs — deliberately not matching on title alone, so a real
-     book that happens to share just one field is never at risk. Guarded
-     by DECOY_CLEANUP_FLAG so this only ever runs once. */
+
   function cleanupLegacyDecoysIfNeeded() {
     if (localStorage.getItem(DECOY_CLEANUP_FLAG)) return;
     const knownDecoys = [
@@ -1519,8 +1486,8 @@
     resolveAndOpenFile(id).then(status => {
       btn.disabled = false;
       if (status === 'opened') return;
-      if (book.link) {
-        window.open(book.link, '_blank', 'noopener,noreferrer');
+      if (book.link && /^https?:\/\//i.test(book.link.trim())) {
+        window.open(book.link.trim(), '_blank', 'noopener,noreferrer');
       } else {
         showToast(t('fileNotFoundNoLink'));
       }
@@ -1726,7 +1693,7 @@
 
     const link = linkInput.value.trim();
     const newId = uid();
-    const excerpt = (pendingCoverResult && pendingCoverResult.excerpt) || null; // step 9 — feeds OsirisCore.aiClassifyBatch() via the Hub
+    const excerpt = (pendingCoverResult && pendingCoverResult.excerpt) || null;
     const aiExcluded = document.getElementById('fExcludeAi').checked;
     addBookToState({
       id: newId, title, author, category, hex: selectedAccent, cover,

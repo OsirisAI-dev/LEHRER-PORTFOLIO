@@ -5,6 +5,7 @@
 <link rel="manifest" href="../manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klassenarbeit Editor</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
     
     <script src="../lib/htmldocx/v1/html-docx.js"></script>
     <script src="../js/core/osiris-educore.js"></script>
@@ -41,12 +42,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
         .app-title-main { font-family: var(--klass-font-family, 'Brush Script MT', cursive); text-align: center; font-size: 1.15em; margin: 15px 0 0 0; color: var(--primary); transition: color 0.3s ease, font-size 0.2s ease; }
         .app-title-sub { font-family: var(--klass-font-family, 'Brush Script MT', cursive); text-align: center; font-size: 0.62em; margin: 0 0 20px 0; color: var(--text-color); opacity: 0.8; font-style: italic; }
 
-        /* Hidden rather than deleted: the language dropdown duplicates the
-           Hub's own FR/DE toggle (this tool's version also offers EN/ES,
-           but the Hub-parity convention established for the other tools
-           takes priority) — hidden via CSS rather than removed from the
-           DOM so setLanguage()/toggleLangMenu() (still used by the new
-           SET_LANG listener below) don't hit a null reference. */
+
         .globe-menu button[onclick^="toggleLangMenu"],
         #lang-dropdown { display: none; }
 
@@ -185,12 +181,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
             opacity: 0;
             pointer-events: none;
         }
-        /* Same auto-hide treatment as #floating-toolbar above (shares its
-           resetHideTimer(), not a second independent timer) — the DOCX
-           export used to live in the top toolbar row; moved here per
-           request so the row stays lighter and export reads as a
-           persistent-but-unobtrusive action, consistent with the
-           formatting bar's own "recedes when idle" behavior. */
+
         #docx-fab {
             position: fixed;
             bottom: 30px;
@@ -304,17 +295,7 @@ try { prefs = JSON.parse(localStorage.getItem('osiris_hub_prefs') || '{}'); } ca
         }
         .ex-cat-header .ex-cat-arrow { font-size: 9px; width: 10px; display: inline-block; }
 
-        /* Grid, not flex: every row's text lands in column 1 and every
-           checkbox lands in column 2 at the exact same x-position, no
-           matter how long or short each label is or whether it wraps —
-           that's what flex + "gap" couldn't guarantee before. Text comes
-           first in both the DOM and visually (checkbox reads as trailing
-           the exercise name, not leading it). `display: contents` on the
-           label lets its two children become direct grid items of the
-           body itself, while keeping the native label-click-toggles-
-           checkbox behavior intact. Nested sub-categories (II.A/B/C) sit
-           in their own indented grid, one level in from their parent.
-           */
+
         .ex-cat-body {
             display: grid; grid-template-columns: 1fr auto;
             column-gap: 8px; row-gap: 6px; align-items: start;
@@ -895,59 +876,59 @@ function jumpToText(pos) {
 
 const translations = {
     fr: { 
-        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Centrer", "auto-backup": "Auto-Backup", "load": "Importer", "save": "Exporter",
-        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Paramètres", margins: "Marges Word",
+        theme: "<img src='../icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Centrer", "auto-backup": "Auto-Backup", "load": "Importer", "save": "Exporter",
+        sweep: "Sweep <img src='../icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Paramètres", margins: "Marges Word",
         "margin-normal": "Normales", "margin-narrow": "Étroites", "margin-moderate": "Moyennes", "margin-wide": "Larges",
         font: "Police", size: "Taille", rulerTitle: "Règle de texte", showRuler: "Afficher",
-        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer IA", logoBoxTitle: "En-tête / Logo", titlePlac: "TITRE:", logoPlac: "Infos établissement / Logo (Max: 633x250px, 100ko)...",
+        aiGenBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer IA", logoBoxTitle: "En-tête / Logo", titlePlac: "TITRE:", logoPlac: "Infos établissement / Logo (Max: 633x250px, 100ko)...",
         schoolYear: "ANNÉE SCOLAIRE:", serie: "SERIE", option: "OPTION", coef: "COEFFICIENT", duration: "DURÉE",
         mins: "Minutes", hours: "Heures", trimester: "TRIMESTRE", mainTextPlac: "Saisissez votre texte ici...",
         from: "From:", step: "Step:", spacing: "Spacing:", sourceLabel: "Source:",
         vocabTitle: "VOCABULAIRE :", spacing100: "Espacement: 1.00", spacing115: "Espacement: 1.15", spacing150: "Espacement: 1.50",
-        minusCol: "- Colonne", plusCol: "+ Colonne", plusRow: "+ Ligne", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Traductions IA",
-        exercisesTitle: "EXERCICES :", exZonePlac: "les exercices générés apparaîtront ici", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer les exercices (à partir du texte actuel)",
+        minusCol: "- Colonne", plusCol: "+ Colonne", plusRow: "+ Ligne", aiTranslationsBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Traductions IA",
+        exercisesTitle: "EXERCICES :", exZonePlac: "les exercices générés apparaîtront ici", genExOnlyBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Générer les exercices (à partir du texte actuel)",
         marginsPrefix: "Marges : ", aiModelWarning: "Choisissez un modèle IA dans le Vault du Hub."
     },
     en: { 
-        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Center", "auto-backup": "Auto-Backup", "load": "Import", "save": "Export",
-        sweep: "Sweep <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters", margins: "Word Margins",
+        theme: "<img src='../icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Theme", center: "Center", "auto-backup": "Auto-Backup", "load": "Import", "save": "Export",
+        sweep: "Sweep <img src='../icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters", margins: "Word Margins",
         "margin-normal": "Normal", "margin-narrow": "Narrow", "margin-moderate": "Moderate", "margin-wide": "Wide",
         font: "Font", size: "Size", rulerTitle: "Text Ruler", showRuler: "Show",
-        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Generate", logoBoxTitle: "Header / Logo", titlePlac: "TITLE:", logoPlac: "School Info / Logo (Max: 633x250px, 100kb)...",
+        aiGenBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Generate", logoBoxTitle: "Header / Logo", titlePlac: "TITLE:", logoPlac: "School Info / Logo (Max: 633x250px, 100kb)...",
         schoolYear: "SCHOOL YEAR:", serie: "CLASS", option: "OPTION", coef: "COEFFICIENT", duration: "DURATION",
         mins: "Minutes", hours: "Hours", trimester: "TERM", mainTextPlac: "Enter your text here...",
         from: "From:", step: "Step:", spacing: "Spacing:", sourceLabel: "Source:",
         vocabTitle: "VOCABULARY :", spacing100: "Spacing: 1.00", spacing115: "Spacing: 1.15", spacing150: "Spacing: 1.50",
-        minusCol: "- Column", plusCol: "+ Column", plusRow: "+ Row", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Translations",
-        exercisesTitle: "EXERCISES :", exZonePlac: "generated exercises will appear here", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generate exercises (from current text)",
+        minusCol: "- Column", plusCol: "+ Column", plusRow: "+ Row", aiTranslationsBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>AI Translations",
+        exercisesTitle: "EXERCISES :", exZonePlac: "generated exercises will appear here", genExOnlyBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generate exercises (from current text)",
         marginsPrefix: "Margins : ", aiModelWarning: "Choose an AI model in the Hub Vault."
     },
     es: { 
-        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Tema", center: "Centrar", "auto-backup": "Auto-Respaldo", "load": "Importar", "save": "Exportar",
-        sweep: "Limpiar <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parámetros", margins: "Márgenes Word",
+        theme: "<img src='../icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Tema", center: "Centrar", "auto-backup": "Auto-Respaldo", "load": "Importar", "save": "Exportar",
+        sweep: "Limpiar <img src='../icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parámetros", margins: "Márgenes Word",
         "margin-normal": "Normal", "margin-narrow": "Estrecho", "margin-moderate": "Moderado", "margin-wide": "Ancho",
         font: "Fuente", size: "Tamaño", rulerTitle: "Regla de texto", showRuler: "Mostrar",
-        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar IA", logoBoxTitle: "Encabezado / Logo", titlePlac: "TÍTULO:", logoPlac: "Info escolar / Logo (Max: 633x250px, 100kb)...",
+        aiGenBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar IA", logoBoxTitle: "Encabezado / Logo", titlePlac: "TÍTULO:", logoPlac: "Info escolar / Logo (Max: 633x250px, 100kb)...",
         schoolYear: "AÑO ESCOLAR:", serie: "CURSO", option: "OPCIÓN", coef: "COEFICIENTE", duration: "DURACIÓN",
         mins: "Minutos", hours: "Horas", trimester: "TRIMESTRE", mainTextPlac: "Introduzca su texto aquí...",
         from: "De:", step: "Paso:", spacing: "Espaciado:", sourceLabel: "Fuente:",
         vocabTitle: "VOCABULARIO :", spacing100: "Espaciado: 1.00", spacing115: "Espaciado: 1.15", spacing150: "Espaciado: 1.50",
-        minusCol: "- Columna", plusCol: "+ Columna", plusRow: "+ Fila", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Traducciones IA",
-        exercisesTitle: "EJERCICIOS :", exZonePlac: "los ejercicios generados aparecerán aquí", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar ejercicios (del texto actual)",
+        minusCol: "- Columna", plusCol: "+ Columna", plusRow: "+ Fila", aiTranslationsBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Traducciones IA",
+        exercisesTitle: "EJERCICIOS :", exZonePlac: "los ejercicios generados aparecerán aquí", genExOnlyBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Generar ejercicios (del texto actual)",
         marginsPrefix: "Márgenes : ", aiModelWarning: "Elige un modelo de IA en el Vault del Hub."
     },
     de: { 
-        theme: "<img src='/icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Design", center: "Zentrieren", "auto-backup": "Auto-Backup", "load": "Importieren", "save": "Exportieren",
-        sweep: "Aufräumen <img src='/icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters", margins: "Word Ränder",
+        theme: "<img src='../icons/palette-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Design", center: "Zentrieren", "auto-backup": "Auto-Backup", "load": "Importieren", "save": "Exportieren",
+        sweep: "Aufräumen <img src='../icons/delete-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-left:4px;'>", paramBtn: "Parameters", margins: "Word Ränder",
         "margin-normal": "Normal", "margin-narrow": "Schmal", "margin-moderate": "Mittel", "margin-wide": "Breit",
         font: "Schriftart", size: "Größe", rulerTitle: "Textlineal", showRuler: "Anzeigen",
-        aiGenBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Generieren", logoBoxTitle: "Kopfzeile / Logo", titlePlac: "TITEL:", logoPlac: "Schulinfo / Logo (Max: 633x250px, 100kb)...",
+        aiGenBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Generieren", logoBoxTitle: "Kopfzeile / Logo", titlePlac: "TITEL:", logoPlac: "Schulinfo / Logo (Max: 633x250px, 100kb)...",
         schoolYear: "SCHULJAHR:", serie: "KLASSE", option: "WAHLFACH", coef: "KOEFFIZIENT", duration: "DAUER",
         mins: "Minuten", hours: "Stunden", trimester: "TRIMESTER", mainTextPlac: "Geben Sie hier Ihren Text ein...",
         from: "Von:", step: "Schritt:", spacing: "Abstand:", sourceLabel: "Quelle:",
         vocabTitle: "VOKABULAR :", spacing100: "Abstand: 1.00", spacing115: "Abstand: 1.15", spacing150: "Abstand: 1.50",
-        minusCol: "- Spalte", plusCol: "+ Spalte", plusRow: "+ Zeile", aiTranslationsBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Übersetzungen",
-        exercisesTitle: "ÜBUNGEN :", exZonePlac: "Generierte Übungen erscheinen hier", genExOnlyBtn: "<img src='/icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Übungen generieren (aus aktuellem Text)",
+        minusCol: "- Spalte", plusCol: "+ Spalte", plusRow: "+ Zeile", aiTranslationsBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>KI Übersetzungen",
+        exercisesTitle: "ÜBUNGEN :", exZonePlac: "Generierte Übungen erscheinen hier", genExOnlyBtn: "<img src='../icons/brainstorm-svgrepo-com.svg' style='width:14px;height:14px;vertical-align:middle;margin-right:4px;'>Übungen generieren (aus aktuellem Text)",
         marginsPrefix: "Ränder : ", aiModelWarning: "Wählen Sie ein KI-Modell im Hub-Vault aus."
     }
 };
@@ -1643,11 +1624,7 @@ function exportTestToDOCX() {
     <style>
         @page { margin: ${marginCSS}; }
         body { font-family: ${selectedFont}; font-size: ${selectedSize}; }
-        /* table-layout was "fixed" here but "auto" everywhere on screen
-           (the header tables set it explicitly, everything else defaults
-           to auto) — that mismatch could make Word evenly split/distort
-           columns differently than what the editor actually showed.
-           Matches the screen behavior now. */
+
         table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
         td { vertical-align: top; padding: 5px; border: none; }
         .flex-item { font-weight: bold; } 
@@ -1750,8 +1727,9 @@ function toggleLangMenu(e) { e.stopPropagation(); const d = document.getElementB
 
 
 window.addEventListener('message', function (e) {
+    if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
     if (e.data && e.data.type === 'SET_FONT') {
-        var font = (e.data.payload && e.data.payload.font) || '';
+        var font = (e.data.payload && typeof e.data.payload.font === 'string') ? e.data.payload.font.slice(0, 120) : '';
         if (font) document.documentElement.style.setProperty('--klass-font-family', font);
     }
     if (e.data && e.data.type === 'SET_LANG') {

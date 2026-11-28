@@ -5,6 +5,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mein Bibliothek — Hub</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 
 <script>
   /* Pre-paint restore: set the shelf theme + font before first paint, so there's
@@ -729,9 +730,21 @@
   })();
 
 
+  function _sameOriginTarget() {
+    return (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+  }
+  function _isTrustedOrigin(origin) {
+    if (!window.location.origin || window.location.origin === 'null') return true;
+    return origin === window.location.origin;
+  }
+  function _safeHttpUrl(u) {
+    var s = String(u || '').trim();
+    return /^https?:\/\//i.test(s) ? s : '';
+  }
+
   window.addEventListener('message', function (e) {
+    if (!_isTrustedOrigin(e.origin)) return;
     if (!e.data || e.data.type !== 'osirisOpenBookInHub') return;
-    console.debug('[osiris-nav] Hub received osirisOpenBookInHub', e.data, 'sourceIsParent=', e.source === window.parent);
     if (e.source !== window.parent) return;
     if (e.data.id) pendingOpenBookId = e.data.id;
   });
@@ -780,8 +793,9 @@
         if (file) return file;
         return core.getFileBlob(id).then(function(blob) {
             if (blob) return blob;
-            if (book && book.link && /\.pdf$/i.test(book.link)) {
-                return fetch(book.link).then(function(res) {
+            var safeLink = book && _safeHttpUrl(book.link);
+            if (safeLink && /\.pdf$/i.test(safeLink)) {
+                return fetch(safeLink).then(function(res) {
                     if (res.ok) {
                         return res.blob().then(function(b) {
                             b.name = "document.pdf";
@@ -803,8 +817,8 @@
           var blobUrl = URL.createObjectURL(file);
           fallbackOpenUrl(blobUrl);
           setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 60000);
-        } else if (book && book.link) {
-          window.open(book.link, '_blank', 'noopener,noreferrer');
+        } else if (book && _safeHttpUrl(book.link)) {
+          window.open(_safeHttpUrl(book.link), '_blank', 'noopener,noreferrer');
         }
         return;
       }
@@ -823,6 +837,7 @@
 
 
   window.addEventListener('message', function (e) {
+    if (!_isTrustedOrigin(e.origin)) return;
     if (!e.data) return;
     var frame = document.getElementById('shelf-frame');
     if (!frame || e.source !== frame.contentWindow) return;
@@ -830,9 +845,10 @@
     if (e.data.type === 'osirisReaderReady' && pendingReaderPayload) {
       var payload = pendingReaderPayload;
       pendingReaderPayload = null;
-      frame.contentWindow.postMessage({ type: 'OPEN_PDF', payload: { buffer: payload.buffer, title: payload.title, author: payload.author } }, '*');
-      frame.contentWindow.postMessage({ type: 'SET_LANG', payload: { lang: appState.lang } }, '*');
-      frame.contentWindow.postMessage({ type: 'SET_THEME', payload: { theme: payload.theme } }, '*');
+      var targetOrig = _sameOriginTarget();
+      frame.contentWindow.postMessage({ type: 'OPEN_PDF', payload: { buffer: payload.buffer, title: payload.title, author: payload.author } }, targetOrig);
+      frame.contentWindow.postMessage({ type: 'SET_LANG', payload: { lang: appState.lang } }, targetOrig);
+      frame.contentWindow.postMessage({ type: 'SET_THEME', payload: { theme: payload.theme } }, targetOrig);
     }
 
     if (e.data.type === 'osirisReaderClose') {
@@ -842,7 +858,7 @@
 
   /* ---------- API-Keys dropdown + Vault bridge ---------- */
 
-  var vaultState = { count: null, ids: [] }; // remembered so a language toggle can re-render this without a new event
+  var vaultState = { count: null, ids: [] };
 
   function renderVaultStatus(count, appliedIds) {
     vaultState.count = count;
@@ -912,15 +928,7 @@
     });
   }
 
-  /* ---------- Dropdown positioning (fix: narrow-screen clipping) ----------
-     .dropdown-panel is center-anchored on its button by default (CSS:
-     left:50%/translateX(-50%)). That alone isn't enough when the button
-     itself sits close to a screen edge ? centering ON the button can still
-     push the panel off-screen. After opening, measure the actual rendered
-     rect and nudge the transform just enough to keep both edges within a
-     12px margin of the viewport, without disturbing the center-anchor
-     behavior on wider screens where nothing needs nudging. Re-applied on
-     resize for any panel currently open. */
+
   function positionDropdown(panel) {
     panel.style.transform = 'translateX(-50%)';
     var margin = 12;
@@ -936,16 +944,6 @@
     document.querySelectorAll('.dropdown-panel.open').forEach(positionDropdown);
   });
 
-  /* ---------- AI Sorting (?7) ----------
-     Runs against the whole shared library (one storage key, all shelves),
-     so this lives at the Hub level rather than duplicated per-shelf ?
-     same reasoning as the Sort control above. Gating matrix per
-     the workplan: offline / no key / has key, each with its own message;
-     a manual run always shows the "indicative and approximate" disclaimer
-     since that's the one moment the user is actively asking. Only books
-     without aiTags yet are sent (cache-first, see workplan cost-control
-     note) ? "Re-tag" for already-tagged books isn't built yet, out of
-     scope for this pass. */
 
   function initAiSorting() {
     var btn = document.getElementById('aiSortBtn');
@@ -1253,24 +1251,11 @@
 
 
     if (window.parent !== window) {
-      console.debug('[osiris-nav] Hub announcing osirisHubReady');
-      window.parent.postMessage({ type: 'osirisHubReady' }, '*');
+      window.parent.postMessage({ type: 'osirisHubReady' }, _sameOriginTarget());
     }
   }
 
-  /* ---------- Auto-refresh the mounted shelf's library when this Hub
-     becomes visible again ----------
-     A shelf's own `books`/`library` array is only ever loaded once, at
-     that iframe's own boot ? it has no way to know the shared storage
-     changed underneath it (e.g. a book added via DASHBOARD.html in
-     another tab) unless something tells it to. Every shelf already
-     handles OsirisCore.MSG.LIBRARY_UPDATED correctly (built for the AI
-     Sorting flow: reload + re-render) ? this just triggers that same,
-     already-proven path on a second occasion: whenever the Hub's own tab
-     regains visibility/focus, not only after AI Sorting finishes.
-     Deliberately NOT on every focus/visibility blip in isolation ? both
-     listeners share one debounce so a rapid focus+visibilitychange pair
-     (common when alt-tabbing) only triggers one reload, not two. */
+
   var refreshOnReturnTimer = null;
   function refreshMountedShelfLibrary() {
     clearTimeout(refreshOnReturnTimer);

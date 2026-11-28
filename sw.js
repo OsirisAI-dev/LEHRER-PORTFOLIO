@@ -18,7 +18,7 @@
  * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-const CACHE_VERSION = 'v36';
+const CACHE_VERSION = 'v39';
 const CACHE_NAME    = `osiris-pwa-${CACHE_VERSION}`;
 
 const AI_HOSTNAMES = [
@@ -70,12 +70,12 @@ const PRECACHE_URLS = [
 
   './assets/library-bg.webp',
   './assets/wiki-globe.webp',
+  './icons/cahier-notes.png',
   './icons/switch_fach.png',
   './icons/switch_woerterbuch.png',
   './icons/icon_autobahn_racer.svg',
 
   './js/smart_tutor.js',
-  './js/core/config.js',
   './js/core/deutschthek-sync.js',
   './js/core/portfolio-ocr.js',
   './js/core/osiris-core.js',
@@ -83,12 +83,8 @@ const PRECACHE_URLS = [
   './js/core/class-roster.js',
   './js/core/epub-pdf-extractor.js',
   './js/core/vault-crypto.js',
-  './js/linguistics/german-conjugation.js',
   './js/apps/wiki-app.js',
   './js/apps/dashboard-pointeur.js',
-
-  './js/utils/pwa-install.js',
-  './js/utils/lib-loader.js',
 
   './lib/chart/v4.5.1/chart.umd.min.js',
   './lib/sqljs/v1.10.3/sql-wasm.js',

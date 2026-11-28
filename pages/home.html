@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Das Lehrer Portofolio — OSIRIS Inc.</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 <link rel="manifest" href="../manifest.json">
 <script>
   if ('serviceWorker' in navigator) {
@@ -822,6 +823,7 @@
   });
 
   window.addEventListener('message', function (e) {
+    if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
     if (e.data && e.data.type === 'exitToGate') {
       closeDashboard();
     }

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Cahier de Notes Pro – Accueil Word &amp; Grille Excel</title>
   <link rel="manifest" href="../manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="../icons/dashboard-graph-analytics-report-svgrepo-com.svg" />
+  <link rel="icon" type="image/png" href="../icons/cahier-notes.png" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png" />
   <link rel="stylesheet" href="../fonts/fonts.css" />
   <script>if (window.self !== window.top) document.documentElement.classList.add('in-portfolio-iframe');</script>
@@ -1433,10 +1433,6 @@
             Mémoire active &amp; suggestions
           </button>
           <div class="dropdown-sep"></div>
-          <button type="button" onclick="loadDemoData(); toggleDbMenu()" class="dropdown-item">
-            <svg class="svg-ico" style="color:#475569;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8M3 3v5h5"/></svg>
-            Charger un exemple démo
-          </button>
           <button type="button" onclick="deleteAllDatabase(); toggleDbMenu()" class="dropdown-item danger">
             <svg class="svg-ico" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
             Supprimer toute la base
@@ -2140,11 +2136,11 @@
       showCrossPreview: false,
       bulkEditStudents: false,
       activeMemory: {
-        schools: ['Lycée Moderne de Katiola', 'Lycée Moderne Gaston Ouassenan Koné'],
-        classes: ['5e1', '5e2', '1ère A', '1ère D', 'Tle A'],
-        customEvalTypes: ['Interrogation', 'Devoir Surveillé', 'Exposé Oral'],
+        schools: [],
+        classes: [],
+        customEvalTypes: [],
         evalWeights: { 'Test': 1, 'Devoir': 2, 'Interro / Quiz': 0.5, 'Oral': 1 },
-        subtitles: ['Année Scolaire 2026-2027 • Allemand']
+        subtitles: []
       },
       workbooks: {}
     };
@@ -2153,6 +2149,28 @@
     let chartInstances = { comparison: null, distribution: null };
 
     // ==================== INITIALIZATION & PERSISTENCE ====================
+    function cleanupLegacyMockDataOnce() {
+      const flag = 'cahier_mock_cleanup_v1';
+      try {
+        if (localStorage.getItem(flag)) return;
+        let changed = false;
+        Object.entries(appState.workbooks || {}).forEach(([id, wb]) => {
+          const first = wb?.students?.[0];
+          const isSeed5e1 = wb?.school === 'Lycée Moderne de Katiola' && wb?.className === '5e1' && first?.id === 'st_1' && first?.name === 'KOUASSI Affoué Grace';
+          const isSeed1ereA = wb?.school === 'Lycée Moderne de Katiola' && wb?.className === '1ère A' && first?.id === 'st_201' && first?.name === 'BAMBA Mariam';
+          if (isSeed5e1 || isSeed1ereA) {
+            delete appState.workbooks[id];
+            changed = true;
+          }
+        });
+        if (changed) {
+          normalizeActiveWorkbook();
+          saveState();
+        }
+        localStorage.setItem(flag, '1');
+      } catch (_) {}
+    }
+
     function initApp() {
       let saved = null;
       try {
@@ -2165,19 +2183,13 @@
         try {
           const parsed = JSON.parse(saved);
           const clean = sanitizeAppState(parsed);
-          if (clean) {
-            appState = clean;
-          } else {
-            seedDefaultWorkbooks();
-          }
+          if (clean) appState = clean;
         } catch (e) {
           console.error('Erreur lecture sauvegarde:', e);
-          seedDefaultWorkbooks();
         }
-      } else {
-        seedDefaultWorkbooks();
       }
 
+      cleanupLegacyMockDataOnce();
       normalizeActiveWorkbook();
 
       document.getElementById('toggle-cross-preview').checked = !!appState.showCrossPreview;
@@ -2244,126 +2256,6 @@
       appState.activeTab = '1';
       saveState();
       renderAll();
-    }
-
-    function seedDefaultWorkbooks() {
-      const now = Date.now();
-      const wb1 = 'wb_' + now;
-      const wb2 = 'wb_' + (now + 1);
-
-      appState.workbooks[wb1] = {
-        id: wb1,
-        school: 'Lycée Moderne de Katiola',
-        className: '5e1',
-        reportSubtitle: 'Année Scolaire 2026-2027',
-        themeColor: '#1e40af',
-        trimesterCount: 3,
-        defaultWeight: 1,
-        capAt20: true,
-        trimesterWeights: { '1': 1, '2': 2, '3': 2 },
-        students: [
-          { id: 'st_1', name: 'KOUASSI Affoué Grace', gender: 'F' },
-          { id: 'st_2', name: 'KONÉ Sekou', gender: 'G' },
-          { id: 'st_3', name: 'YAO Akissi Marie-Ange', gender: 'F' },
-          { id: 'st_4', name: 'TRAORÉ Ibrahim', gender: 'G' },
-          { id: 'st_5', name: "N'GUESSAN Adjoua Clarisse", gender: 'F' },
-          { id: 'st_6', name: 'OUATTARA Fatoumata', gender: 'F' },
-          { id: 'st_7', name: 'DIALLO Mamadou', gender: 'G' },
-          { id: 'st_8', name: 'KOFFI Amenan Esther', gender: 'F' }
-        ],
-        trimesters: {
-          '1': {
-            evalWeights: { 'Test': 1, 'Interro / Quiz': 0.5, 'Oral': 1 },
-            columns: [
-              { id: 'c1_1', type: 'Test', customLabel: '' },
-              { id: 'c1_2', type: 'Interro / Quiz', customLabel: '' },
-              { id: 'c1_3', type: 'Bonus (+)', customLabel: 'Participation' }
-            ],
-            grades: {
-              'st_1': { 'c1_1': 14, 'c1_2': 16, 'c1_3': 1 },
-              'st_2': { 'c1_1': 11, 'c1_2': 12, 'c1_3': 0.5 },
-              'st_3': { 'c1_1': 15.5, 'c1_2': 14, 'c1_3': 1 },
-              'st_4': { 'c1_1': 8.5, 'c1_2': 9, 'c1_3': 0 },
-              'st_5': { 'c1_1': 13, 'c1_2': 15, 'c1_3': 0.5 },
-              'st_6': { 'c1_1': 10, 'c1_2': 11, 'c1_3': 0 },
-              'st_7': { 'c1_1': 7, 'c1_2': 8.5, 'c1_3': 0 },
-              'st_8': { 'c1_1': 16, 'c1_2': 17, 'c1_3': 1 }
-            },
-            manualOverrides: {}
-          },
-          '2': {
-            evalWeights: { 'Devoir': 2, 'Test': 1 },
-            columns: [
-              { id: 'c2_1', type: 'Devoir', customLabel: '' },
-              { id: 'c2_2', type: 'Test', customLabel: '' }
-            ],
-            grades: {
-              'st_1': { 'c2_1': 15, 'c2_2': 16 },
-              'st_2': { 'c2_1': 10.5, 'c2_2': 12 },
-              'st_3': { 'c2_1': 14, 'c2_2': 15 },
-              'st_4': { 'c2_1': 9.5, 'c2_2': 10 },
-              'st_5': { 'c2_1': 12.5, 'c2_2': 13.5 },
-              'st_6': { 'c2_1': 11, 'c2_2': 10 },
-              'st_7': { 'c2_1': 8, 'c2_2': 9 },
-              'st_8': { 'c2_1': 17, 'c2_2': 16.5 }
-            },
-            manualOverrides: {}
-          },
-          '3': {
-            evalWeights: { 'Devoir': 2, 'Interro / Quiz': 0.5 },
-            columns: [
-              { id: 'c3_1', type: 'Devoir', customLabel: '' },
-              { id: 'c3_2', type: 'Interro / Quiz', customLabel: '' }
-            ],
-            grades: {
-              'st_1': { 'c3_1': 16, 'c3_2': 15 },
-              'st_2': { 'c3_1': 12, 'c3_2': 11 },
-              'st_3': { 'c3_1': 14.5, 'c3_2': 16 },
-              'st_4': { 'c3_1': 10, 'c3_2': 10.5 },
-              'st_5': { 'c3_1': 13, 'c3_2': 14 },
-              'st_6': { 'c3_1': 11.5, 'c3_2': 12 },
-              'st_7': { 'c3_1': 8.5, 'c3_2': 8 },
-              'st_8': { 'c3_1': 17.5, 'c3_2': 18 }
-            },
-            manualOverrides: {}
-          }
-        }
-      };
-
-      appState.workbooks[wb2] = {
-        id: wb2,
-        school: 'Lycée Moderne de Katiola',
-        className: '1ère A',
-        reportSubtitle: 'Année Scolaire 2026-2027',
-        themeColor: '#0f766e',
-        trimesterCount: 3,
-        defaultWeight: 1,
-        capAt20: true,
-        trimesterWeights: { '1': 1, '2': 2, '3': 2 },
-        students: [
-          { id: 'st_201', name: 'BAMBA Mariam', gender: 'F' },
-          { id: 'st_202', name: 'COULIBALY Lacina', gender: 'G' },
-          { id: 'st_203', name: 'SILUÉ Chantal', gender: 'F' },
-          { id: 'st_204', name: 'SORO Drissa', gender: 'G' }
-        ],
-        trimesters: {
-          '1': {
-            evalWeights: { 'Devoir': 2, 'Interro / Quiz': 0.5 },
-            columns: [
-              { id: 'c201_1', type: 'Devoir', customLabel: '' },
-              { id: 'c201_2', type: 'Interro / Quiz', customLabel: '' }
-            ],
-            grades: { 'st_201': { 'c201_1': 14, 'c201_2': 15 }, 'st_202': { 'c201_1': 11, 'c201_2': 10 } },
-            manualOverrides: {}
-          },
-          '2': { evalWeights: { 'Devoir': 2 }, columns: [{ id: 'c202_1', type: 'Devoir', customLabel: '' }], grades: {}, manualOverrides: {} },
-          '3': { evalWeights: { 'Devoir': 2 }, columns: [{ id: 'c203_1', type: 'Devoir', customLabel: '' }], grades: {}, manualOverrides: {} }
-        }
-      };
-
-      appState.activeWorkbookId = wb1;
-      appState.currentView = 'home';
-      saveState();
     }
 
     // ==================== EVENT DELEGATION (NO INLINE QUOTING BUGS) ====================
@@ -2625,7 +2517,6 @@
       }).join('');
     }
 
-    // ==================== LOGIC 2: WEIGHTED MATHS & OVERRIDES ====================
     function isBonusType(type) { return type === 'Bonus (+)'; }
     function isMalusType(type) { return type === 'Malus (-)'; }
 
@@ -3379,7 +3270,6 @@
       if (wb && appState.activeTab !== 'annual') renderTrimesterGrid(wb, appState.activeTab);
     }
 
-    // ==================== LOGIC 3 & 4: ANNUAL VIEW & CHART.JS ====================
     function renderAnnualView() {
       const wb = getActiveWorkbook();
       if (!wb) return;
@@ -3590,7 +3480,6 @@
       }
     }
 
-    // ==================== LOGIC 1: SETUP WIZARD & ACTIVE MEMORY ====================
     function populateMemoryDatalists() {
       document.getElementById('memory-schools').innerHTML = (appState.activeMemory.schools || [])
         .map(s => `<option value="${escapeHtml(s)}">`).join('');
@@ -3787,7 +3676,6 @@
       renderAll();
     }
 
-    // ==================== LOGIC 4: WORD / PDF / OCR ROSTER IMPORTER ====================
     function openImportRosterModal() {
       parsedImportBuffer = [];
       document.getElementById('roster-file-input').value = '';
@@ -4285,13 +4173,6 @@
       saveState();
       renderAll();
       showToast(`Classe "${target.className}" supprimée.`, 'info');
-    }
-
-    function loadDemoData() {
-      if (!confirm('Charger les classes de démonstration (conserve ou remplace selon le cas) ?')) return;
-      seedDefaultWorkbooks();
-      renderAll();
-      showToast('Exemple de démonstration chargé.', 'info');
     }
 
     function deleteAllDatabase() {

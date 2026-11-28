@@ -5,6 +5,7 @@
     <link rel="manifest" href="../manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editeur de Fiche de Cours Pro</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
     
     <script>
       function osirisLoadWithFallback(localSrc, cdnSrc, testGlobal) {
@@ -284,10 +285,40 @@
 </div>
 
 <script>
+    function sanitizeLehrskizzeHtml(rawHtml) {
+        const doc = new DOMParser().parseFromString(String(rawHtml || ''), 'text/html');
+        doc.querySelectorAll('script, iframe, object, embed, svg, math, style, link, meta, base, form').forEach(el => el.remove());
+        const allowedOnclick = new Set([
+            'addMetaRow(this)',
+            'addStandardRow(this)',
+            'addStandardRow(this, true)',
+            'deleteRow(this)',
+            'deleteColumn(this)'
+        ]);
+        const allowedAddColRx = /^addColumn\(['"][a-zA-Z0-9_-]{1,40}['"]\)$/;
+        doc.body.querySelectorAll('*').forEach(el => {
+            Array.from(el.attributes).forEach(attr => {
+                const name = attr.name.toLowerCase();
+                const val = (attr.value || '').trim();
+                if (name === 'onclick') {
+                    if (!allowedOnclick.has(val) && !allowedAddColRx.test(val)) el.removeAttribute(attr.name);
+                } else if (name === 'onblur') {
+                    if (val !== 'registerSchool(this)') el.removeAttribute(attr.name);
+                } else if (name.startsWith('on')) {
+                    el.removeAttribute(attr.name);
+                } else if ((name === 'href' || name === 'src' || name === 'action') && /^\s*(javascript|vbscript|data):/i.test(val)) {
+                    el.removeAttribute(attr.name);
+                }
+            });
+        });
+        return doc.body.innerHTML;
+    }
+
     window.addEventListener('message', function (e) {
+        if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
         const msg = e.data || {};
-        if (msg.type === 'SET_FONT' && msg.payload && msg.payload.font) {
-            document.documentElement.style.setProperty('--lehrskizze-font-family', msg.payload.font);
+        if (msg.type === 'SET_FONT' && msg.payload && typeof msg.payload.font === 'string') {
+            document.documentElement.style.setProperty('--lehrskizze-font-family', msg.payload.font.slice(0, 120));
         } else if (msg.type === 'SET_LANG' && msg.payload && (msg.payload.lang === 'FR' || msg.payload.lang === 'DE')) {
             window.__lehrskizzeLang = msg.payload.lang;
             if (typeof setLanguage === 'function') {
@@ -376,7 +407,7 @@ const translations = {
         const saved = localStorage.getItem('fiche_pro_html_v4');
         
         if (saved && saved.includes('type="date"')) {
-            document.getElementById('export-content').innerHTML = saved;
+            document.getElementById('export-content').innerHTML = sanitizeLehrskizzeHtml(saved);
             
             setTimeout(() => {
                 document.querySelectorAll('textarea').forEach(t => {
@@ -536,7 +567,8 @@ const translations = {
     }
 
     function registerSchool(i) {
-        let list = JSON.parse(localStorage.getItem('schools') || '["LYCEE MODERNE....."]');
+        let list = [];
+        try { const parsed = JSON.parse(localStorage.getItem('schools') || '[]'); if (Array.isArray(parsed)) list = parsed; } catch (_) {}
         if(i.value && !list.includes(i.value)) {
             list.push(i.value);
             localStorage.setItem('schools', JSON.stringify(list));
@@ -545,30 +577,55 @@ const translations = {
     }
 
     function loadSchools() {
-        const list = JSON.parse(localStorage.getItem('schools') || '["LYCEE MODERNE....."]');
+        let list = [];
+        try {
+            const parsed = JSON.parse(localStorage.getItem('schools') || '[]');
+            if (Array.isArray(parsed)) list = parsed;
+        } catch (_) {}
         const datalist = document.getElementById('school-list');
-        if (datalist) datalist.innerHTML = list.map(s => `<option value="${s}">`).join('');
+        if (datalist) {
+            datalist.textContent = '';
+            list.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = String(s || '');
+                datalist.appendChild(opt);
+            });
+        }
     }
 
     function exportJSON() {
         const blob = new Blob([JSON.stringify({html: document.getElementById('export-content').innerHTML, theme: document.documentElement.getAttribute('data-theme')})], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Fiche_Backup.json'; a.click();
+        const a = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        a.href = url; a.download = 'Fiche_Backup.json'; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     function importJSON(i) {
+        const file = i && i.files && i.files[0];
+        if (!file) return;
         const r = new FileReader();
         r.onload = (e) => {
-            const d = JSON.parse(e.target.result);
-            document.getElementById('export-content').innerHTML = d.html;
-            document.documentElement.setAttribute('data-theme', d.theme);
-            saveAll();
-            setTimeout(() => {
-                document.querySelectorAll('textarea').forEach(t => {
-                    t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px';
-                });
-            }, 50);
+            try {
+                const d = JSON.parse(e.target.result);
+                if (!d || typeof d.html !== 'string') throw new Error('Invalid backup format');
+                document.getElementById('export-content').innerHTML = sanitizeLehrskizzeHtml(d.html);
+                const allowedThemes = ['light', 'dark', 'ocean', 'sunset'];
+                const safeTheme = allowedThemes.includes(d.theme) ? d.theme : 'light';
+                document.documentElement.setAttribute('data-theme', safeTheme);
+                saveAll();
+                setTimeout(() => {
+                    document.querySelectorAll('textarea').forEach(t => {
+                        t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px';
+                    });
+                }, 50);
+            } catch (err) {
+                alert('Erreur import JSON : ' + (err && err.message ? err.message : 'Format invalide'));
+            } finally {
+                i.value = '';
+            }
         };
-        r.readAsText(i.files[0]);
+        r.readAsText(file);
     }
 
     function exportWord() {
@@ -617,7 +674,6 @@ const translations = {
         a.download = 'Fiche_Cours.docx';
         a.click();
     } 
-
 
 
 </script>

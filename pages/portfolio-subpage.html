@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
 <link rel="manifest" href="../manifest.json">
 <style>
   * { box-sizing: border-box; font-family: var(--font-family); }
@@ -224,13 +225,7 @@
 
   /* --- Navigationsleisten-Varianten --- */
 
-  /* Portfolio: Register-Reiter mit Eckausschnitt (Step-Cut), angelehnt an
-     die physischen Trennblätter aus portefolio_sample_fixed.html. Farben
-     kommen weiterhin aus --tab-accent / item.page.color (bestehendes
-     tabColors-System) statt aus fest verdrahteten Werten. Der aktive Tab
-     "hebt sich ab" (translateY) und wirft einen stärkeren Schatten; der
-     Farb-Akzent wandert zusätzlich als obere Kontur auf das Inhaltspanel
-     (siehe .content im JS/renderContent). */
+
   .tab-group.nav-portefolio .page-tab {
     opacity: 1;
     border-radius: 0;
@@ -551,10 +546,7 @@
     max-width: 480px;
   }
 
-  /* ===== Vault-FAB — schwebendes Symbol, nur sichtbar wenn Safe global
-     aktiviert ist UND die aktuell offene Verknüpfung als "API-Seite"
-     markiert wurde (edit-icon-submenu). Öffnet das eingebaute
-     API-VAULT-Popup (kein iframe-Modal mehr). ===== */
+
   .vault-fab {
     position: fixed;
     right: 22px;
@@ -577,10 +569,7 @@
   .vault-fab.show { display: flex; }
   .vault-fab img { width: 22px; height: 22px; }
 
-  /* ===== Vault-Popup — inline sticker submenu (built-in, ersetzt das
-     frühere Vollbild-iframe-Modal). Nutzt dieselben .sticker-frame /
-     .submenu-Klassen wie das "Verknüpfung hinzufügen"-Popup weiter unten;
-     hier nur die zusätzlichen, vault-eigenen Innereien. ===== */
+
   #lock-view { display: flex; flex-direction: column; gap: 10px; }
   .lock-hint { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
   #passphrase-input {
@@ -672,10 +661,7 @@
   .vault-footer-menu { display: flex; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--border-color); }
   .vault-footer-menu input { flex: 1; font-size: 11px; padding: 7px 8px; border: 1px solid var(--border-color); border-radius: 6px; }
 
-  /* Zwischenschritt vor dem vollen Stapel-Layout (640px): Tabs werden
-     schrittweise verkleinert, bevor sie umbrechen — Icon fällt zuerst weg,
-     danach schrumpft die Mindestbreite, Label und Close-Button bleiben
-     immer sichtbar/erreichbar. */
+
   @media (max-width: 990px) {
     .page-tab {
       flex: 1 1 120px;
@@ -1807,7 +1793,8 @@ if (exitLink) {
   exitLink.addEventListener('click', function (e) {
     if (window.parent && window.parent !== window) {
       e.preventDefault();
-      window.parent.postMessage({ type: 'exitToGate' }, '*');
+      const targetOrig = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '*';
+      window.parent.postMessage({ type: 'exitToGate' }, targetOrig);
     }
     // else: not embedded, let the normal href navigation happen
   });
@@ -1856,17 +1843,15 @@ const DEFAULT_TAB_ICON = '../icons/dashboard.svg';
 const DEFAULT_TAB_PAGE = 'dashboard.html';
 
 // Fixed default vertical shortcuts — always present in the rail,
-// pointing at the suite's core tool pages. Deliberately NOT part of
 // userLinks/portfolioUserLinks: they don't get edit/remove controls (see
 // renderRail()) and can't be deleted, same "protected" treatment the
 // 'home' tab already gets via DEFAULT_TAB_ID, just extended to more than
 // one entry. itemFromId() resolves these before falling through to
 // userLinks, so openTabById()/tab close/tab-state persistence all work
-// on them for free — no changes needed to that machinery.
 const FIXED_SHORTCUTS = [
+  { id: 'fixed-cahiernotes', name: 'CAHIER DE NOTES', pageSrc: 'cahier-notes.html', icon: '../icons/cahier-notes.png' },
   { id: 'fixed-bibliothek', name: 'BIBLIOTHEK', pageSrc: 'library.html', icon: '../icons/bibliothek-default.png' },
   { id: 'fixed-eduhub', name: 'EDU HUB', pageSrc: 'edu-hub.html', icon: '../icons/eduhub-default.png' },
-  { id: 'fixed-cahiernotes', name: 'CAHIER DE NOTES', pageSrc: 'cahier-notes.html', icon: '../icons/dashboard-graph-analytics-report-svgrepo-com.svg' },
   { id: 'fixed-woerterbuch', name: 'KI-WÖRTERBUCH', pageSrc: 'woerterbuch.html', icon: '../icons/ki-woerterbuch-v2.png' },
   { id: 'fixed-spezwoerterbuch', name: 'KI-FACHWÖRTERBUCH', pageSrc: 'fachwoerterbuch.html', icon: '../icons/ki-fachwoerterbuch-v2.png' },
   { id: 'fixed-autobahnracer', name: 'AUTOBAHN RACER', pageSrc: 'autobahn_racer.html', icon: '../icons/icon_autobahn_racer.svg' },
@@ -1916,10 +1901,7 @@ const deriveVaultKey = (passphrase, saltBytes) => VaultCrypto.deriveVaultKey(pas
 const encryptVault = (passphrase, data) => VaultCrypto.encryptVault(passphrase, data);
 const decryptVault = (passphrase, blob) => VaultCrypto.decryptVault(passphrase, blob);
 
-/* failCount lebt nur im Speicher (kein localStorage/sessionStorage) —
-   wird bei jedem Neuladen/Schließen der Seite zurückgesetzt. Gewollt:
-   ohne Passphrase-Wiederherstellung soll der Nutzer nach einer Pause
-   eine neue Chance bekommen, statt endgültig ausgesperrt zu werden. */
+
 let vaults = [];
 let unlockedPassphrase = null;
 let selectedVaultId = null;
@@ -2228,22 +2210,7 @@ window.addEventListener('message', (e) => {
   statusEl.className = 'status-msg' + (n > 0 ? ' ok' : '');
 });
 
-/* ---- "Im Shell bleiben"-Navigation von einer eingebetteten Seite ----
-   Eine eingebettete Seite (z.B. DASHBOARD.html) möchte statt eines neuen
-   Tabs lieber innerhalb dieser Shell zu einer anderen registrierten
-   Verknüpfung wechseln (z.B. "Buch in der Bibliothek öffnen"). Der
-   Dateiname (pageFileName) ist der einzige stabile Bezugspunkt, den wir
-   für hochgeladene Seiten haben — es gibt keine echte URL, an die man
-   sonst anknüpfen könnte, da der Inhalt als srcdoc eingebettet ist.
-   Vergleich ohne Groß-/Kleinschreibung und ohne führende/folgende
-   Leerzeichen, da der gespeicherte Dateiname genau das ist, was beim
-   Hochladen im Dateisystem stand — leicht abweichende Schreibweisen
-   sollen den Abgleich nicht scheitern lassen.
-   Schickt in jedem Fall eine Antwort (osirisNavigateToAppResult) an die
-   anfragende Seite zurück — Erfolg oder Misserfolg —, damit diese bei
-   einem Fehlschlag zuverlässig auf ihr eigenes Standardverhalten
-   zurückfallen kann, statt dass ein bereits unterdrückter Klick
-   ansonsten spurlos ins Leere läuft. */
+
 function normalizedFileName(name) {
   return String(name || '').trim().toLowerCase();
 }
@@ -2264,7 +2231,8 @@ window.addEventListener('message', (e) => {
     }
   };
   const wanted = normalizedFileName(e.data.pageFileName);
-  const match = userLinks.find(l => l.link && normalizedFileName(l.link.pageFileName) === wanted);
+  const match = FIXED_SHORTCUTS.find(f => normalizedFileName(f.pageSrc) === wanted)
+    || userLinks.find(l => l.link && normalizedFileName(l.link.pageFileName) === wanted);
   console.debug('[osiris-nav] match=', match && match.id, 'wasAlreadyOpen=', match && openTabs.includes(match.id));
   if (!match) { reply(false); return; }
   openTabById(match.id);
@@ -2281,14 +2249,12 @@ window.addEventListener('message', (e) => {
 // Zielseite fertig ist.
 let pendingOpenBookPayload = null;
 window.addEventListener('message', (e) => {
+  if (window.location.origin && window.location.origin !== 'null' && e.origin !== window.location.origin) return;
   if (!e.data || e.data.type !== 'osirisHubReady') return;
   const pageFrame = content.querySelector('.page-frame');
-  console.debug('[osiris-nav] osirisHubReady received; pendingOpenBookPayload=', pendingOpenBookPayload,
-    'sourceMatchesCurrentFrame=', !!pageFrame && e.source === pageFrame.contentWindow);
   if (!pendingOpenBookPayload) return;
   if (!pageFrame || e.source !== pageFrame.contentWindow) return;
   pageFrame.contentWindow.postMessage({ type: 'osirisOpenBookInHub', id: pendingOpenBookPayload }, window.location.origin);
-  console.debug('[osiris-nav] sent osirisOpenBookInHub', pendingOpenBookPayload);
   pendingOpenBookPayload = null;
 });
 
@@ -2392,10 +2358,7 @@ function saveTabState() {
   } catch (e) { /* Speicher nicht verfügbar — Zustand übersteht den Neuladevorgang dann einfach nicht */ }
 }
 
-/* Entfernt Tab-IDs, die nicht mehr aufgelöst werden können (z. B. weil sich
-   die zugrunde liegenden Seiten/Unterseiten geändert haben), damit die
-   Anzahl sichtbarer Tabs nie von der für MAX_TABS gezählten Anzahl abweicht
-   (verhindert eine verfrühte "Maximal X Tabs"-Warnung bei weniger sichtbaren Tabs). */
+
 function pruneOpenTabs() {
   const before = openTabs.length;
   openTabs = openTabs.filter(id => itemFromId(id));
@@ -2549,10 +2512,7 @@ function renderContent() {
   updateVaultFab();
 }
 
-/* ===== Vault-FAB: schwebendes Symbol, das das eingebaute API-VAULT-
-   Popup öffnet (siehe weiter oben — kein iframe-Modal mehr).
-   Sichtbar nur wenn settings.safeEnabled true ist UND die aktuell aktive
-   Verknüpfung im Bearbeiten-Popup als "API-Seite" markiert wurde. ===== */
+
 function updateVaultFab() {
   const item = itemFromId(activeTabId);
   const show = !!(typeof settings !== 'undefined' && settings.safeEnabled && item && item.link && item.link.apiPowered);
@@ -3025,10 +2985,7 @@ function resetLinkForm() {
   linkSaveBtn.textContent = 'Ajouter au menu';
 }
 
-/* Öffnet das bereits vorhandene Verknüpfungs-Popup im Bearbeiten-Modus,
-   vorausgefüllt mit den Daten der ausgewählten Verknüpfung. Beim
-   Speichern wird die bestehende Verknüpfung aktualisiert statt eine
-   neue anzulegen. */
+
 function openEditLinkForm(link, isFixed = false) {
   rerollSticker();
   resetLinkForm();
@@ -3154,9 +3111,9 @@ const stickyReset = document.getElementById('stickyReset');
 const PERSONALIZE_KEY = 'portfolioPersonalize';
 const defaultTabColors = {
   'home': '#1c1c1e',
+  'fixed-cahiernotes': '#0097a7',
   'fixed-bibliothek': '#2f6feb',
   'fixed-eduhub': '#e0393f',
-  'fixed-cahiernotes': '#1e40af',
   'fixed-woerterbuch': '#3aa65a',
   'fixed-spezwoerterbuch': '#3aa65a',
   'fixed-autobahnracer': '#00529b'

@@ -1002,17 +1002,24 @@
                     if (summaryEl) summaryEl.textContent = msg;
                 });
                 self.incomingBundle = bundle;
+                var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
                 var meta = bundle.meta || {};
                 var summaryHtml = `
-                    <strong>${meta.appName || 'Osiris Portfolio'}</strong><br>
-                    • Écoles : ${meta.schoolsCount || 0}<br>
-                    • Classes : ${meta.classesCount || 0} (${meta.studentsTotal || 0} élèves)<br>
+                    <strong>${esc(meta.appName || 'Osiris Portfolio')}</strong><br>
+                    • Écoles : ${Number(meta.schoolsCount) || 0}<br>
+                    • Classes : ${Number(meta.classesCount) || 0} (${Number(meta.studentsTotal) || 0} élèves)<br>
                     • Coffre-fort IA : ${meta.hasVault ? '<span style="color:#16a34a;font-weight:600;">✓ Inclus</span>' : 'Non configuré'}<br>
-                    • Date d'envoi : ${new Date(bundle.timestamp).toLocaleString()}
+                    • Date d'envoi : ${esc(new Date(bundle.timestamp).toLocaleString())}
                 `;
                 if (summaryEl) summaryEl.innerHTML = summaryHtml;
             } catch (err) {
-                if (summaryEl) summaryEl.innerHTML = `<span style="color:#ef4444;">${lang.syncError} ${err.message}</span>`;
+                if (summaryEl) {
+                    summaryEl.textContent = '';
+                    var span = document.createElement('span');
+                    span.style.color = '#ef4444';
+                    span.textContent = (lang.syncError || 'Erreur :') + ' ' + (err && err.message ? err.message : String(err));
+                    summaryEl.appendChild(span);
+                }
             }
         },
 

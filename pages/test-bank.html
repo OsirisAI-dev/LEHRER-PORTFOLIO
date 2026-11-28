@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>MEINE TESTBANK</title>
+<link rel="icon" type="image/png" href="../icons/icon-192.png">
     <!-- Library loading: local files are tried first (this app is meant to run
          fully offline, next to these .js files on disk). If a local file is
          missing or fails to load for any reason, each library falls back to
@@ -2421,7 +2422,6 @@
         `;
     }
 
-    // Enforced hard block: an identical file already exists in the database.
     // The only ways forward are editing that entry or choosing a different
     // file — there is no "save it again anyway" path, so no duplicate can
     // be added.
@@ -2512,7 +2512,6 @@
         if (!idb) return; // DB not ready yet, skip silently
 
 
-
         showCheckingNotice(statusEl);
         setSaveBtnEnabled(false);
 
@@ -2588,8 +2587,6 @@
     document.getElementById('inp-file').addEventListener('change', handleFileSelect);
 
 
-
-
 function saveEntry() {
         const rawThema = document.getElementById('inp-thema').value;
         let thema = (rawThema === 'SONSTIGES') 
@@ -2634,7 +2631,6 @@ function saveEntry() {
             alert("Diese Datei ist bereits gespeichert. Bitte bearbeiten Sie den vorhandenen Eintrag, anstatt sie erneut hinzuzufügen.");
             return;
         }
-
 
 
         let subTyp = [];
@@ -4359,10 +4355,10 @@ ${docRelsItems}</Relationships>`;
         const msgText = 'Dokument: ' + fileName;
 
         if (platform === 'whatsapp') {
-            window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msgText), '_blank');
+            window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msgText), '_blank', 'noopener,noreferrer');
 
         } else if (platform === 'telegram') {
-            window.open('https://t.me/share/url?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(msgText), '_blank');
+            window.open('https://t.me/share/url?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(msgText), '_blank', 'noopener,noreferrer');
 
         } else if (platform === 'email') {
             window.location.href = 'mailto:?subject=' + encodeURIComponent(fileName) + '&body=' + encodeURIComponent(msgText);
